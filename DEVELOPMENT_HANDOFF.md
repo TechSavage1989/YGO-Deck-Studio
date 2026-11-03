@@ -2,9 +2,9 @@
 
 ## Latest version
 
-3.0.0-alpha.221-duelcore.1-rc242 (unpublished; Practice Dummy decision fixes and the Rules Engine query flag fix, see docs/releases/CHANGELOG_rc242.txt and docs/validation/DUELCORE_VALIDATION_alpha221_duelcore1_rc242.txt).
+3.0.0-alpha.221-duelcore.1-rc243 (unpublished; duel core and Practice Dummy review, see docs/releases/CHANGELOG_rc243.txt and docs/validation/DUELCORE_VALIDATION_alpha221_duelcore1_rc243.txt).
 
-Previous published baseline: 3.0.0-alpha.221-duelcore.1-rc241. Before that: rc240. The owner confirmed the rc240 desktop icon is fixed. Native Windows installation and restart are not inferred from icon confirmation.
+Previous published baseline: 3.0.0-alpha.221-duelcore.1-rc242 (tag v3.0.0-alpha.221-duelcore.1-rc242, published 2026-11-03; the published manifest, executable, archives and checksums were verified from the live feed and the unchanged rc241 updater client found, downloaded and validated it). Before that: rc241. The owner confirmed the rc240 desktop icon is fixed. Native Windows installation and restart are not inferred from icon confirmation.
 
 ## Source and repository state
 
@@ -95,6 +95,7 @@ The release builder:
 
 ## Current focused tests
 
+- tests/test_rc243_duel_review.py
 - tests/test_rc242_practice_dummy_decisions.py
 - tests/test_rc236_update_client_timers.py
 - tests/test_rc238_update_banner_clicks.py
@@ -170,4 +171,10 @@ Local validation passed: repository layout, JavaScript syntax, all updater Go te
 The Practice Dummy was exercised end to end against the real OCGCore engine (ocgcore-wasm, Project Ignis cards.cdb and CardScripts) in headless Chromium with scripted Player responses. Five defects were fixed in web/js/duel-core.js: unmapped CHAINING.triggering_controller (wrong chain attribution and threat assessment whenever the Dummy opened the duel), "any trigger in the window" disabling every response rule (self-negation, stacked interruptions), board-blind activations (Dark Hole into its own board, Mystical Space Typhoon on its own set card), no recognition of opponent summons/attacks as response events, and cost-style selections choosing the Dummy's best card. The field refresh no longer requests OcgQueryFlags.TYPE, which no ocgcore-wasm build parses and which truncated every later field of each card query. Casual/Competitive/Expert action caps are now difficulty based. tests/test_rc242_practice_dummy_decisions.py guards the new rules. The embedded slot for duel-core.js (798,551 bytes after the patcher's stripping) is nearly full; sixteen unreferenced methods were removed to fit, and AGENTS.md records how to measure the budget before committing.
 
 Not performed here: native Windows build and packaging (no recovered baseline in the environment), tests/test_rc238_update_banner_clicks.py (needs the packaged core), owner playtesting of the Dummy feel at each difficulty.
+
+## Duel core and Practice Dummy review — 2026-11-03 (rc243)
+
+The duel controller, the Best-of-3 match flow and the Dummy decision functions were reviewed against the Rules Engine contract and exercised with a 24-duel headless campaign (vanilla, Blue-Eyes, Salamangreat and Traptrix lists; Casual, Competitive and Expert; Dummy first and second; passive and mirrored Player). Fixed: the Player's optional-chain auto-pass swallowed event windows such as the Damage Step of the Player's own attack; the Dummy toggled battle positions every Main Phase 2 and flipped walls; LP-cost prompts were always accepted; weak attackers rammed set monsters. tools/patch_embedded_web.py now compacts whitespace on literal-free JavaScript lines so the review fixes fit the duel-core.js slot with about 1.5 KB to spare; tests/test_rc243_duel_review.py guards the compactor and the fixes. Rules legality remains the engine's: every Dummy response is still validated by OCGCore, and the campaign recorded no RETRY.
+
+Not performed here: native Windows build, packaging and owner playtesting.
 

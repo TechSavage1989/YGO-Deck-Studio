@@ -1,4 +1,4 @@
-const DUEL_BRANCH = 'duelcore.1-rc242';
+const DUEL_BRANCH = 'duelcore.1-rc243';
 
 const DUMMY_CARD_CODE = 89631139;
 const DUMMY_OK=Object.freeze({blocked:false,penalty:0,reason:''}),DUMMY_BLOCK=reason=>({blocked:true,penalty:Infinity,reason}); // Blue-Eyes White Dragon: inert Level 8 normal monster.
@@ -6879,6 +6879,7 @@ export class IntegratedDuelController {
     if(message?.type!==T.SELECT_CHAIN||message.forced||Number(message.player)!==0||(message.selects||[]).length===0)return false;
     if(this.chainTimingOverrideHeld())return false;
     if(this.chainPromptContainsTriggeredEffect(message))return false;
+    const H=this.mod?.OcgHintTiming||{},timing=Number(message.hint_timing)||0,eventBits=['SUMMON','SPSUMMON','FLIPSUMMON','MSET','SSET','POS_CHANGE','ATTACK','DAMAGE_STEP','DAMAGE_CAL','BATTLED','DESTROY','REMOVE','EQUIP','DAMAGE','RECOVER'].reduce((mask,key)=>mask|(Number(H[key])||0),0);if(timing&eventBits)return false;
     if(Number(this.turnPlayer)===1&&Number(this.phase)===Number(P.END))return false;
     if(this.meaningfulResponseWindow)return false;
     return true;
@@ -8486,7 +8487,7 @@ export class IntegratedDuelController {
     if(kind==='activate')score=520+effectValue;
     else if(kind==='special')score=500+cardValue;
     else if(kind==='summon')score=545+cardValue;
-    else if(kind==='pos')score=120+cardValue*.15;
+    else if(kind==='pos')score=this.dummyPositionChangeScore(item);
     else if(kind==='spellset')score=230+effectValue*.4;
     else if(kind==='monsterset')score=170+cardValue*.25;
     else if(kind==='tribute')score=250+cardValue*.45;
@@ -8515,6 +8516,7 @@ export class IntegratedDuelController {
   dummyShouldAcceptYesNo(m={}) {
     const exact=this.exactEffectContext?.(m)||{},sourceController=Number(exact.controller??m.controller??this.pendingEffectSource?.controller??1)||0;
     if(this.dummyChainCandidateAssessment({code:m.code||exact.code,controller:sourceController,location:m.location,sequence:m.sequence,description:m.description},m).blocked)return false;
+    const costText=String(this.inferPromptEffectText?.(m)||exact.description||this.pendingEffectSource?.description||'').toLowerCase(),pay=costText.match(/pay (\d{3,5}) lp/),lp=Number(this.lp?.[1])||0;if((pay&&lp<=Number(pay[1])*1.5)||(/pay half (?:of )?your lp/.test(costText)&&lp<=2000))return false;
     if(sourceController===1)return true;
     const threat=this.dummyThreatScore(this.inferPromptEffectText?.(m)||exact.description||this.pendingEffectSource?.description||'',this.effectSourceCode?.(m)||0);
     return threat>=this.dummyDifficultyPolicy().chainThreshold*.55;
@@ -8604,9 +8606,19 @@ export class IntegratedDuelController {
     return this.dummyBattleValue(live,'attack')>=1500;
   }
 
+  // rc243: flip a set monster only to use a FLIP effect or to attack with it; go to Defense only when it would
+  // lose a battle in Attack but survives in Defense; return to Attack only when it out-muscles the opponent's board.
+  dummyPositionChangeScore(item={}) {
+    const P=this.mod?.OcgPosition||{},live=this.cardAtLoc(item)||item,pos=Number(live?.position)||0,faceup=Number(P.FACEUP||5),attackPos=Number(P.FACEUP_ATTACK||1);
+    const atk=this.dummyBattleValue(live,'attack'),def=this.dummyBattleValue(live,'defense'),opp=(this.field?.players?.[0]?.mzone||[]).filter(Boolean),oppAtk=Math.max(0,...opp.map(card=>(Number(card.position)||0)&faceup?this.dummyBattleValue(card,'attack'):0));
+    if(!(pos&faceup)){if(/\bflip:/i.test(String(this.cardDescription(this.normalizeActionCode(item?.code))||''))&&opp.length)return 700+Math.abs(this.dummyCardStrategicValue(live))*.2;return atk>oppAtk&&atk>=1000?480+atk*.05:-1;}
+    if(pos&attackPos)return oppAtk>atk&&def>atk?520+(def-atk)*.1:-1;
+    return (atk>oppAtk||!opp.length)&&atk>=1000?500+atk*.05:-1;
+  }
+
   dummyIdleChoices(m){
     const R=this.mod.OcgResponseType,I=this.mod.SelectIdleCMDAction,ranked=[],policy=this.dummyDifficultyPolicy();
-    const add=(items,kind,action)=>{(items||[]).forEach((item,index)=>{if(kind==='activate'&&(this.dummyActivationBoardAssessment(item).blocked||this.dummyIdleSelfCostActivation(item)))return;ranked.push({response:{type:R.SELECT_IDLECMD,action,index},score:this.dummyIdleActionScore(kind,item,index),kind,item,index});});};
+    const add=(items,kind,action)=>{(items||[]).forEach((item,index)=>{if(kind==='activate'&&(this.dummyActivationBoardAssessment(item).blocked||this.dummyIdleSelfCostActivation(item)))return;const score=this.dummyIdleActionScore(kind,item,index);if(kind==='pos'&&score<0)return;ranked.push({response:{type:R.SELECT_IDLECMD,action,index},score,kind,item,index});});};
     add(m.summons,'summon',I.SELECT_SUMMON);add(m.activates,'activate',I.SELECT_ACTIVATE);add(m.special_summons,'special',I.SELECT_SPECIAL_SUMMON);add(m.pos_changes,'pos',I.SELECT_POS_CHANGE);add(m.spell_sets,'spellset',I.SELECT_SPELL_SET);add(m.monster_sets,'monsterset',I.SELECT_MONSTER_SET);
     const lethal=this.dummyHasImmediateLethal(),hasBoard=(this.field?.players?.[1]?.mzone||[]).some(Boolean);
     if(m.to_bp)ranked.push({response:{type:R.SELECT_IDLECMD,action:I.TO_BP,index:null},score:lethal?20000:(this.dummyPhaseActionCount>=policy.mainActionCap?12000:(hasBoard?620:180)),kind:'battle'});
@@ -8634,7 +8646,7 @@ export class IntegratedDuelController {
     const P=this.mod?.OcgPosition||{};const pos=Number(target?.position)||0;
     const faceupAttack=Number(P.FACEUP_ATTACK)||1,faceupDefense=Number(P.FACEUP_DEFENSE)||4,faceup=Number(P.FACEUP)||5;
     const strategic=Math.min(1800,this.dummyCardStrategicValue(target,{opponent:true})*.55);
-    const isFaceup=!!(pos&faceup);if(!isFaceup)return 250+strategic*.15; // Unknown set monster: legal but uncertain.
+    const isFaceup=!!(pos&faceup);if(!isFaceup)return attackerAtk>=1600?250+strategic*.15:attackerAtk-1650; // Unknown set monster: legal but uncertain.
     if(pos&faceupAttack){const delta=attackerAtk-this.dummyBattleValue(target,'attack');return delta>0?5000+delta+strategic:delta===0?400+strategic*.5:-7000+delta+strategic*.15;}
     if(pos&faceupDefense){const delta=attackerAtk-this.dummyBattleValue(target,'defense');return delta>0?3500+delta+strategic:delta===0?500+strategic*.3:-1200+delta+strategic*.1;}
     return strategic;

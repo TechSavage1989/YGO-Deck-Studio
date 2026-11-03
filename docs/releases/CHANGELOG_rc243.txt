@@ -1,0 +1,16 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc243
+
+Duel core and Practice Dummy review (web/js/duel-core.js):
+
+- Player smart chain prompts: the optional-chain auto-pass treated every window without a trigger effect as a "phase-only" window, so the Player's own quick effects at event windows (Honest during the Damage Step of the Player's own attack, quick effects right after the Player's own Summon, effects on destruction or banishment) were passed automatically unless Shift was held. The auto-pass now reads the window's timing from the Rules Engine and keeps event windows (Summon, Special Summon, Flip Summon, Set, position change, attack, Damage Step, damage calculation, battle, destruction, banishment, equip, damage, recovery). Pure phase windows and chain-end windows are still passed automatically.
+- Dummy position changes: battle-position changes and Flip Summons were scored with a flat value, so the Dummy toggled monsters between Attack and Defense every Main Phase 2 and flipped walls face-up. Position changes are now judged against the opponent's board: a set monster is flipped to use a FLIP effect or to attack with a stronger monster, a monster goes to Defense only when it would lose in Attack but survives in Defense, and returns to Attack only when it out-muscles the opponent's board.
+- Dummy LP costs: optional effects that pay LP (a fixed amount or half) are declined when the Dummy's LP could not afford them safely.
+- Dummy attacks into set monsters: attackers below 1600 ATK no longer ram into unknown face-down monsters.
+
+Embedded size budget (tools/patch_embedded_web.py):
+
+- The patcher now also removes whitespace around punctuation on JavaScript lines that contain no quote, backtick or slash. Such lines cannot contain strings, templates, regular expressions or comments, and the spaces that carry meaning (between identifiers, and between repeated sign operators such as "a + +b") are preserved. This recovers about 2.6 KB of the duel-core.js slot and keeps the file under the 798,551-byte allocation with the review fixes included. tests/test_rc243_duel_review.py checks the compactor's guarantees, runs node --check on the compacted app.js and duel-core.js, and asserts both still fit their slots.
+
+Reviewed without change: deck validation (40 to 60 Main, 15 Extra, 15 Side, combined copy limits by banlist), Best-of-3 match flow (loser chooses turn order, one-for-one Side Deck swaps with Extra Deck cards only swapping with Extra Deck cards, Dummy side-decking by matchup), result registration and concession, core-to-logical player mapping for every engine field that carries a player index, RETRY recovery, and the Dummy's tribute, material, counter, sort, announce and rock-paper-scissors responses.
+
+Tests: tests/test_rc243_duel_review.py (new); all rc230 to rc242 regressions updated to rc243.
