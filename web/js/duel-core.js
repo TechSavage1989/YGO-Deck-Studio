@@ -1,4 +1,4 @@
-const DUEL_BRANCH = 'duelcore.1-rc241';
+const DUEL_BRANCH = 'duelcore.1-rc242';
 
 
 
@@ -832,7 +832,7 @@ export class IntegratedDuelController {
     if(value&&typeof value==='object'){
       const out={};for(const [k,v] of Object.entries(value))out[k]=this.mapCoreMessageValue(v,k);return out;
     }
-    if(['player','controller','owner','team'].includes(key)&&Number.isInteger(Number(value))&&(Number(value)===0||Number(value)===1))return this.logicalPlayer(Number(value));
+    if(['player','controller','owner','team','triggering_controller'].includes(key)&&Number.isInteger(Number(value))&&(Number(value)===0||Number(value)===1))return this.logicalPlayer(Number(value));
     return value;
   }
 
@@ -1260,7 +1260,7 @@ export class IntegratedDuelController {
   }
 
   hardeningCheckState(handle) {
-    const M=this.mod,L=M.OcgLocation,Q=M.OcgQueryFlags,flags=(Q.CODE||0)|(Q.POSITION||0)|(Q.TYPE||0)|(Q.OWNER||0),fail=[];for(const player of [0,1]){for(const loc of [L.DECK,L.HAND,L.GRAVE,L.REMOVED,L.EXTRA]){if(loc==null)continue;let count;try{count=Number(this.core.duelQueryCount(handle,player,loc));}catch(error){fail.push(`query count failed p${player} loc${loc}: ${error?.message||error}`);continue;}if(!Number.isInteger(count)||count<0||count>200)fail.push(`impossible count ${count} at p${player} loc${loc}`);}for(const [loc,max] of [[L.MZONE,7],[L.SZONE,8]]){if(loc==null)continue;for(let sequence=0;sequence<max;sequence++){let card;try{card=this.core.duelQuery(handle,{controller:player,location:loc,sequence,flags});}catch(error){fail.push(`fixed-slot query failed p${player} loc${loc} seq${sequence}: ${error?.message||error}`);continue;}if(!card||!Number(card.code))continue;const qloc=Number(card.location??loc)||0,qseq=Number(card.sequence??sequence),controller=Number(card.controller??player);if(!(qloc&Number(loc)))fail.push(`card ${card.code} reports impossible location ${qloc} in ${loc}`);if(controller!==player)fail.push(`card ${card.code} controller ${controller} disagrees with queried player ${player}`);if(qseq<0||qseq>=max)fail.push(`card ${card.code} sequence ${qseq} outside location ${loc}`);}}}try{const field=this.core.duelQueryField(handle);if(field?.chain&&!Array.isArray(field.chain))fail.push('duelQueryField returned a non-array Chain.');}catch(error){fail.push(`field query failed: ${error?.message||error}`);}return fail;
+    const M=this.mod,L=M.OcgLocation,Q=M.OcgQueryFlags,flags=(Q.CODE||0)|(Q.POSITION||0)|(Q.OWNER||0),fail=[];for(const player of [0,1]){for(const loc of [L.DECK,L.HAND,L.GRAVE,L.REMOVED,L.EXTRA]){if(loc==null)continue;let count;try{count=Number(this.core.duelQueryCount(handle,player,loc));}catch(error){fail.push(`query count failed p${player} loc${loc}: ${error?.message||error}`);continue;}if(!Number.isInteger(count)||count<0||count>200)fail.push(`impossible count ${count} at p${player} loc${loc}`);}for(const [loc,max] of [[L.MZONE,7],[L.SZONE,8]]){if(loc==null)continue;for(let sequence=0;sequence<max;sequence++){let card;try{card=this.core.duelQuery(handle,{controller:player,location:loc,sequence,flags});}catch(error){fail.push(`fixed-slot query failed p${player} loc${loc} seq${sequence}: ${error?.message||error}`);continue;}if(!card||!Number(card.code))continue;const qloc=Number(card.location??loc)||0,qseq=Number(card.sequence??sequence),controller=Number(card.controller??player);if(!(qloc&Number(loc)))fail.push(`card ${card.code} reports impossible location ${qloc} in ${loc}`);if(controller!==player)fail.push(`card ${card.code} controller ${controller} disagrees with queried player ${player}`);if(qseq<0||qseq>=max)fail.push(`card ${card.code} sequence ${qseq} outside location ${loc}`);}}}try{const field=this.core.duelQueryField(handle);if(field?.chain&&!Array.isArray(field.chain))fail.push('duelQueryField returned a non-array Chain.');}catch(error){fail.push(`field query failed: ${error?.message||error}`);}return fail;
   }
 
   hardeningMessageCardCode(message={}) {
@@ -4459,7 +4459,7 @@ export class IntegratedDuelController {
 
   smokeQuery(handle, player, location) {
     const Q = this.mod.OcgQueryFlags;
-    const flags = Q.CODE | Q.POSITION | Q.TYPE;
+    const flags = Q.CODE | Q.POSITION;
     try {
       return (this.core.duelQueryLocation(handle, {controller:player, location, flags}) || []).filter(Boolean);
     } catch {
@@ -5157,7 +5157,7 @@ export class IntegratedDuelController {
     this.lastSubmittedResponse = null;
     this.smartAutoPassedPrompts = new WeakSet();
     this.suppressNextAutoPlace = false;
-    this.promptView='';this.detailsReturnSnapshot=null;this.detailsDetachedFromChain=false;try{this.cardDetailsOverlay?.remove?.();}catch{}this.cardDetailsOverlay=null;this.cardDetailsTarget=null;this.hidePileHoverOverlay();this.recentRevealBatch=null;this.chainEffectCodes.clear();this.chainEffectSources.clear();this.chainHistory.clear();this.clearChainVisualization({immediate:true});this.resolvingChainLink=0;this.lastActivatedChainLink=0;this.activeEffectCode=0;this.activeEffectDescription='';this.pendingEffectSource=null;this.pendingSpecialSummon=null;this.stagedUnselectCommit=null;this.inlineCardSelection=null;this.opponentActionThisPhase=false;this.smartOptionalChainPhaseOffers.clear();this.finalResult=null;this.pendingResult=null;this.damagePresentationUntil=0;this.pinnedInspector=null;this.hoverLogCardCode=0;this.selectedLogCardCode=0;this.meaningfulResponseWindow=false;this.shiftChainOverrideHeld=false;this.initialDrawSeen=[false,false];this.initialSetupComplete=false;this.pendingDrawArrivals.clear();this.pendingDrawPresentationCounts=[0,0];this.pendingDrawMoveCodes.clear();this.dummyRetryAttempts.clear();this.dummyRejectedResponses.clear();this.dummyPromptFailureCounts.clear();this.dummyRetryNoticeKey='';this.dummyPromptSerial=0;this.lastSubmittedPromptToken=0;this.dummyRpsRound=0;this.dummyPhaseActionCount=0;this.dummyBattleActionCount=0;this.dummySafeModeThisTurn=false;this.dummyActionHistory.clear();this.dummyPlan={turn:0,intents:[],recentCodes:[]};this.duelStateRevision=0;this.monsterTopologyRevision=0;this.lastDeckAccessByPlayer=[null,null];this.lastSummonContext=[null,null];this.dummyMaterialPlanner=null;this.lastAttackContext=null;this.pendingPlayerAttack=null;this.hideCardHoverOverlay();this.clearOpponentEvents();this.promptRevision=0;this.currentPromptRevision=0;this.promptRecoveryCount=0;this.authoritativePendingDecision=null;this.activeDecisionId=0;this.renderedDecisionId=0;if(this.decisionGuardianTimer){clearTimeout(this.decisionGuardianTimer);this.decisionGuardianTimer=0;}this.decisionGuardianRestores=0;this.cancelInformationalGate();if(this.promptVisibilityTimer){clearTimeout(this.promptVisibilityTimer);this.promptVisibilityTimer=0;}if(this.interactionWatchdogTimer){clearTimeout(this.interactionWatchdogTimer);this.interactionWatchdogTimer=0;}this.interactionWatchdogMisses=0;this.interactionWatchdogRevision=0;this.hideResultOverlay();
+    this.promptView='';this.detailsReturnSnapshot=null;this.detailsDetachedFromChain=false;try{this.cardDetailsOverlay?.remove?.();}catch{}this.cardDetailsOverlay=null;this.cardDetailsTarget=null;this.hidePileHoverOverlay();this.recentRevealBatch=null;this.chainEffectCodes.clear();this.chainEffectSources.clear();this.chainHistory.clear();this.clearChainVisualization({immediate:true});this.resolvingChainLink=0;this.lastActivatedChainLink=0;this.activeEffectCode=0;this.activeEffectDescription='';this.pendingEffectSource=null;this.pendingSpecialSummon=null;this.stagedUnselectCommit=null;this.inlineCardSelection=null;this.opponentActionThisPhase=false;this.smartOptionalChainPhaseOffers.clear();this.finalResult=null;this.pendingResult=null;this.damagePresentationUntil=0;this.pinnedInspector=null;this.hoverLogCardCode=0;this.selectedLogCardCode=0;this.meaningfulResponseWindow=false;this.shiftChainOverrideHeld=false;this.initialDrawSeen=[false,false];this.initialSetupComplete=false;this.pendingDrawArrivals.clear();this.pendingDrawPresentationCounts=[0,0];this.pendingDrawMoveCodes.clear();this.dummyRetryAttempts.clear();this.dummyRejectedResponses.clear();this.dummyPromptFailureCounts.clear();this.dummyRetryNoticeKey='';this.dummyPromptSerial=0;this.lastSubmittedPromptToken=0;this.dummyRpsRound=0;this.dummyPhaseActionCount=0;this.dummyBattleActionCount=0;this.dummySafeModeThisTurn=false;this.dummyActionHistory.clear();this.dummyPlan={turn:0,intents:[],recentCodes:[],nextTags:[],lastKind:'',lastCode:0};this.duelStateRevision=0;this.monsterTopologyRevision=0;this.lastDeckAccessByPlayer=[null,null];this.lastSummonContext=[null,null];this.dummyMaterialPlanner=null;this.lastAttackContext=null;this.pendingPlayerAttack=null;this.hideCardHoverOverlay();this.clearOpponentEvents();this.promptRevision=0;this.currentPromptRevision=0;this.promptRecoveryCount=0;this.authoritativePendingDecision=null;this.activeDecisionId=0;this.renderedDecisionId=0;if(this.decisionGuardianTimer){clearTimeout(this.decisionGuardianTimer);this.decisionGuardianTimer=0;}this.decisionGuardianRestores=0;this.cancelInformationalGate();if(this.promptVisibilityTimer){clearTimeout(this.promptVisibilityTimer);this.promptVisibilityTimer=0;}if(this.interactionWatchdogTimer){clearTimeout(this.interactionWatchdogTimer);this.interactionWatchdogTimer=0;}this.interactionWatchdogMisses=0;this.interactionWatchdogRevision=0;this.hideResultOverlay();
     this.cardAnimationPresentationUntil=0;this.actionPresentationUntil=0;this.chainOutcomePresentationUntil=0;this.activeChainSummary=null;this.pendingMoveArrivals.clear();this.liveMonsterStats?.clear?.();this.activeMonsterStatKeys?.clear?.();this.affectedCardOutcomeQueue=[];if(this.currentAffectedCardOutcome?.timer)clearTimeout(this.currentAffectedCardOutcome.timer);this.currentAffectedCardOutcome=null;this.activationPresentationHistory.clear();this.effectTargetPresentationHistory.clear();this.boardWrap?.querySelectorAll?.('.duel-activation-showcase,.duel-effect-target-showcase,.duel-affected-card-showcase').forEach(node=>node.remove());this.root?.querySelectorAll?.('.duel-effect-targeted').forEach(node=>node.classList.remove('duel-effect-targeted'));this.clearPhaseAnnouncements();this.lastPointerClient=null;this.pileHoverRestoredAwaitingPointerMove=false;
     this.syncDuelToggles();this.renderMeta(); this.renderField(); this.renderLog();
     this.log(`Test Duel started. Practice Dummy: ${this.dummyMode==='passive'?'Passive':this.dummyDifficulty}. Format: ${this.duelFormat.toUpperCase()} MR5. Banlist: ${this.currentBanlist()}. First player: ${this.currentFirstPlayer===0?'Player':'Practice Dummy'}.`);
@@ -5653,7 +5653,7 @@ export class IntegratedDuelController {
 
     if(m?.type!==T.RETRY)this.duelStateRevision+=1;
     if (m.type === T.NEW_TURN) {
-      this.turn += 1;this.turnPlayer=Number(m.player);this.opponentActionThisPhase=false;this.meaningfulResponseWindow=false;this.smartOptionalChainPhaseOffers.clear();this.dummyPhaseActionCount=0;this.dummyBattleActionCount=0;this.dummySafeModeThisTurn=false;this.dummyActionHistory.clear();this.dummyPlan={turn:0,intents:[],recentCodes:[]};this.lastAttackContext=null;this.dummyMaterialPlanner=null;this.lastSummonContext=[null,null];this.chainHistory.clear();if(this.turnPlayer!==0)this.recentRevealBatch=null;
+      this.turn += 1;this.turnPlayer=Number(m.player);this.opponentActionThisPhase=false;this.meaningfulResponseWindow=false;this.smartOptionalChainPhaseOffers.clear();this.dummyPhaseActionCount=0;this.dummyBattleActionCount=0;this.dummySafeModeThisTurn=false;this.dummyActionHistory.clear();this.dummyPlan={turn:0,intents:[],recentCodes:[],nextTags:[],lastKind:'',lastCode:0};this.lastAttackContext=null;this.dummyMaterialPlanner=null;this.lastSummonContext=[null,null];this.chainHistory.clear();if(this.turnPlayer!==0)this.recentRevealBatch=null;
       this.log(`Turn ${this.turn} begins - ${m.player===0?'Player':'Practice Dummy'}.`);
     }
     else if (m.type === T.NEW_PHASE) {
@@ -6152,7 +6152,10 @@ export class IntegratedDuelController {
     if (!this.handle || !this.core) return;
     const M = this.mod;
     const Q = M.OcgQueryFlags;
-    const flags = Q.CODE|Q.POSITION|Q.TYPE|Q.LEVEL|Q.RANK|Q.ATTRIBUTE|Q.ATTACK|Q.DEFENSE|Q.OWNER|Q.IS_PUBLIC|Q.LINK|Q.OVERLAY_CARD;
+    // rc242: the ocgcore-wasm query reader has no QUERY_TYPE branch, so a TYPE entry desynchronizes every field
+    // after it (ATK/DEF, owner, public flag, Link data, Xyz materials) and can raise "eof" for whole zones.
+    // The queried type bits are never consumed here, so the flag is omitted.
+    const flags = Q.CODE|Q.POSITION|Q.LEVEL|Q.RANK|Q.ATTRIBUTE|Q.ATTACK|Q.DEFENSE|Q.OWNER|Q.IS_PUBLIC|Q.LINK|Q.OVERLAY_CARD;
 
     for (let p=0; p<2; p++) {
       const target = this.emptyPlayer();
@@ -8916,9 +8919,9 @@ export class IntegratedDuelController {
   }
 
   dummyDifficultyPolicy() {
-    if(this.dummyDifficulty==='casual')return{chainThreshold:55,lowThreatFloor:35,responseValueFloor:145,repeatPenalty:150,planWeight:.2,coveredPenalty:45};
-    if(this.dummyDifficulty==='competitive')return{chainThreshold:105,lowThreatFloor:65,responseValueFloor:165,repeatPenalty:245,planWeight:.65,coveredPenalty:340};
-    return{chainThreshold:150,lowThreatFloor:95,responseValueFloor:180,repeatPenalty:360,planWeight:1,coveredPenalty:Number.POSITIVE_INFINITY};
+    if(this.dummyDifficulty==='casual')return{chainThreshold:55,lowThreatFloor:35,responseValueFloor:145,repeatPenalty:150,planWeight:.2,coveredPenalty:45,mainActionCap:3,endActionCap:4};
+    if(this.dummyDifficulty==='competitive')return{chainThreshold:105,lowThreatFloor:65,responseValueFloor:165,repeatPenalty:245,planWeight:.65,coveredPenalty:340,mainActionCap:5,endActionCap:7};
+    return{chainThreshold:150,lowThreatFloor:95,responseValueFloor:180,repeatPenalty:360,planWeight:1,coveredPenalty:Number.POSITIVE_INFINITY,mainActionCap:8,endActionCap:10};
   }
 
   dummyCurrentChainTop() {
@@ -8929,12 +8932,78 @@ export class IntegratedDuelController {
 
   dummyEffectInteractionKinds(text='') {
     const value=String(text||'').toLowerCase(),kinds=new Set();
-    if(/negate|disable|cannot activate|cannot summon/.test(value))kinds.add('negate');
+    if(/negate|disable|cannot activate|cannot summon|cannot (?:be )?special summon|neither player can|cannot be activated/.test(value))kinds.add('negate');
     if(/destroy/.test(value))kinds.add('destroy');
     if(/banish/.test(value))kinds.add('banish');
     if(/return .* (?:hand|deck)|shuffle .* into the deck/.test(value))kinds.add('return');
     if(/take control|control of/.test(value))kinds.add('control');
     return kinds;
+  }
+
+  // rc242: a chain candidate is a trigger effect of the Dummy's own card (optional "When/If this card..." effects),
+  // not merely an event-activated Trap. Only true triggers bypass the response assessment.
+  dummyChainCandidateIsTrigger(item={}) {
+    const code=this.normalizeActionCode(item?.code);if(!code)return false;
+    const semantic=this.projectIgnisEffectForActionItem(code,item);
+    if(semantic)return (semantic.types||[]).some(token=>/^EFFECT_TYPE_TRIGGER(?:_O|_F)?$/i.test(String(token)));
+    const text=this.conciseEffectText(this.effectLabel(item,'')||this.descriptionText(item?.description,''));
+    return /^(?:If|When) this card\b/i.test(String(text||''));
+  }
+
+  dummyBoardSnapshot() {
+    const players=this.field?.players||[];
+    const side=p=>{const pl=players[p]||{};const monsters=(pl.mzone||[]).filter(Boolean),spells=(pl.szone||[]).filter(Boolean);const value=list=>list.reduce((sum,card)=>sum+Math.abs(this.dummyCardStrategicValue(card,{opponent:p===0})),0);return{monsters,spells,monsterValue:value(monsters),spellValue:value(spells)};};
+    return{own:side(1),opponent:side(0)};
+  }
+
+  // rc242: refuse activations whose only legal outcome hurts the Dummy (board wipes into an empty opponent field,
+  // targeted removal with no opponent target). OCGCore still decides legality; this only ranks the Dummy's own choices.
+  dummyActivationBoardAssessment(item={}) {
+    const none={blocked:false,penalty:0,reason:''};
+    const text=String(this.dummyEffectTextForItem(item)||'').toLowerCase().replace(/\s+/g,' ');if(!text)return none;
+    const board=this.dummyBoardSnapshot(),policy=this.dummyDifficultyPolicy();
+    const opponentOnly=/your opponent(?:'s)? (?:controls|monsters?|spells?|traps?|cards?|field|attack position|spell & trap zone|monster zone)|opponent's (?:monster|spell|trap|card)s?\b|monsters? your opponent controls|cards? your opponent controls/.test(text);
+    const selfOnly=/\byou control\b|from your (?:hand|field|gy|graveyard|deck|extra deck)|in your (?:gy|graveyard|hand|deck)|your (?:gy|graveyard)/.test(text)&&!/on the field|on either field|either player|each player|both players/.test(text);
+    if(opponentOnly||selfOnly)return none;
+    const symmetricWipe=/(?:destroy|banish|return|shuffle|send) all (?:face-up |face-down |other )?(?:monsters|cards|spells?(?: and| &|\/)? ?traps?|spell\/trap cards?)(?: on the field| on either field)?|all (?:monsters|cards) on the field/.test(text);
+    if(symmetricWipe){
+      const hitsMonsters=/all (?:face-up |face-down |other )?(?:monsters|cards)/.test(text),hitsSpells=/all (?:face-up |face-down |other )?(?:cards|spells?)/.test(text);
+      const oppCount=(hitsMonsters?board.opponent.monsters.length:0)+(hitsSpells?board.opponent.spells.length:0);
+      if(!oppCount)return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'would only remove the Dummy own cards'};
+      const opp=(hitsMonsters?board.opponent.monsterValue:0)+(hitsSpells?board.opponent.spellValue:0),own=(hitsMonsters?board.own.monsterValue:0)+(hitsSpells?board.own.spellValue:0);
+      if(own>opp)return{blocked:Number.isFinite(policy.coveredPenalty)===false,penalty:Number.isFinite(policy.coveredPenalty)?policy.coveredPenalty:Number.POSITIVE_INFINITY,reason:'would cost the Dummy more than the opponent'};
+      return none;
+    }
+    if(!/\b(?:destroy|banish|negate|return|shuffle|send|take control)\b/.test(text))return none;
+    const targetsSpellTrap=/\b(?:1|2|3|up to \d) (?:face-up |face-down |set )?(?:spells?\/traps?|spells? or traps?|spells? and traps?|spell cards?|trap cards?|cards? in (?:the |a )?spell & trap zone)/.test(text);
+    const targetsMonster=/\b(?:1|2|3|up to \d) (?:face-up |face-down |set |attack position |defense position |special summoned |effect |level \d+ (?:or (?:lower|higher) )?)?monsters?/.test(text);
+    const targetsAnyCard=/\b(?:1|2|3|up to \d) (?:face-up |face-down |set )?cards? (?:on the field|on either field|your opponent controls)/.test(text);
+    const oppCards=board.opponent.monsters.length+board.opponent.spells.length,ownCards=board.own.monsters.length+board.own.spells.length;
+    if(targetsAnyCard&&!oppCards&&ownCards)return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'has no opponent card to target'};
+    if(targetsSpellTrap&&!targetsMonster&&!board.opponent.spells.length&&board.own.spells.length)return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'has no opponent Spell/Trap to target'};
+    if(targetsMonster&&!targetsSpellTrap&&!board.opponent.monsters.length&&board.own.monsters.length)return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'has no opponent monster to target'};
+    return none;
+  }
+
+  // rc242: what the Dummy would be responding to in this chain window: an opponent Chain Link, or an opponent
+  // summon/attack event exposed through the window timing and the tracked summon/attack context.
+  dummyChainWindowThreat(m={}) {
+    const chainThreat=this.dummyLatestOpponentThreat();if(chainThreat.code)return{...chainThreat,event:'chain'};
+    const H=this.mod?.OcgHintTiming||{},bit=(name,fallback)=>Number(H[name]??fallback)||0;
+    const timing=Number(m?.hint_timing)||0,turn=Number(this.turn)||0;
+    const summonBits=bit('SUMMON',0x40)|bit('SPSUMMON',0x80)|bit('FLIPSUMMON',0x100),attackBits=bit('ATTACK',0x1000),damageBits=bit('DAMAGE_STEP',0x2000)|bit('DAMAGE_CAL',0x4000)|bit('BATTLED',0x8000000);
+    const attack=this.lastAttackContext;
+    if(attack&&Number(attack.attackerController)===0&&Number(attack.turn)===turn&&(!timing||(timing&(attackBits|damageBits)))){
+      const db=attack.attackerCode?this.cardData(attack.attackerCode):null,atk=Math.max(0,Number(db?.attack)||0,Number(attack.expectedDamage)||0);
+      return{score:80+Math.min(220,Math.round(atk/15)),code:0,event:'attack',description:''};
+    }
+    const summon=this.lastSummonContext?.[0];
+    if(summon&&Number(summon.controller)===0&&Number(summon.turn)===turn&&(!timing||(timing&summonBits))&&Math.max(0,Number(this.duelStateRevision)-Number(summon.revision))<=8){
+      const card=this.cardAtLoc(summon)||{code:summon.code,controller:0,location:summon.location,sequence:summon.sequence};
+      return{score:70+Math.min(200,Math.round(Math.abs(this.dummyCardStrategicValue(card,{opponent:true}))/4)),code:0,event:'summon',description:''};
+    }
+    if(Number(this.turnPlayer)===1&&attack&&Number(attack.attackerController)===1&&Number(attack.turn)===turn&&timing&&(timing&damageBits))return{score:80,code:0,event:'own-battle',description:''};
+    return{score:0,code:0,event:'',description:''};
   }
 
   dummyRecentOwnSummon() {
@@ -8944,20 +9013,22 @@ export class IntegratedDuelController {
   }
 
   dummyChainCandidateAssessment(item={},m={}) {
-    if(m.forced||this.chainPromptContainsTriggeredEffect(m))return{blocked:false,penalty:0,reason:''};
+    if(m.forced||this.dummyChainCandidateIsTrigger(item))return{blocked:false,penalty:0,reason:''};
+    const board=this.dummyActivationBoardAssessment(item);if(board.blocked)return board;
     const text=this.dummyEffectTextForItem(item),lower=String(text||'').toLowerCase(),top=this.dummyCurrentChainTop();
     const directActivationNegate=/negate (?:the|that|this|its) (?:activation|summon)\b|negate (?:the )?summon or activation\b|negate (?:that|this|the activated) effect\b/.test(lower);
     const summonNegate=/negate (?:the|that|this) summon\b|negate (?:the )?summon or activation\b/.test(lower);
-    if(Number(top?.controller)===1&&directActivationNegate)return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'would negate the Dummy current Chain Link'};
+    const candidateKinds=this.dummyEffectInteractionKinds(text);
+    if(Number(top?.controller)===1&&(directActivationNegate||candidateKinds.has('negate')))return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'would negate or stop the Dummy current Chain Link'};
     if(!top&&this.dummyRecentOwnSummon()&&summonNegate)return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'would negate the Dummy own summon'};
-    if(Number(top?.controller)!==1||Number(top?.respondsToController)!==0)return{blocked:false,penalty:0,reason:''};
-    const candidateKinds=this.dummyEffectInteractionKinds(text),topText=String(top.description||this.cardDescription(top.code)||''),topKinds=this.dummyEffectInteractionKinds(topText);
-    const overlap=[...candidateKinds].some(kind=>topKinds.has(kind));if(!overlap)return{blocked:false,penalty:0,reason:''};
+    if(Number(top?.controller)!==1||Number(top?.respondsToController)!==0)return board;
+    const topText=String(top.description||this.cardDescription(top.code)||''),topKinds=this.dummyEffectInteractionKinds(topText);
+    const overlap=[...candidateKinds].some(kind=>topKinds.has(kind));if(!overlap)return board;
     const sameCode=this.normalizeActionCode(item.code)===this.normalizeActionCode(top.code);
     if(sameCode)return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'would repeat the same interruption already covering the opponent action'};
     const policy=this.dummyDifficultyPolicy();
     if(!Number.isFinite(policy.coveredPenalty))return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'would spend another interruption on an opponent action already covered'};
-    return{blocked:false,penalty:policy.coveredPenalty,reason:'duplicates an interruption already covering the opponent action'};
+    return{blocked:false,penalty:policy.coveredPenalty+board.penalty,reason:'duplicates an interruption already covering the opponent action'};
   }
 
   dummyCurrentDamagePotential() {
@@ -8971,8 +9042,11 @@ export class IntegratedDuelController {
   }
 
   dummySelectionIntent(prompt={}) {
-    const effect=String(this.inferPromptEffectText?.(prompt)||this.activeEffectDescription||this.pendingEffectSource?.description||'').toLowerCase();
+    const effect=String(this.inferPromptEffectText?.(prompt)||this.activeEffectDescription||this.pendingEffectSource?.description||'').toLowerCase().replace(/\s+/g,' ');
+    const selects=prompt?.selects||[],ownOnly=selects.length>0&&selects.every(item=>Number(item?.controller??1)===1);
     if(/(?:discard|tribute|send).*(?:cost|;)|banish .* from your (?:hand|gy|field)/.test(effect))return'cost';
+    if(/special summon (?:that target|those targets|it|them|both)\b|add (?:that target|those targets|it|them) to (?:your|the) hand|set (?:that target|it) (?:to|on) your field/.test(effect))return'summon';
+    if(ownOnly&&/(?:shuffle|return|banish|send|discard|tribute|release|detach|destroy)[^.;]{0,80}(?:that target|those targets|\bit\b|\bthem\b|this card)|(?:shuffle|return) [^.;]{0,60}(?:into|to) (?:the|your) deck/.test(effect))return'cost';
     if(/destroy|banish|negate|return .* to (?:the )?(?:hand|deck)|take control/.test(effect))return'removal';
     if(/special summon/.test(effect))return'summon';
     if(/add .* hand|search|from your deck/.test(effect))return'search';
@@ -9037,6 +9111,7 @@ export class IntegratedDuelController {
     else if(kind==='spellset')score=230+effectValue*.4;
     else if(kind==='monsterset')score=170+cardValue*.25;
     else if(kind==='tribute')score=250+cardValue*.45;
+    if(kind==='summon'||kind==='monsterset'){const db=code?this.cardData(code):null,desc=String(this.cardDescription(code)||'').toLowerCase(),type=Number(db?.type)||0,atk=Math.max(0,Number(db?.attack)||0),def=Math.max(0,Number(db?.defense)||0);const flip=!!(type&0x200000)||/\bflip:/.test(desc),hasEffect=!!(type&0x20),wall=!flip&&(!hasEffect||!/summon/.test(desc.slice(0,90)))&&def>=atk+500&&atk<1600;if(flip||wall){if(kind==='monsterset')score=545+cardValue+(flip?80:40);else score-=flip?200:130;}if(/\(quick effect\): you can discard this card|discard this card; negate|discard this card, then/.test(desc))score-=300;}
     const key=`${kind}:${code||index}`,repeat=this.dummyActionHistory.get(key)||0;score-=repeat*policy.repeatPenalty;
     const difficulty=this.dummyDifficulty;if(difficulty==='casual')score*=0.76;if(difficulty==='expert'){const arch=String(this.getCardById?.(code)?.archetype||'');if(arch&&arch===this.dummyStrategyProfile?.name)score+=85;if(/add .*deck|search|draw|special summon/.test(effect.toLowerCase()))score+=55;}
     const personality=this.dummyPersonality==='auto'?(this.dummyStrategyProfile?(this.dummyStrategyProfile.controlDensity>this.dummyStrategyProfile.comboDensity?'control':this.dummyStrategyProfile.tags?.battle>4?'aggressive':'combo'):'balanced'):this.dummyPersonality;
@@ -9050,8 +9125,10 @@ export class IntegratedDuelController {
   }
 
   dummyShouldPassChain(m={}) {
-    if(m.forced||this.chainPromptContainsTriggeredEffect(m))return false;
-    const threat=this.dummyLatestOpponentThreat(),choices=(m.selects||[]).map((item,index)=>{const assessment=this.dummyChainCandidateAssessment(item,m),base=this.dummyEffectStrategicScore(this.dummyEffectTextForItem(item),item.code);return{item,index,assessment,value:base-assessment.penalty};}).filter(entry=>!entry.assessment.blocked);if(!choices.length)return true;
+    if(m.forced)return false;
+    const selects=m.selects||[];if(selects.some(item=>this.dummyChainCandidateIsTrigger(item)))return false;
+    const threat=this.dummyChainWindowThreat(m),choices=selects.map((item,index)=>{const assessment=this.dummyChainCandidateAssessment(item,m),base=this.dummyEffectStrategicScore(this.dummyEffectTextForItem(item),item.code);return{item,index,assessment,value:base-assessment.penalty};}).filter(entry=>!entry.assessment.blocked);if(!choices.length)return true;
+    if(!threat.event&&Number(this.turnPlayer)===1)return true;
     const best=Math.max(...choices.map(entry=>entry.value),0),policy=this.dummyDifficultyPolicy(),threatScore=Math.max(0,Number(threat.score)||0);
     return threatScore+best<policy.chainThreshold||(threatScore<policy.lowThreatFloor&&best<policy.responseValueFloor);
   }
@@ -9143,13 +9220,26 @@ export class IntegratedDuelController {
     return this.dummyResponse(m,Math.max(0,Number(attempt)||0));
   }
 
+  // rc242: a face-up monster's own quick effect that tributes or removes itself is held during the Dummy's idle
+  // command; it stays available as a chain response (where the threat context justifies the cost).
+  dummyIdleSelfCostActivation(item={}) {
+    const L=this.mod?.OcgLocation||{},P=this.mod?.OcgPosition||{};
+    if(!((Number(item?.location)||0)&Number(L.MZONE||0)))return false;
+    const text=String(this.dummyEffectTextForItem(item)||'').toLowerCase();
+    if(!/tribute this card|banish this (?:face-up )?card|send this (?:face-up )?card (?:you control )?to the (?:gy|graveyard)|destroy this card/.test(text))return false;
+    const live=this.cardAtLoc(item)||item,position=Number(live?.position)||0;if(position&&!(position&Number(P.FACEUP||5)))return false;
+    const semantic=this.projectIgnisEffectForActionItem(this.normalizeActionCode(item?.code),item),types=semantic?.types||[];
+    if(semantic&&!types.some(token=>/QUICK/i.test(String(token))))return false;
+    return this.dummyBattleValue(live,'attack')>=1500;
+  }
+
   dummyIdleChoices(m){
-    const R=this.mod.OcgResponseType,I=this.mod.SelectIdleCMDAction,ranked=[];
-    const add=(items,kind,action)=>{(items||[]).forEach((item,index)=>ranked.push({response:{type:R.SELECT_IDLECMD,action,index},score:this.dummyIdleActionScore(kind,item,index),kind,item,index}));};
+    const R=this.mod.OcgResponseType,I=this.mod.SelectIdleCMDAction,ranked=[],policy=this.dummyDifficultyPolicy();
+    const add=(items,kind,action)=>{(items||[]).forEach((item,index)=>{if(kind==='activate'&&(this.dummyActivationBoardAssessment(item).blocked||this.dummyIdleSelfCostActivation(item)))return;ranked.push({response:{type:R.SELECT_IDLECMD,action,index},score:this.dummyIdleActionScore(kind,item,index),kind,item,index});});};
     add(m.summons,'summon',I.SELECT_SUMMON);add(m.activates,'activate',I.SELECT_ACTIVATE);add(m.special_summons,'special',I.SELECT_SPECIAL_SUMMON);add(m.pos_changes,'pos',I.SELECT_POS_CHANGE);add(m.spell_sets,'spellset',I.SELECT_SPELL_SET);add(m.monster_sets,'monsterset',I.SELECT_MONSTER_SET);
     const lethal=this.dummyHasImmediateLethal(),hasBoard=(this.field?.players?.[1]?.mzone||[]).some(Boolean);
-    if(m.to_bp)ranked.push({response:{type:R.SELECT_IDLECMD,action:I.TO_BP,index:null},score:lethal?20000:(this.dummyPhaseActionCount>=4?12000:(hasBoard?620:180)),kind:'battle'});
-    if(m.to_ep)ranked.push({response:{type:R.SELECT_IDLECMD,action:I.TO_EP,index:null},score:this.dummyPhaseActionCount>=6?11000:60,kind:'end'});
+    if(m.to_bp)ranked.push({response:{type:R.SELECT_IDLECMD,action:I.TO_BP,index:null},score:lethal?20000:(this.dummyPhaseActionCount>=policy.mainActionCap?12000:(hasBoard?620:180)),kind:'battle'});
+    if(m.to_ep)ranked.push({response:{type:R.SELECT_IDLECMD,action:I.TO_EP,index:null},score:this.dummyPhaseActionCount>=policy.endActionCap?11000:60,kind:'end'});
     if(this.dummySafeModeThisTurn)ranked.forEach(entry=>{if(entry.kind==='battle'||entry.kind==='end')entry.score+=50000;});
     ranked.sort((a,b)=>b.score-a.score||a.index-b.index);
     return ranked.map(entry=>entry.response);
@@ -9175,7 +9265,7 @@ export class IntegratedDuelController {
     const faceupAttack=Number(P.FACEUP_ATTACK)||1,faceupDefense=Number(P.FACEUP_DEFENSE)||4,faceup=Number(P.FACEUP)||5;
     const strategic=Math.min(1800,this.dummyCardStrategicValue(target,{opponent:true})*.55);
     const isFaceup=!!(pos&faceup);if(!isFaceup)return 250+strategic*.15; // Unknown set monster: legal but uncertain.
-    if(pos&faceupAttack){const delta=attackerAtk-this.dummyBattleValue(target,'attack');return delta>=0?5000+delta+strategic:-7000+delta+strategic*.15;}
+    if(pos&faceupAttack){const delta=attackerAtk-this.dummyBattleValue(target,'attack');return delta>0?5000+delta+strategic:delta===0?400+strategic*.5:-7000+delta+strategic*.15;}
     if(pos&faceupDefense){const delta=attackerAtk-this.dummyBattleValue(target,'defense');return delta>0?3500+delta+strategic:delta===0?500+strategic*.3:-1200+delta+strategic*.1;}
     return strategic;
   }
@@ -9204,7 +9294,7 @@ export class IntegratedDuelController {
   dummyBattleChoices(m){
     const R=this.mod.OcgResponseType,B=this.mod.SelectBattleCMDAction,ranked=[];
     (m.attacks||[]).forEach((item,index)=>ranked.push({response:{type:R.SELECT_BATTLECMD,action:B.SELECT_BATTLE,index},score:this.dummyBattleAttackScore(item),kind:'attack'}));
-    (m.chains||[]).forEach((item,index)=>ranked.push({response:{type:R.SELECT_BATTLECMD,action:B.SELECT_CHAIN,index},score:700+this.dummyEffectStrategicScore(this.dummyEffectTextForItem(item),item?.code),kind:'chain'}));
+    (m.chains||[]).forEach((item,index)=>{const text=this.dummyEffectTextForItem(item);if(this.dummyActivationBoardAssessment(item).blocked)return;const trigger=this.dummyChainCandidateIsTrigger(item),battleRelated=/attack|battle|damage|\batk\b/i.test(text);if(!trigger&&!battleRelated)return;ranked.push({response:{type:R.SELECT_BATTLECMD,action:B.SELECT_CHAIN,index},score:(trigger?900:350)+this.dummyEffectStrategicScore(text,item?.code),kind:'chain'});});
     if(m.to_m2)ranked.push({response:{type:R.SELECT_BATTLECMD,action:B.TO_M2,index:null},score:this.dummyBattleActionCount>12?9000:100,kind:'exit'});
     if(m.to_ep)ranked.push({response:{type:R.SELECT_BATTLECMD,action:B.TO_EP,index:null},score:this.dummyBattleActionCount>12?8500:80,kind:'exit'});
     if(this.dummySafeModeThisTurn)ranked.forEach(entry=>{if(entry.kind==='exit')entry.score+=50000;});
@@ -9287,8 +9377,8 @@ export class IntegratedDuelController {
   }
 
   dummyChainChoices(m={}) {
-    const selects=m.selects||[],threat=this.dummyLatestOpponentThreat();
-    return selects.map((item,index)=>{const text=this.dummyEffectTextForItem(item),assessment=this.dummyChainCandidateAssessment(item,m);let value=this.dummyEffectStrategicScore(text,item?.code)-assessment.penalty;if(/negate/i.test(text))value+=Math.min(220,threat.score*1.25);if(/destroy|banish|return/i.test(text))value+=Math.min(130,threat.score*.55);if(this.dummyDifficulty==='expert'&&threat.score<95&&/negate/i.test(text))value-=130;return{index,value,blocked:assessment.blocked};}).filter(entry=>!entry.blocked).sort((a,b)=>b.value-a.value||a.index-b.index).map(entry=>entry.index);
+    const selects=m.selects||[],threat=this.dummyChainWindowThreat(m);
+    return selects.map((item,index)=>{const text=this.dummyEffectTextForItem(item),assessment=this.dummyChainCandidateAssessment(item,m);let value=this.dummyEffectStrategicScore(text,item?.code)-assessment.penalty;if(this.dummyChainCandidateIsTrigger(item))value+=400;if(/negate/i.test(text))value+=Math.min(220,threat.score*1.25);if(/destroy|banish|return/i.test(text))value+=Math.min(130,threat.score*.55);if(this.dummyDifficulty==='expert'&&threat.score<95&&/negate/i.test(text))value-=130;return{index,value,blocked:assessment.blocked};}).filter(entry=>!entry.blocked).sort((a,b)=>b.value-a.value||a.index-b.index).map(entry=>entry.index);
   }
 
   dummyOptionChoices(m={}) {

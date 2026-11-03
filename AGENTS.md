@@ -2,7 +2,7 @@
 
 ## Current baseline
 
-The current development baseline is 3.0.0-alpha.221-duelcore.1-rc241.
+The current development baseline is 3.0.0-alpha.221-duelcore.1-rc242.
 
 This project is a recovered-source continuation. The original native Go source for the rc189 application shell was not available. The current browser entry points, launcher/updater, tests, and release handoff are maintained in Git. The complete recovered-source tree, including web dependencies, artwork, and the verified rc189 native baseline, is distributed in the versioned Source ZIP identified in docs/SOURCE_SNAPSHOT.md. Use that complete snapshot together with newer confirmed Git changes; do not reconstruct missing files from older revisions. tools/patch_embedded_web.py patches the maintained browser assets into the verified rc189 native baseline before the launcher embeds that core executable.
 
@@ -96,6 +96,13 @@ Do not persist updater downloads, caches, staging files, or settings beside the 
 Preserve working deck editor, duel simulator, settings, visual design, rules integration, visual Duel Log, attack effects/audio, Direct Hand/Field selection, Xyz-material handling, shared Extra Monster Zone mapping, and existing user data unless a requested change requires otherwise.
 
 OCGCore remains authoritative for duel legality. UI work must not silently override engine candidate lists or rules decisions.
+
+Practice Dummy gotchas (rc242):
+
+- Every player-bearing field in a core message must be mapped from core to logical numbering in mapCoreMessageValue; CHAINING.triggering_controller was missed until rc242 and silently flipped the Dummy's threat assessment whenever the Dummy went first.
+- Do not request OcgQueryFlags.TYPE in card queries. No published ocgcore-wasm build parses it, and an unparsed entry desynchronizes every later field of that query. tests/test_rc242_practice_dummy_decisions.py guards the refresh flag set.
+- Dummy decision rules live in the dummy* methods at the end of web/js/duel-core.js. Keep "trigger" (a card's own When/If-this-card effect) distinct from event-activated Traps; only the former skips the response assessment.
+- A headless end-to-end Dummy duel can be driven with the real engine (ocgcore-wasm from npm, Project Ignis cards.cdb and CardScripts) by serving web/ plus the /api/duel-engine endpoints and calling the controller's start() with a fixedSetup; see docs/validation/DUELCORE_VALIDATION_alpha221_duelcore1_rc242.txt for the procedure used.
 
 ## Repository layout contract
 

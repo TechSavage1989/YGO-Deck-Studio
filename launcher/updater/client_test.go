@@ -18,7 +18,7 @@ func TestCompareVersions(t *testing.T) {
 	cases := []struct {
 		a, b string
 		want int
-	}{{"3.0.0-alpha.221-duelcore.1-rc240", "3.0.0-alpha.221-duelcore.1-rc241", -1}, {"3.0.0-alpha.221-duelcore.1-rc235", "3.0.0-alpha.221-duelcore.1-rc241", -1}, {"3.0.0-alpha.221-duelcore.1-rc241", "3.0.0-alpha.221-duelcore.1-rc241", 0}, {"3.0.0", "3.0.0-alpha.221-duelcore.1-rc999", 1}}
+	}{{"3.0.0-alpha.221-duelcore.1-rc241", "3.0.0-alpha.221-duelcore.1-rc242", -1}, {"3.0.0-alpha.221-duelcore.1-rc235", "3.0.0-alpha.221-duelcore.1-rc242", -1}, {"3.0.0-alpha.221-duelcore.1-rc242", "3.0.0-alpha.221-duelcore.1-rc242", 0}, {"3.0.0", "3.0.0-alpha.221-duelcore.1-rc999", 1}}
 	for _, tc := range cases {
 		got, err := CompareVersions(tc.a, tc.b)
 		if err != nil || got != tc.want {
@@ -40,8 +40,8 @@ func TestCheckUsesETagAndCachedRelease(t *testing.T) {
 			}
 			w.Header().Set("ETag", "etag-one")
 			json.NewEncoder(w).Encode([]map[string]any{{
-				"tag_name": "v3.0.0-alpha.221-duelcore.1-rc241",
-				"html_url": "https://github.com/TechSavage1989/YGO-Deck-Studio/releases/tag/v3.0.0-alpha.221-duelcore.1-rc241",
+				"tag_name": "v3.0.0-alpha.221-duelcore.1-rc242",
+				"html_url": "https://github.com/TechSavage1989/YGO-Deck-Studio/releases/tag/v3.0.0-alpha.221-duelcore.1-rc242",
 				"body":     "- first\n- second",
 				"assets": []map[string]any{
 					{"name": "update-manifest.json", "browser_download_url": server.URL + "/manifest", "size": 100},
@@ -49,7 +49,7 @@ func TestCheckUsesETagAndCachedRelease(t *testing.T) {
 				},
 			}})
 		case "/manifest":
-			json.NewEncoder(w).Encode(Manifest{Schema: 1, AppID: "com.techsavage1989.ygo-deck-studio", Version: "3.0.0-alpha.221-duelcore.1-rc241", Tag: "v3.0.0-alpha.221-duelcore.1-rc241", AssetName: "YGODeckStudio.exe", SHA256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", Size: 123, Notes: []string{"First change", "Second change"}})
+			json.NewEncoder(w).Encode(Manifest{Schema: 1, AppID: "com.techsavage1989.ygo-deck-studio", Version: "3.0.0-alpha.221-duelcore.1-rc242", Tag: "v3.0.0-alpha.221-duelcore.1-rc242", AssetName: "YGODeckStudio.exe", SHA256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", Size: 123, Notes: []string{"First change", "Second change"}})
 		default:
 			http.NotFound(w, r)
 		}
@@ -81,7 +81,7 @@ func TestRateLimitNeverReportsUpToDate(t *testing.T) {
 		w.WriteHeader(http.StatusTooManyRequests)
 	}))
 	defer server.Close()
-	c := NewClient("com.techsavage1989.ygo-deck-studio", "3.0.0-alpha.221-duelcore.1-rc241", "TechSavage1989", "YGO-Deck-Studio", t.TempDir())
+	c := NewClient("com.techsavage1989.ygo-deck-studio", "3.0.0-alpha.221-duelcore.1-rc242", "TechSavage1989", "YGO-Deck-Studio", t.TempDir())
 	c.APIBase = server.URL
 	c.HTTP = server.Client()
 	u, _ := url.Parse(server.URL)
@@ -99,7 +99,7 @@ func TestRepositoryRenameRedirectsAndCachedRelease(t *testing.T) {
 	const oldPath = "/repos/TechSavage1989/YDO-Deck-Studio/releases"
 	const newPath = "/repos/TechSavage1989/YGO-Deck-Studio/releases"
 	const idPath = "/repositories/1432770484/releases"
-	const version = "3.0.0-alpha.221-duelcore.1-rc241"
+	const version = "3.0.0-alpha.221-duelcore.1-rc242"
 	var redirects, cached int32
 	var server *httptest.Server
 	server = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +136,7 @@ func TestRepositoryRenameRedirectsAndCachedRelease(t *testing.T) {
 	defer server.Close()
 	for _, repo := range []string{"YDO-Deck-Studio", "YGO-Deck-Studio"} {
 		t.Run(repo, func(t *testing.T) {
-			c := NewClient("com.techsavage1989.ygo-deck-studio", "3.0.0-alpha.221-duelcore.1-rc240", "TechSavage1989", repo, t.TempDir())
+			c := NewClient("com.techsavage1989.ygo-deck-studio", "3.0.0-alpha.221-duelcore.1-rc241", "TechSavage1989", repo, t.TempDir())
 			c.APIBase = server.URL
 			// Trust only the test server's certificate and host; retain CheckRedirect.
 			c.HTTP.Transport = server.Client().Transport
@@ -157,7 +157,7 @@ func TestRepositoryRenameRedirectsAndCachedRelease(t *testing.T) {
 }
 
 func TestRepositoryRenameDoesNotRelaxRedirectHosts(t *testing.T) {
-	c := NewClient("com.techsavage1989.ygo-deck-studio", "3.0.0-alpha.221-duelcore.1-rc241", "TechSavage1989", "YGO-Deck-Studio", t.TempDir())
+	c := NewClient("com.techsavage1989.ygo-deck-studio", "3.0.0-alpha.221-duelcore.1-rc242", "TechSavage1989", "YGO-Deck-Studio", t.TempDir())
 	for _, target := range []string{"https://untrusted.invalid/asset", "http://github.com/asset"} {
 		req, err := http.NewRequest(http.MethodGet, target, nil)
 		if err != nil {
@@ -186,7 +186,7 @@ func TestDownloadAndValidateBuiltCandidate(t *testing.T) {
 		switch r.URL.Path {
 		case "/repos/TechSavage1989/YGO-Deck-Studio/releases":
 			json.NewEncoder(w).Encode([]map[string]any{{
-				"tag_name": "v3.0.0-alpha.221-duelcore.1-rc241",
+				"tag_name": "v3.0.0-alpha.221-duelcore.1-rc242",
 				"html_url": "https://example.invalid/release",
 				"body":     "",
 				"assets": []map[string]any{
@@ -195,7 +195,7 @@ func TestDownloadAndValidateBuiltCandidate(t *testing.T) {
 				},
 			}})
 		case "/manifest":
-			json.NewEncoder(w).Encode(Manifest{Schema: 1, AppID: "com.techsavage1989.ygo-deck-studio", Version: "3.0.0-alpha.221-duelcore.1-rc241", Tag: "v3.0.0-alpha.221-duelcore.1-rc241", AssetName: "YGODeckStudio.exe", SHA256: hash, Size: st.Size(), Notes: []string{"Updater test"}})
+			json.NewEncoder(w).Encode(Manifest{Schema: 1, AppID: "com.techsavage1989.ygo-deck-studio", Version: "3.0.0-alpha.221-duelcore.1-rc242", Tag: "v3.0.0-alpha.221-duelcore.1-rc242", AssetName: "YGODeckStudio.exe", SHA256: hash, Size: st.Size(), Notes: []string{"Updater test"}})
 		case "/YGODeckStudio.exe":
 			http.ServeFile(w, r, candidate)
 		default:
@@ -210,7 +210,7 @@ func TestDownloadAndValidateBuiltCandidate(t *testing.T) {
 	c.AllowedHosts = map[string]bool{u.Hostname(): true}
 	c.AutoCooldown = 0
 	c.MaxDownloadBytes = st.Size() + 1024
-	previous := filepath.Join(c.DataDir, "downloads", "3.0.0-alpha.221-duelcore.1-rc240", "YGODeckStudio.exe")
+	previous := filepath.Join(c.DataDir, "downloads", "3.0.0-alpha.221-duelcore.1-rc241", "YGODeckStudio.exe")
 	if err := os.MkdirAll(filepath.Dir(previous), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -251,7 +251,7 @@ func TestWrongIdentityCandidateRejected(t *testing.T) {
 	sum := sha256.Sum256(b)
 	hash := hex.EncodeToString(sum[:])
 	st, _ := os.Stat(candidate)
-	ok, err := validateFile(candidate, hash, st.Size(), "wrong.app.id", "3.0.0-alpha.221-duelcore.1-rc241")
+	ok, err := validateFile(candidate, hash, st.Size(), "wrong.app.id", "3.0.0-alpha.221-duelcore.1-rc242")
 	if ok || err == nil {
 		t.Fatal("wrong identity candidate was accepted")
 	}

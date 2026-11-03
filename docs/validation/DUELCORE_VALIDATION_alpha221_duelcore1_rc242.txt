@@ -1,0 +1,63 @@
+YGO DECK STUDIO 3
+PRACTICE DUMMY VALIDATION REPORT
+Version: v3.0.0-alpha.221-duelcore.1-rc242
+
+BASELINE
+
+Repository: https://github.com/TechSavage1989/YGO-Deck-Studio
+Git parent: 03d4bf7b39b2fb04cf2ce4bf5cf62234768e6434
+Previous published baseline: v3.0.0-alpha.221-duelcore.1-rc241
+Complete rc241 source ZIP: YGO_Deck_Studio_3_v3.0.0-alpha.221-duelcore.1-rc241_Source_Chat.zip (web/duel-core.css, web/js/core.js and web/js/search-list-layout.js taken from it; web/index.html, styles.css, app.js and duel-core.js in the ZIP were byte-identical to the Git checkout before this change).
+Recovered rc189 native baseline: not available in this environment; no native build or packaging was performed.
+
+PRODUCT CHANGE
+
+Practice Dummy decision logic and the Rules Engine field refresh in web/js/duel-core.js (see docs/releases/CHANGELOG_rc242.txt). No UI layout, update client, launcher or packaging change.
+
+VALIDATION METHOD
+
+The browser application (web/index.html, app.js, duel-core.js) was executed headlessly in Chromium 153 (JSPI available) against the real OCGCore engine:
+- ocgcore-wasm 0.1.6 from npm served at /duel-engine/ocgcore, sql.js 1.13.0 at /duel-engine/sqljs
+- Project Ignis cards.cdb (BabelCDB) at /duel-engine/data/cards.cdb and CardScripts (official/ plus base scripts) behind /api/duel-engine/script
+- /api/cards served from cards.cdb converted to the app's card payload format
+- IntegratedDuelController.start() called with a fixedSetup; the Player seat was driven by a scripted responder (passive, or the Dummy policy mirrored) so every decision on both sides was legal and automatic
+- presentation delays and animations disabled; every engine message, Dummy decision and RETRY counted
+
+Deck lists used (fictional sample lists built by card name): a vanilla beatdown list, Blue-Eyes, Salamangreat and Traptrix.
+
+OBSERVED BEFORE THE CHANGE
+
+- Dummy going first: "Chain Link 1 - Player activates Dark Hole" for a Dummy activation; Dummy later chained Linkuriboh (tributing its own freshly summoned Sage) because its own chain link registered as an opponent threat.
+- Dummy activated Dark Hole with only its own two Mystical Elf on the field, and Mystical Space Typhoon targeting its own set Dust Tornado.
+- Dummy activated Ash Blossom & Joyous Spring against its own Fire Formation - Tenki, Vanity's Emptiness on top of its own Traptrix Holeutea Special Summon, and Mirror Force on top of its own Sakuretsu Armor.
+- Blue-Eyes Spirit Dragon tributed itself for a negated Azure-Eyes Silver Dragon on the Dummy's own turn immediately after being Synchro Summoned.
+- Salamangreat Jack Jaguar shuffled the Dummy's best Graveyard monster back into the Deck as its cost.
+- Every duel logged hundreds of "duelQuery failed 1 4 2 Error: eof" warnings for a zone holding a Link or Synchro monster; the zone-query audit showed the app's query flag set returned only code and position for every card, and the same query without QUERY_TYPE returned every requested field.
+
+PASSED CHECKS
+
+PASS - node --check web/js/app.js and web/js/duel-core.js
+PASS - go test ./launcher/updater, including the rc241 to rc242 version comparison
+PASS - python scripts/check_layout.py
+PASS - tests/test_rc242_practice_dummy_decisions.py (new)
+PASS - tests/test_rc236_update_client_timers.py
+PASS - tests/test_rc235_named_identity_legality_explanations.py
+PASS - tests/test_rc234_shared_extra_monster_zones.py
+PASS - tests/test_rc233_xyz_material_and_final_chain.py
+PASS - tests/test_rc232_visual_log_click_routing.py
+PASS - tests/test_rc230_exact_material_autosubmit.py
+PASS - headless Expert duels after the change, 10 turns or to a result, zero RETRY, zero query failures, zero page errors:
+       vanilla vs vanilla (Dummy first, mirrored Player), Blue-Eyes mirror (Dummy first), Salamangreat vs Traptrix Dummy (Player first), vanilla vs Traptrix Dummy (Player first), Salamangreat mirror
+       Observed: Raigeki and Dust Tornado used against Player cards only; Bottomless Trap Hole / Trap Hole / Sakuretsu Armor fired on Player summons and attacks; Traptrix Sera and Rafflesia triggers, Xyz and Link summons, Knightmare Phoenix removal of Player backrow; no self-negation; no Spirit Dragon self-tribute from the idle command
+PASS - headless Casual duel (Blue-Eyes Dummy vs passive Player): 8 turns, Dummy won, zero RETRY
+PASS - headless Passive Dummy duel: ends each turn without actions, zero RETRY
+
+NOT RUN
+
+SKIP - tests/test_rc238_update_banner_clicks.py requires launcher/payload/YGODeckStudioCore.exe from a release build with the recovered native baseline; not available here. The test is unrelated to this change.
+SKIP - Native Windows build, embedded-web patching, installer/restart, rollback.
+
+KNOWN LIMITATIONS
+
+- The shipped rules package's ocgcore-wasm version is not recorded in Git; every published npm version (0.0.34 through 0.1.6) lacks the QUERY_TYPE reader branch, so the flag removal is expected to apply to the shipped package as well.
+- Dummy heuristics are text based (Project Ignis card text and script semantics). Cards whose text does not match the removal/wipe/trigger patterns fall back to the previous ranking.
