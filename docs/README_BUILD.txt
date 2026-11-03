@@ -4,7 +4,7 @@ PACKAGE STATUS
 
 The original native Go project source for the rc189 application shell was not recovered. This package contains the maintained browser source, the verified rc189 native baseline used for local builds, the reproducible embedded-web patcher, and the new source-controlled Windows launcher/updater.
 
-The preserved rc189 core remains authoritative for the native application shell and OCGCore integration. Browser-side changes through rc241 are under web/. The rc241 launcher adds the stable portable filename and safe GitHub Releases update path.
+The preserved rc189 core remains authoritative for the native application shell and OCGCore integration. Browser-side changes through rc242 are under web/. The rc241 launcher adds the stable portable filename and safe GitHub Releases update path.
 
 REBUILDING RC241
 

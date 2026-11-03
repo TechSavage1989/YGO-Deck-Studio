@@ -1,0 +1,19 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc242
+
+Practice Dummy decision fixes (web/js/duel-core.js):
+
+- Chain attribution: Rules Engine chain messages carry the activating player in triggering_controller. That field was never mapped from core to logical player numbering, so whenever the Practice Dummy opened the duel, its own activations were logged as the Player's, and the Dummy treated its own Chain Links as opponent threats (chaining Linkuriboh or negation effects to its own cards). The field is now mapped like player/controller.
+- Trigger handling: a chain window was exempt from every response rule as soon as any candidate looked "triggered", which included event-activated Traps. The Dummy therefore negated its own cards (Ash Blossom on its own Fire Formation - Tenki, Vanity's Emptiness on its own Special Summon) and stacked Mirror Force on top of its own Sakuretsu Armor. Only a card's own trigger effect now bypasses the assessment; every other candidate is judged.
+- Board-aware activations: Dark Hole with only Dummy monsters on the field, Mystical Space Typhoon with only the Dummy's own set card, and similar removal with no opponent target are no longer activated (Expert/Competitive block them; Casual applies a penalty to symmetric wipes).
+- Response windows: the Dummy now recognizes an opponent attack declaration or summon as something worth answering (Sakuretsu Armor, Mirror Force, Trap Hole, Bottomless Trap Hole), and holds its quick effects during its own quiet turn instead of firing them at random phase windows. Face-up monsters' self-tribute quick effects (Blue-Eyes Spirit Dragon) are no longer spent from the idle command.
+- Selections: cost-style targets ("shuffle that target into the Deck") pick the Dummy's least valuable card instead of its best one; equal-ATK attacks are ranked below favorable attacks.
+- Normal Summon vs Set: FLIP monsters and low-ATK/high-DEF walls are Set instead of Normal Summoned in Attack Position.
+- Main Phase action caps are difficulty based (Casual 3, Competitive 5, Expert 8) instead of a flat 4.
+
+Rules Engine field refresh:
+
+- The ocgcore-wasm card query reader has no branch for QUERY_TYPE. Requesting it desynchronized every later field in the query (ATK/DEF, owner, public flag, Link data, Xyz materials) and raised "eof" for entire zones. The field refresh, the hardening invariant check and the smoke query no longer request the unused type bits.
+
+Embedded size budget: web/js/duel-core.js must fit the 798,551-byte slot of the recovered executable after the patcher strips indentation and comments; rc241 had 14 bytes to spare. Sixteen methods that nothing in the application or tests referenced (availableOpponentDeckChoices, cardDetailMeta, chainCandidateVisibleInPlace, chooseDummyModeBeforeDuel, effectDecisionActionLabel, fitExtraDeckViewer, hardeningReadCachedScript, presentCardInspectionGate, printedEffectGateChoices, projectIgnisEffectRoleSummary, renderContextActions, selectionContextEffect, showChainSourceEffect, smartOptionalChainFingerprint, smokeQuery, toggleDummyMode) were removed to make room; the budget is documented in AGENTS.md.
+
+Tests: tests/test_rc242_practice_dummy_decisions.py covers the mapping, trigger detection, board assessment, chain-window rules, selection intent, Set-versus-Summon ranking and the query flag set. Existing focused regressions and updater tests updated to rc242.

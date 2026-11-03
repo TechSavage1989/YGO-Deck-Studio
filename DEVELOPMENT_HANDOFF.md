@@ -2,9 +2,9 @@
 
 ## Latest version
 
-3.0.0-alpha.221-duelcore.1-rc241
+3.0.0-alpha.221-duelcore.1-rc242 (unpublished; Practice Dummy decision fixes and the Rules Engine query flag fix, see docs/releases/CHANGELOG_rc242.txt and docs/validation/DUELCORE_VALIDATION_alpha221_duelcore1_rc242.txt).
 
-Previous published baseline: 3.0.0-alpha.221-duelcore.1-rc240. The owner confirmed the rc240 desktop icon is fixed. Native Windows installation and restart are not inferred from icon confirmation.
+Previous published baseline: 3.0.0-alpha.221-duelcore.1-rc241. Before that: rc240. The owner confirmed the rc240 desktop icon is fixed. Native Windows installation and restart are not inferred from icon confirmation.
 
 ## Source and repository state
 
@@ -95,6 +95,7 @@ The release builder:
 
 ## Current focused tests
 
+- tests/test_rc242_practice_dummy_decisions.py
 - tests/test_rc236_update_client_timers.py
 - tests/test_rc238_update_banner_clicks.py
 - tests/test_rc235_named_identity_legality_explanations.py
@@ -163,3 +164,10 @@ Installed launchers still use `YDO-Deck-Studio`. The existing rc240/rc241 update
 [GitHub documents repository redirects](https://docs.github.com/en/repositories/creating-and-managing-repositories/renaming-a-repository). **Never recreate a repository under the old `YDO-Deck-Studio` name:** doing so would break the redirects used by installed applications. A new application build is not needed solely for the rename.
 
 Local validation passed: repository layout, JavaScript syntax, all updater Go tests (including the existing rc241 executable candidate), `go vet`, and the live feed/download checks above. Local Chromium regression launch was blocked by the execution sandbox, so those browser checks remain for hosted CI. Native Windows installation, restart, shortcut behavior, and rollback were not exercised by this rename verification.
+
+## Practice Dummy decision fixes — 2026-11-03 (rc242)
+
+The Practice Dummy was exercised end to end against the real OCGCore engine (ocgcore-wasm, Project Ignis cards.cdb and CardScripts) in headless Chromium with scripted Player responses. Five defects were fixed in web/js/duel-core.js: unmapped CHAINING.triggering_controller (wrong chain attribution and threat assessment whenever the Dummy opened the duel), "any trigger in the window" disabling every response rule (self-negation, stacked interruptions), board-blind activations (Dark Hole into its own board, Mystical Space Typhoon on its own set card), no recognition of opponent summons/attacks as response events, and cost-style selections choosing the Dummy's best card. The field refresh no longer requests OcgQueryFlags.TYPE, which no ocgcore-wasm build parses and which truncated every later field of each card query. Casual/Competitive/Expert action caps are now difficulty based. tests/test_rc242_practice_dummy_decisions.py guards the new rules. The embedded slot for duel-core.js (798,551 bytes after the patcher's stripping) is nearly full; sixteen unreferenced methods were removed to fit, and AGENTS.md records how to measure the budget before committing.
+
+Not performed here: native Windows build and packaging (no recovered baseline in the environment), tests/test_rc238_update_banner_clicks.py (needs the packaged core), owner playtesting of the Dummy feel at each difficulty.
+
