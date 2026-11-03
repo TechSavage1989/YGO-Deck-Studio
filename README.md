@@ -1,10 +1,23 @@
-<h1 align="center">YGO Deck Studio</h1>
+<p align="center">
+  <img src="web/assets/app_icon.ico" width="112" alt="YGO Deck Studio icon">
+</p>
 
+<h1 align="center">YGO Deck Studio</h1>
 <p align="center"><strong>Build a deck. Test your ideas. Review the duel.</strong></p>
 
-A **Windows desktop deck builder and integrated test-duel application**, with a configurable Practice Dummy, visual Duel Log, replay tools, and a built-in GitHub Releases updater.
+<p align="center">
+  <a href="https://github.com/TechSavage1989/YGO-Deck-Studio/releases">Download</a> ·
+  <a href="#getting-started">Get started</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#screenshots">Screenshots</a> ·
+  <a href="#development">Development</a>
+</p>
 
-<p align="center"><a href="https://github.com/TechSavage1989/YGO-Deck-Studio/releases">Download preview · Releases</a> · <a href="#getting-started">Get started</a> · <a href="#features">Features</a> · <a href="#updates-and-settings">Updates</a> · <a href="#development">Development</a></p>
+<p align="center">
+  <img src="docs/images/hero.png" alt="YGO Deck Studio main window" width="900">
+</p>
+
+A **Windows desktop deck builder and integrated test-duel application**, with a configurable Practice Dummy, visual Duel Log, replay tools, and a built-in GitHub Releases updater.
 
 > **Preview software:** the maintained line is an alpha/release-candidate build. Choose the newest published preview in Releases and read its notes.
 
@@ -15,6 +28,22 @@ A **Windows desktop deck builder and integrated test-duel application**, with a 
 | Create/load decks and organize deck-library directories. | Choose a Practice Dummy deck, intelligence, and turn order. | Inspect the visual Duel Log and replay recorded decisions. |
 | Scan supported deck files, including YDK and YDKE. | Test through the integrated OCGCore rules engine. | Seek through live history and branch with a new decision. |
 | Keep recent decks and reconnect saved library folders. | Use prompt-window or eligible direct hand/field selection. | Reset a duel with its captured setup and a fresh shuffle. |
+
+## Screenshots
+
+Captured from the application's browser UI with a fictional sample card list. Official card artwork is not shown; plain placeholder images stand in for card art.
+
+**Deck and search in List view**
+
+<img src="docs/images/list-view.png" alt="Deck and search in List view" width="900">
+
+**Deck statistics**
+
+<img src="docs/images/statistics.png" alt="Deck statistics" width="900">
+
+**Test Duel setup**
+
+<img src="docs/images/test-duel.png" alt="Test Duel setup" width="900">
 
 ## Download
 
