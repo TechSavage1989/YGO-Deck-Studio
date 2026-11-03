@@ -1,0 +1,50 @@
+YGO DECK STUDIO 3
+DUEL CORE AND PRACTICE DUMMY REVIEW VALIDATION REPORT
+Version: v3.0.0-alpha.221-duelcore.1-rc243
+
+BASELINE
+
+Repository: https://github.com/TechSavage1989/YGO-Deck-Studio
+Git parent: 5563e65cb015334225b08374916c5cf68983e41e (merge of pull request #5, published as v3.0.0-alpha.221-duelcore.1-rc242)
+Previous published baseline: v3.0.0-alpha.221-duelcore.1-rc242, verified from the live feed after publication: six assets, every digest matching CHECKSUMS_SHA256_alpha221_duelcore1_rc242.txt, manifest consistent with YGODeckStudio.exe, and the unchanged rc241 updater client found, downloaded and validated it.
+Recovered rc189 native baseline: taken from the published rc241 Source ZIP for the headless build used below; no Windows execution.
+
+SCOPE OF THE REVIEW
+
+Read and checked against the Rules Engine contract (ocgcore-wasm 0.1.6 types and the EDOPro core protocol):
+- processLoop, prompt detection, RETRY recovery for both seats, core-to-logical player mapping (every engine message field that carries a player index uses player, controller, owner, team or triggering_controller; all are mapped)
+- Player automation: smart optional chain prompts, passive empty windows, Auto Zones, held pass, staged unselect commits
+- Match flow: strict deck validation, Best-of-3 state, loser-chooses turn order, Side Deck swaps, Dummy side-decking, result and concession registration
+- Dummy decisions: idle, battle, chain, yes/no, option, card, tribute, sum, unselect, place, position, counter, sort, announce, rock-paper-scissors
+
+DEFECTS FOUND AND FIXED
+
+- Player optional-chain auto-pass ignored the window timing and passed event windows (own attack Damage Step, own Summon, destruction, banishment). Fixed by reading hint_timing.
+- Dummy position changes used a flat score: monsters toggled between Attack and Defense every Main Phase 2 and walls were flipped face-up. Fixed with a board-aware score.
+- Dummy accepted every LP-cost prompt regardless of its LP. Fixed.
+- Dummy attackers of any ATK rammed unknown set monsters. Fixed for attackers below 1600 ATK.
+- The fixes exceeded the duel-core.js embedded slot by 1,093 bytes. tools/patch_embedded_web.py now compacts whitespace on literal-free lines; processed sizes are 797,018 bytes for duel-core.js (1,533 bytes of headroom) and 437,517 bytes for app.js.
+
+PASSED CHECKS
+
+PASS - node --check web/js/app.js and web/js/duel-core.js (source) and of both files after the patcher's compaction
+PASS - go test ./launcher/updater, including the rc242 to rc243 version comparison
+PASS - python scripts/check_layout.py
+PASS - tests/test_rc243_duel_review.py (new: compactor guarantees, slot-fit assertions, the four behaviour changes)
+PASS - tests/test_rc242_practice_dummy_decisions.py, test_rc236, test_rc235, test_rc234, test_rc233, test_rc232, test_rc230
+PASS - the behavioural parts of the rc230, rc233, rc234, rc235, rc242 regressions re-run against the compacted embedded duel-core.js (only their literal source-text assertions differ, as expected), plus a 10-turn Expert duel on the compacted file: zero RETRY, zero query failures, zero page errors
+PASS - headless stress campaign, 24 duels, 303 turns, real OCGCore engine, Project Ignis cards.cdb and CardScripts, the Player seat scripted (passive or mirrored Dummy policy):
+       decks: vanilla beatdown, Blue-Eyes, Salamangreat, Traptrix in eight pairings; difficulties: Expert, Competitive, Casual; Dummy first and second
+       result: 0 Rules Engine RETRY, 0 card-query failures, 0 duel errors, 0 page errors, 0 Dummy warnings; 10 duels reached a result within 14 turns (Dummy 9, Player 1), 14 were stopped at the turn cap
+       prompt coverage: SELECT_IDLECMD 1317, SELECT_BATTLECMD 440, SELECT_CHAIN 7913, SELECT_CARD 544, SELECT_PLACE 782, SELECT_POSITION 137, SELECT_UNSELECT_CARD 356, SELECT_EFFECTYN 214, SELECT_YESNO 24, SELECT_OPTION 17, SELECT_TRIBUTE 21
+       not exercised by these lists: SELECT_SUM, SELECT_COUNTER, SORT_CARD, SELECT_DISFIELD, ANNOUNCE_*, ROCK_PAPER_SCISSORS (their response shapes were reviewed against the ocgcore-wasm response types)
+
+NOT RUN
+
+SKIP - tests/test_rc238_update_banner_clicks.py from the Git checkout (needs the packaged core); it passed inside the full headless release build performed for rc242 and the build path is unchanged.
+SKIP - Native Windows build, installer/restart, rollback, owner playtesting of the Dummy at each difficulty.
+
+KNOWN LIMITATIONS
+
+- Dummy heuristics are text based; cards whose text does not match the removal, wipe, trigger, cost or position patterns fall back to the previous ranking.
+- Rules legality remains the engine's responsibility: the Dummy only ranks the candidates OCGCore offers, and the campaign's zero RETRY count shows it never submitted an illegal one.

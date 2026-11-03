@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Patch the verified rc242 browser assets into the exact rc189 Go executable.
+"""Patch the verified rc243 browser assets into the exact rc189 Go executable.
 
 This script intentionally supports only the supplied rc189 baseline. It verifies the
 baseline SHA-256 before modifying the Go embed.FS payload, updates the embedded file
@@ -19,7 +19,7 @@ EMBED_TABLE_VA = 0xD6A578
 EMBED_ENTRY_COUNT = 87
 EMBED_ENTRY_SIZE = 48
 NATIVE_VERSION_OLD = b"3.0.0-alpha.221-duelcore.1-rc189"
-NATIVE_VERSION_NEW = b"3.0.0-alpha.221-duelcore.1-rc242"
+NATIVE_VERSION_NEW = b"3.0.0-alpha.221-duelcore.1-rc243"
 PATCH_FILES = (
     "web/index.html",
     "web/styles.css",
@@ -162,6 +162,42 @@ def compact_css_text(text: str) -> str:
         index += 1
     return "".join(out)
 
+_JS_PUNCTUATION = set("=+-*%<>!&|?:,;(){}[]")
+
+def compact_literal_free_js_line(line: str) -> str:
+    """Remove whitespace around punctuation on a line that contains no quote, backtick or slash.
+
+    Such a line cannot contain a string, template, regular expression or comment, so the only
+    whitespace that carries meaning separates two identifier characters or two identical sign
+    operators (``a + +b``); both are preserved.
+    """
+    if any(ch in line for ch in "'\"`/"):
+        return line
+    out: list[str] = []
+    index = 0
+    length = len(line)
+    while index < length:
+        char = line[index]
+        if char not in " \t":
+            out.append(char)
+            index += 1
+            continue
+        end = index
+        while end < length and line[end] in " \t":
+            end += 1
+        previous = out[-1] if out else ""
+        following = line[end] if end < length else ""
+        keep = False
+        if previous and following:
+            if previous not in _JS_PUNCTUATION and following not in _JS_PUNCTUATION:
+                keep = True
+            elif previous in "+-" and following == previous:
+                keep = True
+        if keep:
+            out.append(" ")
+        index = end
+    return "".join(out)
+
 def replacement_bytes(path: Path, embedded_name: str) -> bytes:
     data = path.read_bytes()
     if embedded_name == "web/styles.css":
@@ -192,7 +228,7 @@ def replacement_bytes(path: Path, embedded_name: str) -> bytes:
             if "*/" not in line:
                 in_block_comment = True
             continue
-        lines.append(line)
+        lines.append(compact_literal_free_js_line(line))
     chunks: list[str] = []
     for index, line in enumerate(lines):
         chunks.append(line)
@@ -226,7 +262,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("base_exe", type=Path, help="Exact rc189 baseline executable")
     parser.add_argument("web_root", type=Path, help="Patched web source root")
-    parser.add_argument("output_exe", type=Path, help="Output rc242 executable")
+    parser.add_argument("output_exe", type=Path, help="Output rc243 executable")
     args = parser.parse_args()
     base_bytes = args.base_exe.read_bytes()
     actual_sha = hashlib.sha256(base_bytes).hexdigest()
@@ -258,7 +294,7 @@ def main() -> int:
     print(f"SHA-256: {output_sha}")
     for name, old_size, new_size in changed:
         print(f"{name}: {old_size} bytes -> {new_size} bytes")
-    print(f"Native version constant: rc189 -> rc242 at file offset {native_offset:#x}")
+    print(f"Native version constant: rc189 -> rc243 at file offset {native_offset:#x}")
     return 0
 
 if __name__ == "__main__":
