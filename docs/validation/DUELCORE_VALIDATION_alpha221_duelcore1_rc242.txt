@@ -52,6 +52,10 @@ PASS - headless Expert duels after the change, 10 turns or to a result, zero RET
 PASS - headless Casual duel (Blue-Eyes Dummy vs passive Player): 8 turns, Dummy won, zero RETRY
 PASS - headless Passive Dummy duel: ends each turn without actions, zero RETRY
 
+EMBEDDED SIZE BUDGET
+
+The first CI run of the pull request failed in tools/patch_embedded_web.py: the processed duel-core.js was 807,056 bytes against the 798,551-byte slot of the rc189 executable (rc241 used 798,537). Sixteen unreferenced methods were removed and the new Dummy code tightened; the processed file is now 798,130 bytes (421 bytes of headroom). After the trim: syntax checks, Go tests, all focused browser tests and a 10-turn Expert Traptrix duel (zero RETRY, zero query failures, zero page errors) passed again.
+
 NOT RUN
 
 SKIP - tests/test_rc238_update_banner_clicks.py requires launcher/payload/YGODeckStudioCore.exe from a release build with the recovered native baseline; not available here. The test is unrelated to this change.

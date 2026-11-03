@@ -14,4 +14,6 @@ Rules Engine field refresh:
 
 - The ocgcore-wasm card query reader has no branch for QUERY_TYPE. Requesting it desynchronized every later field in the query (ATK/DEF, owner, public flag, Link data, Xyz materials) and raised "eof" for entire zones. The field refresh, the hardening invariant check and the smoke query no longer request the unused type bits.
 
+Embedded size budget: web/js/duel-core.js must fit the 798,551-byte slot of the recovered executable after the patcher strips indentation and comments; rc241 had 14 bytes to spare. Sixteen methods that nothing in the application or tests referenced (availableOpponentDeckChoices, cardDetailMeta, chainCandidateVisibleInPlace, chooseDummyModeBeforeDuel, effectDecisionActionLabel, fitExtraDeckViewer, hardeningReadCachedScript, presentCardInspectionGate, printedEffectGateChoices, projectIgnisEffectRoleSummary, renderContextActions, selectionContextEffect, showChainSourceEffect, smartOptionalChainFingerprint, smokeQuery, toggleDummyMode) were removed to make room; the budget is documented in AGENTS.md.
+
 Tests: tests/test_rc242_practice_dummy_decisions.py covers the mapping, trigger detection, board assessment, chain-window rules, selection intent, Set-versus-Summon ranking and the query flag set. Existing focused regressions and updater tests updated to rc242.

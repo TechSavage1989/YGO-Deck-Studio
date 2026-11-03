@@ -1,20 +1,7 @@
 const DUEL_BRANCH = 'duelcore.1-rc242';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const DUMMY_CARD_CODE = 89631139; // Blue-Eyes White Dragon: inert Level 8 normal monster.
+const DUMMY_CARD_CODE = 89631139;
+const DUMMY_OK=Object.freeze({blocked:false,penalty:0,reason:''}),DUMMY_BLOCK=reason=>({blocked:true,penalty:Infinity,reason}); // Blue-Eyes White Dragon: inert Level 8 normal monster.
 const SELFTEST_NORMAL_CODE = 43096270; // Alexandrite Dragon: deterministic normal-summon smoke test.
 const SELFTEST_EFFECT_CODE = 55144522; // Pot of Greed: deterministic script/chain/draw smoke test.
 const CARD_IMAGE_BASE = 'https://images.ygoprodeck.com/images/cards/';
@@ -86,9 +73,6 @@ function firstBits(mask, values) {
   return values.filter(v => (mask & v) !== 0);
 }
 
-
-
-
 export function wholeCardViewport(cardCount, cardWidth, gap, availableWidth, paddingStart=0, paddingEnd=paddingStart) {
   const count=Math.max(0,Math.floor(Number(cardCount)||0));
   const width=Math.max(1,Number(cardWidth)||1),space=Math.max(0,Number(gap)||0);
@@ -101,11 +85,6 @@ export function wholeCardViewport(cardCount, cardWidth, gap, availableWidth, pad
   return{visibleCount,viewportWidth,stride:width+space};
 }
 
-
-
-
-
-
 export function wholeCardViewportByStride(cardCount, cardWidth, stride, availableWidth, insetStart=0, insetEnd=insetStart) {
   const count=Math.max(0,Math.floor(Number(cardCount)||0));
   const width=Math.max(1,Number(cardWidth)||1),step=Math.max(width,Number(stride)||width);
@@ -117,9 +96,6 @@ export function wholeCardViewportByStride(cardCount, cardWidth, stride, availabl
   const viewportWidth=start+end+width+Math.max(0,visibleCount-1)*step;
   return{visibleCount,viewportWidth,stride:step};
 }
-
-
-
 
 export function wholeCardRailInsets(cardWidth, stride, insetStart=0, insetEnd=insetStart) {
   const width=Math.max(1,Number(cardWidth)||1),step=Math.max(width,Number(stride)||width);
@@ -135,7 +111,6 @@ export function chainDisplayFootprint(linkCount=1,connectorCount=0,shelfWidth=32
   const baseWidth=Math.min(width,Math.max(220,links*188+connectors*45+20));
   return{baseWidth,width:baseWidth*scale,height:height*scale,scale};
 }
-
 
 function installRc191DuelStyles() {
   if(typeof document==='undefined'||document.getElementById('duelRc191Styles'))return;
@@ -211,13 +186,8 @@ export class IntegratedDuelController {
     this.lastSubmittedPrompt = null;
     this.lastSubmittedResponse = null;
 
-
-
     this.awaitingPlayerResponseAck = null;
     this.playerResponseAckSerial = 0;
-
-
-
 
     this.pendingDecisionLease = null;
 
@@ -226,21 +196,16 @@ export class IntegratedDuelController {
     this.renderedDecisionId = 0;
     this.authoritativePendingDecision = null;
 
-
-
     this.decisionGuardianTimer = 0;
     this.decisionGuardianRestores = 0;
     this.promptDecisionIds = new WeakMap();
     this.pendingRestoredStagedSelection = null;
-
 
     this.stagedCardSelection = null;
     this.inlineCardSelection=null;
     this.promptView = '';
     this.detailsReturnSnapshot = null;
     this.detailsDetachedFromChain = false;
-
-
 
     this.detailsOpenedPromptRevision = 0;
     this.detailsBackgroundPromptDirty = false;
@@ -250,9 +215,6 @@ export class IntegratedDuelController {
     this.recentRevealBatch = null;
     this.chainEffectCodes = new Map();
     this.chainEffectSources = new Map();
-
-
-
 
     this.chainHistory = new Map();
     this.activeChainSummary = null;
@@ -266,7 +228,6 @@ export class IntegratedDuelController {
     this.activationPresentationHistory = new Map();
     this.effectTargetPresentationHistory = new Map();
 
-
     this.promptHomeParent = this.prompt?.parentNode || null;
     this.promptHomeNextSibling = this.prompt?.nextSibling || null;
     this.chainPromptAttached = false;
@@ -277,15 +238,8 @@ export class IntegratedDuelController {
     this.pendingEffectSource = null;
     this.activeEffectDescription = '';
 
-
-
-
     this.projectIgnisSemantics = new Map();
     this.projectIgnisScriptSources = new Map();
-
-
-
-
 
     this.pendingEffectOptionIntent = null;
     this.stagedUnselectCommit = null;
@@ -309,17 +263,12 @@ export class IntegratedDuelController {
     this.animationQueue = [];
     this.actionPresentationUntil = 0;
 
-
     this.cardAnimationPresentationUntil = 0;
-
-
-
 
     this.chainOutcomePresentationUntil = 0;
     this.cardScaleFrame = 0;
     this.boardResizeObserver = null;
     this.autoZoneEnabled = this.readPreference('ygoDuelAutoZones', true);
-
 
     this.confirmChainSelectionsEnabled = this.readPreference('ygoDuelConfirmChainSelections', true);
     this.confirmCardSelectionsEnabled = this.readPreference('ygoDuelConfirmCardSelections', true);
@@ -336,7 +285,6 @@ export class IntegratedDuelController {
     this.duelAnimationsEnabled = this.readPreference('ygoDuelAnimations', true);
     this.actionPresentationEnabled = this.readPreference('ygoDuelActionPresentation', true);
     const legacyActivationShowcaseEnabled=this.readPreference('ygoDuelActivationShowcase',true);
-
 
     this.activationShowcaseEnabled = true;
     this.phasePresentationEnabled = this.readPreference('ygoDuelPhasePresentation', true);
@@ -358,10 +306,6 @@ export class IntegratedDuelController {
     };
     this.chainPlacementPreviewTimer=null;
     this.consolidatedChainSummariesEnabled = this.readPreference('ygoDuelChainSummaries', true);
-
-
-
-
 
     const legacySummaryHover=this.readPreference('ygoDuelChainSummaryHoverCorrelation',true);
     const legacySummaryDetails=this.readPreference('ygoDuelChainSummaryCardDetails',true);
@@ -397,8 +341,6 @@ export class IntegratedDuelController {
     this.soundEffectVolume=Object.fromEntries(this.soundEffectDefinitions().map(([,category])=>[category,this.readNumberPreference(this.soundEffectVolumeStorageKey(category),1,0,1)]));
     this.opponentCardsVisible = this.readPreference('ygoDuelShowOpponentCards', false);
 
-
-
     this.ownDeckViewEnabled = this.readPreference('ygoDuelViewOwnDeck', true);
     this.sfxVolume = this.readNumberPreference('ygoDuelSfxVolume', 0.68, 0, 1);
     this.audioContext = null;
@@ -422,8 +364,6 @@ export class IntegratedDuelController {
     this.meaningfulResponseWindow = false;
     this.shiftChainOverrideHeld = false;
 
-
-
     this.rightPassHoldTimer = 0;
     this.rightPassHoldActive = false;
     this.rightPassSuppressContextMenu = false;
@@ -441,7 +381,6 @@ export class IntegratedDuelController {
     this.dummyRetryNoticeKey = '';
     this.dummyPromptFailureCounts = new Map();
 
-
     this.announceCardCandidateCache = new WeakMap();
     this.hardeningRpsRound = 0;
     this.dummyRpsRound = 0;
@@ -451,11 +390,7 @@ export class IntegratedDuelController {
     this.monsterTopologyRevision = 0;
     this.lastDeckAccessByPlayer = [null, null];
 
-
-
     this.lastSummonContext = [null, null];
-
-
 
     this.dummyMaterialPlanner = null;
     this.lastAttackContext = null;
@@ -475,7 +410,6 @@ export class IntegratedDuelController {
     this.hoverLogCardInfo = null;
     this.selectedLogCardCode = 0;
     this.selectedLogCardInfo = null;
-
 
     this.knownHands = [[], []];
     this.knownExtras = [[], []];
@@ -536,7 +470,6 @@ export class IntegratedDuelController {
     this.currentOpponentNoticeEvent = null;
     this.field = { players: [this.emptyPlayer(), this.emptyPlayer()], chain: [] };
 
-
     this.liveMonsterStats = new Map();
     this.activeMonsterStatKeys = new Set();
     this.bind();
@@ -557,12 +490,9 @@ export class IntegratedDuelController {
     $id('duelEngineRetryBtn')?.addEventListener('click', () => this.restartDuel());
     this.boardWrap?.addEventListener('click', event => {
 
-
       if(event.target.closest?.('.duel-prompt,.duel-prompt-restore'))return;
 
-
       if (event.target.closest?.('.duel-card,.duel-pile,.duel-phase-dock,.duel-zone.legal-target')) return;
-
 
       if(!this.promptMinimized&&this.prompt?.dataset.dismissible==='1'&&['details','pile'].includes(this.promptView)){
         if(this.dismissAuxiliaryViewer())return;
@@ -578,9 +508,6 @@ export class IntegratedDuelController {
     }
     this.root?.addEventListener('contextmenu', event => {
       if(this.root?.hidden)return;
-
-
-
 
       event.preventDefault();
       event.stopPropagation();
@@ -683,9 +610,6 @@ export class IntegratedDuelController {
     this.promptMinimizeButton?.addEventListener('click',()=>this.minimizePrompt());
     this.promptRestoreButton?.addEventListener('click',event=>{event.stopPropagation();this.restorePrompt();});
 
-
-
-
     this.prompt?.addEventListener('click',event=>event.stopPropagation());
     this.syncDuelToggles();
     this.syncInterfaceSettingsMenu();
@@ -693,9 +617,6 @@ export class IntegratedDuelController {
     if(typeof document!=='undefined'&&typeof document.addEventListener==='function')document.addEventListener('pointerdown',event=>{const menu=$id('duelInterfaceSettingsMenu'),btn=$id('duelInterfaceSettingsBtn');if(!menu||menu.hidden)return;if(menu.contains(event.target)||btn?.contains?.(event.target))return;this.toggleInterfaceSettingsMenu(false);});
     if(typeof document!=='undefined'&&typeof document.addEventListener==='function')document.addEventListener('pointerdown',event=>{const menu=$id('duelConsolidatedMenu'),btn=$id('duelConfigMenuBtn');if(!menu||menu.hidden)return;if(menu.contains(event.target)||btn?.contains?.(event.target))return;this.toggleConsolidatedMenu(false);});
     if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') window.addEventListener('resize',()=>{this.scheduleCardScale();this.positionChainVisualization();this.positionOpponentNotice();this.schedulePromptFit();this.scheduleSelectionPromptSizing();this.scheduleExtraDeckViewerFit();});
-
-
-
 
     if(this.boardWrap&&typeof ResizeObserver==='function'){
       this.boardResizeObserver=new ResizeObserver(()=>{this.scheduleCardScale();this.positionChainVisualization();this.positionOpponentNotice();this.schedulePromptFit();this.scheduleSelectionPromptSizing();this.scheduleExtraDeckViewerFit();});
@@ -919,7 +840,6 @@ export class IntegratedDuelController {
 
   async restartDuel() {
 
-
     this.running=false;this.processLoopSerial+=1;this.stopReplayPlayback();
     this.cancelPendingPreDuelChoices();this.starting=false;this.clearSimulatorTaskPrompt({force:true});
     this.forceClearInteractionSurfaces();
@@ -1059,7 +979,6 @@ export class IntegratedDuelController {
   hardeningOfficialCard(card={}) {
     const scope=Number(card.scope)||0;
 
-
     return scope===0||!!(scope&0x3);
   }
 
@@ -1102,9 +1021,6 @@ export class IntegratedDuelController {
 
   hardeningUpstreamScriptlessCodes() {
 
-
-
-
     return new Set([88264978,88264979]);
   }
 
@@ -1133,10 +1049,6 @@ export class IntegratedDuelController {
 
   hardeningSample(values=[],limit=Infinity) {
     if(!Number.isFinite(limit)||values.length<=limit)return[...values];const out=[],step=values.length/Math.max(1,Math.floor(limit));for(let i=0;i<limit;i++)out.push(values[Math.min(values.length-1,Math.floor(i*step))]);return out;
-  }
-
-  async hardeningReadCachedScript(code) {
-    const response=await fetch(`/api/duel-engine/script?local=1&path=${encodeURIComponent(`official/c${Number(code)}.lua`)}`,{cache:'no-store'});return response.ok?response.text():null;
   }
 
   hardeningDiagnostic(type,text) {
@@ -1174,10 +1086,7 @@ export class IntegratedDuelController {
       const audit=await this.hardeningCreateScriptAuditHandle(this.hardeningSeed(start/batchSize,7));
       try{
 
-
-
         for(let index=0;index<batch.length;index++){const card=batch[index],team=index%2,location=(card.type&extraMask)?M.OcgLocation.EXTRA:M.OcgLocation.DECK;await this.core.duelNewCard(audit.handle,{code:card.id,team,duelist:0,controller:team,location,position:P.FACEDOWN_ATTACK,sequence:0});}
-
 
         for(const team of [0,1])await this.core.duelNewCard(audit.handle,{code:DUMMY_CARD_CODE,team,duelist:0,controller:team,location:M.OcgLocation.DECK,position:P.FACEDOWN_ATTACK,sequence:0});
         try{await this.core.startDuel(audit.handle);for(let i=0;i<4;i++){const status=await this.core.duelProcess(audit.handle);this.core.duelGetMessage(audit.handle);if(status!==M.OcgProcessResult.CONTINUE)break;}}catch(error){failures.push({code:0,name:'Audit batch',kind:'startup',error:String(error?.message||error)});}
@@ -1292,8 +1201,6 @@ export class IntegratedDuelController {
       if(name==='BECOME_TARGET'||name==='CARD_TARGET')coverage.dynamic.add('targeting');
       if(name.includes('CONFIRM')||name.includes('SHUFFLE')){coverage.dynamic.add('public-private');coverage.dynamic.add('search-reveal-shuffle');}
 
-
-
       if(name==='WIN'&&Number(m.reason)>=0x10)coverage.dynamic.add('alternate-win');
       if(name.includes('FLIPSUMMON'))coverage.dynamic.add('flip-summon');
       if(name==='SELECT_TRIBUTE')coverage.dynamic.add('tribute-summon');
@@ -1324,15 +1231,12 @@ export class IntegratedDuelController {
     let chain=[];try{chain=this.core.duelQueryField(handle)?.chain||[];}catch{return false;}if(chain.length)return false;
     if(status===this.mod?.OcgProcessResult?.CONTINUE)return true;
 
-
-
     const T=this.mod?.OcgMessageType||{},prompt=[...batch].reverse().find(message=>this.isPrompt(message));
     if(!prompt)return false;
     if(prompt.type===T.SELECT_IDLECMD||prompt.type===T.SELECT_BATTLECMD)return true;
     if(prompt.type===T.SELECT_CHAIN&&!prompt.forced)return true;
     return false;
   }
-
 
   hardeningPromptTypeName(type) { const T=this.mod?.OcgMessageType||{};return Object.entries(T).find(([,value])=>Number(value)===Number(type))?.[0]||`TYPE_${type}`; }
 
@@ -1394,7 +1298,6 @@ export class IntegratedDuelController {
     const maxRunAttempts=replay?1:2;let lastError=null;
     for(let runAttempt=0;runAttempt<maxRunAttempts;runAttempt++){
 
-
       const rng=this.hardeningRng(0x850000+caseIndex),player=this.hardeningDeckForCategory(pools,category,rng),dummy=this.hardeningDeckForCategory(pools,category,rng),seed=this.hardeningSeed(caseIndex,0),coverage={dynamic:new Set(),messageTypes:{}};this.dummyMaterialPlanner=null;let duel=null;
       try{
         duel=await this.hardeningCreateFuzzDuelWithRetry(player,dummy,seed);
@@ -1403,8 +1306,6 @@ export class IntegratedDuelController {
         lastError=error;const metrics=error?.hardeningMetrics||{},kind=String(error?.hardeningKind||''),messageEOF=kind==='core-message-eof',transientEOF=messageEOF||kind==='core-io-eof'||String(error?.message||error).trim().toLowerCase()==='eof';
         const diagnosticSummary=this.hardeningDiagnosticSummary(duel?.diagnostics||[]);error.hardeningCase={category,player,dummy,seed:seed.map(String),setupAttempts:duel?.setupAttempts||1,runAttempts:runAttempt+1,dynamic:[...coverage.dynamic],messageTypes:{...coverage.messageTypes},diagnostics:duel?.diagnostics?.slice(-64)||[],diagnosticSummary,metrics};
         if(transientEOF&&!replay&&runAttempt+1<maxRunAttempts){await this.wait(0);continue;}
-
-
 
         if(messageEOF&&!replay&&!metrics.targetSatisfied&&Number(diagnosticSummary.error||0)===0){return{ended:false,coverageIncomplete:true,completionReason:'core-message-eof-before-target',ioEOF:true,...metrics,category,player,dummy,seed:seed.map(String),setupAttempts:duel?.setupAttempts||1,runAttempts:runAttempt+1,dynamic:[...coverage.dynamic],messageTypes:{...coverage.messageTypes},diagnostics:duel?.diagnostics||[],diagnosticSummary};}
         throw error;
@@ -1478,50 +1379,9 @@ export class IntegratedDuelController {
     try{const response=await fetch('/api/duel-engine/update',{method:'POST'});const status=await response.json();if(!response.ok||!status.ready)throw new Error(status.error||'Rules package update failed.');this.enginePackageStatus=status;this.mod=null;this.core=null;this.db=null;this.projectIgnisSemantics.clear();this.projectIgnisScriptSources.clear();this.setEngineStatus(status.packageId||'Rules package updated','ready');this.toast('Duel rules package updated successfully.');}catch(error){this.setEngineStatus(`Rules update failed: ${error?.message||error}`,'error');this.toast(`Rules update failed: ${error?.message||error}`);}finally{this.clearSimulatorTaskPrompt({force:true});this.renderSimulatorSettings();}
   }
 
-  toggleDummyMode() {
-    this.dummyMode=this.dummyMode==='passive'?'autonomous':'passive';
-    this.writeStringPreference('ygoDuelDummyMode',this.dummyMode);
-    this.syncDuelToggles();
-    this.playSound('select');
-    this.toast(`Practice Dummy mode changed to ${this.dummyMode==='passive'?'Passive':'Autonomous'} for subsequent decisions.`);
-  }
-
-  chooseDummyModeBeforeDuel() {
-    if(!this.prompt||!this.promptBody||!this.promptTitle)return Promise.resolve(this.dummyMode);
-    this.promptView='dummy-mode-start';
-    this.promptMinimized=false;
-    this.prompt.classList.remove('selection-prompt','card-details-prompt','inline-surface-selection-prompt','duel-log-event-prompt','duel-prompt-hidden');
-    this.prompt.classList.add('duel-dummy-mode-prompt');
-    this.promptTitle.textContent='Choose Practice Dummy Intelligence';
-    this.promptBody.replaceChildren();
-    const intro=document.createElement('p');intro.className='duel-selection-purpose';intro.textContent='Choose how strongly the Practice Dummy should play this duel. OCGCore remains authoritative for legal actions at every difficulty.';
-    const choices=document.createElement('div');choices.className='duel-dummy-mode-choice-list';
-    return new Promise(resolve=>{
-      this.preDuelModeResolve=resolve;
-      const choose=value=>{
-        if(value==='passive'){this.dummyMode='passive';this.writeStringPreference('ygoDuelDummyMode','passive');}
-        else{this.setAIDifficulty(value);this.dummyMode='autonomous';}
-        this.syncDuelToggles();this.prompt.classList.remove('duel-dummy-mode-prompt');this.hidePrompt();this.promptView='';this.preDuelModeResolve=null;resolve(this.dummyMode);
-      };
-      const options=[
-        ['Passive','passive','Avoids optional plays and mainly advances phases while handling mandatory rules decisions.'],
-        ['Casual','casual','Avoids obvious self-sabotage while using simpler and more permissive choices.'],
-        ['Competitive','competitive','Evaluates threats, targets, resources, lethal damage, and action sequencing.'],
-        ['Expert','expert','Adds deck-aware planning, avoids redundant responses, and conserves interruption for meaningful threats.'],
-      ];
-      for(const [label,value,detail] of options){const node=this.renderIntegratedEffectChoice(label,detail,()=>choose(value));node.classList.add('duel-dummy-mode-choice');const active=value==='passive'?this.dummyMode==='passive':this.dummyMode!=='passive'&&this.dummyDifficulty===value;if(active)node.classList.add('current-choice');choices.append(node);}
-      this.promptBody.append(intro,choices);this.showPrompt({dismissible:false});this.schedulePromptFit();
-    });
-  }
-
   duelDeckChoiceKey(item={}) {
     const ids=[...(item.deck?.main||[]),...(item.deck?.extra||[]),...(item.deck?.side||[])].map(entry=>Number(entry?.id??entry)||0).join(',');
     return`deck:${String(item.fileName||item.name||'').toLocaleLowerCase()}:${ids}`;
-  }
-
-  availableOpponentDeckChoices() {
-    const seen=new Set(),normalize=(items,source)=>Array.from(items||[]).filter(item=>item?.deck).map(item=>({...item,source,choiceKey:this.duelDeckChoiceKey(item)})).filter(item=>{if(seen.has(item.choiceKey))return false;seen.add(item.choiceKey);return true;});
-    const recent=normalize(this.getRecentDuelDecks?.(),'recent'),library=normalize(this.getDeckLibraryDuelDecks?.(),'library');return{recent,library};
   }
 
   resolveSetupFirstPlayer(value='you') {
@@ -1907,7 +1767,6 @@ export class IntegratedDuelController {
     this.hidePileHoverOverlay();
     this.syncDuelToggles();
 
-
     if(!this.ownDeckViewEnabled&&this.promptView==='pile'&&Number(this.openPileContext?.player)===0&&this.openPileContext?.key==='deck')this.handleBackAction();
     this.renderField();
     this.playSound('select');
@@ -1995,7 +1854,6 @@ export class IntegratedDuelController {
     this.preloadBattleAttackSound(ctx).then(play).catch(()=>{});return true;
   }
 
-
   playGeneratedBattleAttackSound(style='laser') {
     if(this.isReplaySeekReconstruction()||!this.soundEnabled||!this.isSoundEffectEnabled('battle')||this.effectiveSoundVolume('battle')<=0)return false;
     const c=this.ensureAudio();if(!c?.createOscillator||!c?.createGain)return false;const now=c.currentTime+.008,master=c.createGain(),volume=Math.max(.0001,this.effectiveSoundVolume('battle')*.72);master.gain.value=volume;master.connect(c.destination);
@@ -2021,7 +1879,6 @@ export class IntegratedDuelController {
     if(this.isSoundEffectEnabled('shuffle')&&!this.deckShuffleSoundBuffer&&!this.deckShuffleSoundLoadPromise)this.preloadDeckShuffleSound(ctx);
     if(this.isSoundEffectEnabled('battle')&&!this.battleAttackSoundBuffer&&!this.battleAttackSoundLoadPromise)this.preloadBattleAttackSound(ctx);
 
-
     const presets={
       select:[660,.065,'sine',.78],draw:[740,.13,'triangle',.96],summon:[330,.18,'triangle',1.0],special:[440,.22,'sine',1.02],set:[220,.13,'square',.88],position:[220,.13,'square',.88],activate:[880,.16,'sine',.98],chain:[980,.15,'triangle',.98],attack:[150,.24,'sawtooth',1.06],impact:[90,.2,'square',1.04],phase:[520,.15,'sine',.94],damage:[120,.23,'sawtooth',1.04],recover:[620,.21,'sine',.98],move:[300,.1,'triangle',.86],victory:[720,.38,'triangle',1.0],defeat:[90,.2,'square',1.04]
     };
@@ -2043,10 +1900,6 @@ export class IntegratedDuelController {
     this.battleArea=area;this.duelMat=mat;
     const areaRect=area.getBoundingClientRect?.();
     if(!areaRect?.width||!areaRect?.height)return;
-
-
-
-
 
     let availableHeight=0;
     try{
@@ -2070,16 +1923,11 @@ export class IntegratedDuelController {
     if(height>availableHeight){height=availableHeight;width=height*aspect;}
     if(!(width>0&&height>0))return;
 
-
-
     mat.style.width=`${width}px`;
     mat.style.height=`${height}px`;
     mat.style.maxWidth='none';
     mat.style.maxHeight='none';
     mat.style.aspectRatio='9 / 5';
-
-
-
 
     const fieldScale=Math.max(.2,Math.min(1.15,width/900));
     this.boardWrap.style?.setProperty('--duel-field-scale',String(fieldScale));
@@ -2088,13 +1936,6 @@ export class IntegratedDuelController {
   syncCardScale() {
     if(!this.boardWrap||typeof this.boardWrap.querySelector!=='function')return;
     this.syncFieldGeometry();
-
-
-
-
-
-
-
 
     const row=this.boardWrap.querySelector('.duel-zone-row.monster-row');
     const rowRect=row?.getBoundingClientRect?.();
@@ -2132,7 +1973,6 @@ export class IntegratedDuelController {
     this.cardScaleFrame=requestAnimationFrame(()=>{
       this.cardScaleFrame=0;this.syncFieldGeometry();this.syncCardScale();
 
-
       requestAnimationFrame(()=>{this.syncFieldGeometry();this.syncCardScale();});
     });
   }
@@ -2150,7 +1990,6 @@ export class IntegratedDuelController {
     if(typeof html==='string')node.innerHTML=html;
     else node.textContent=safeText(text);
   }
-
 
   syncStyledTextToggle() {
     const button=$id('duelCardTextStylingToggle');if(!button)return;
@@ -2171,9 +2010,6 @@ export class IntegratedDuelController {
 
   dismissAuxiliaryViewer() {
 
-
-
-
     if(this.promptView==='details'&&this.cardDetailsOverlay)return this.closeIndependentCardDetails({restore:true});
     if(!['details','pile'].includes(this.promptView))return false;
     const returnToMinimized=!!this.auxiliaryReturnToMinimized;
@@ -2188,7 +2024,6 @@ export class IntegratedDuelController {
     this.clearLogCardFocus('selected');
     this.inspectCard(0,{}, {transient:true});
     this.promptView='';
-
 
     this.promptTitle?.replaceChildren();
     this.promptBody?.replaceChildren();
@@ -2209,8 +2044,6 @@ export class IntegratedDuelController {
     const T=this.mod?.OcgMessageType||{},R=this.mod?.OcgResponseType||{};
     if(this.promptView==='details'){
       if(this.cardDetailsOverlay)return this.closeIndependentCardDetails({restore:true});
-
-
 
       this.detailsCloseRequested=true;
       try{
@@ -2290,9 +2123,6 @@ export class IntegratedDuelController {
     const rect=card.getBoundingClientRect?.();const style=typeof getComputedStyle==='function'?getComputedStyle(grid):null;
     const gap=parseFloat(axis==='x'?(style?.columnGap||style?.gap||'12'):(style?.rowGap||style?.gap||'12'))||12;
 
-
-
-
     const offsetSize=axis==='x'?Number(card.offsetWidth):Number(card.offsetHeight);const rectSize=axis==='x'?Number(rect?.width):Number(rect?.height);
     const cardSize=offsetSize||rectSize||0;if(cardSize<=0)return null;
     let stride=cardSize+gap;
@@ -2345,15 +2175,10 @@ export class IntegratedDuelController {
     const grid=this.prompt.querySelector?.('.duel-select-card-grid');if(!grid)return;
     const cards=[...grid.querySelectorAll('.duel-prompt-card')];if(!cards.length)return;
 
-
-
-
     this.prompt.style.removeProperty('--duel-selection-card-w');this.prompt.style.removeProperty('--duel-selection-card-h');
     this.prompt.style.removeProperty('--duel-selection-measured-width');this.prompt.style.removeProperty('width');
     for(const prop of ['max-height','overflow-y','overflow-x','grid-template-columns','justify-content'])grid.style.removeProperty(prop);
     grid.classList.remove('duel-selection-grid-scroll');
-
-
 
     const actualExtraViewer=this.promptView==='pile'&&this.openPileContext?.key==='extra'&&this.prompt.classList.contains('duel-extra-deck-viewer-prompt');
     const horizontal=!actualExtraViewer;
@@ -2361,11 +2186,7 @@ export class IntegratedDuelController {
     if(horizontal){
       grid.style.maxHeight='none';grid.style.overflowY='hidden';grid.style.overflowX='auto';grid.style.scrollSnapType='x mandatory';
 
-
-
       const first=cards[0].getBoundingClientRect?.();const style=typeof getComputedStyle==='function'?getComputedStyle(grid):null;
-
-
 
       const cardW=Math.max(1,Math.ceil(Number(cards[0].offsetWidth)||Number(first?.width)||1));
       const cssGap=Math.max(0,parseFloat(style?.columnGap||style?.gap||'12')||12);
@@ -2382,22 +2203,10 @@ export class IntegratedDuelController {
       const promptChrome=Math.max(0,(Number(this.prompt?.offsetWidth)||0)-(Number(this.promptBody?.clientWidth)||0));
       const availableGrid=Math.max(cardW+padStart+padEnd,promptLimit-promptChrome-4);
 
-
       const whole=wholeCardViewportByStride(cards.length,cardW,stride,availableGrid,padStart,padEnd);
       const exactRailWidth=Math.max(1,Math.floor(whole.viewportWidth+0.001));
 
-
       grid.style.setProperty('width',`${exactRailWidth}px`,'important');grid.style.setProperty('min-width',`${exactRailWidth}px`,'important');grid.style.setProperty('max-width',`${exactRailWidth}px`,'important');
-
-
-
-
-
-
-
-
-
-
 
       let contextRailWidth=0;
       const contextRails=[...this.prompt.querySelectorAll?.('.duel-horizontal-context-card-rail')||[]].filter(node=>node!==grid);
@@ -2408,7 +2217,6 @@ export class IntegratedDuelController {
         const contextGapCss=Math.max(0,parseFloat(railStyle?.columnGap||railStyle?.gap||'10')||10);
         const contextMeasuredStride=contextCards.length>1?Number(contextCards[1].offsetLeft)-Number(contextCards[0].offsetLeft):0;
         const contextStride=Number.isFinite(contextMeasuredStride)&&contextMeasuredStride>=contextCardW?contextMeasuredStride:contextCardW+contextGapCss;
-
 
         const contextRawPadStart=parseFloat(railStyle?.paddingLeft||'0')||0,contextRawPadEnd=parseFloat(railStyle?.paddingRight||'0')||0;
         const contextInsets=wholeCardRailInsets(contextCardW,contextStride,contextRawPadStart,contextRawPadEnd),contextPadStart=contextInsets.start,contextPadEnd=contextInsets.end;
@@ -2438,16 +2246,12 @@ export class IntegratedDuelController {
       const criticalText=this.currentPrompt?this.conciseEffectText(this.inferPromptEffectText(this.currentPrompt)):'';
       const criticalContextWidth=criticalText.length>150?Math.min(promptLimit,Math.max(420,Math.min(620,420+Math.ceil((criticalText.length-150)/3)))):0;
 
-
       const measuredPromptWidth=Math.min(promptLimit,Math.max(260,criticalContextWidth,Math.ceil(exactRailWidth+promptChrome+4),Math.ceil(contextRailWidth+promptChrome+4)));
       this.prompt.style.setProperty('--duel-selection-measured-width',`${measuredPromptWidth}px`);
       this.prompt.style.setProperty('width',`${measuredPromptWidth}px`,'important');
       if(this.prompt.classList.contains('duel-chain-attached-prompt')&&this.chainVisualNode)this.chainVisualNode.style.setProperty('--duel-contained-prompt-width',`${measuredPromptWidth}px`);
       grid.dataset.duelVisibleCardCount=String(whole.visibleCount);grid.tabIndex=grid.tabIndex<0?0:grid.tabIndex;
       this.bindCardRailWheelSnap(grid,'x');
-
-
-
 
       const expectsOverflow=cards.length>whole.visibleCount;
       grid.classList.toggle('duel-card-rail-overflow',expectsOverflow);
@@ -2456,8 +2260,6 @@ export class IntegratedDuelController {
       if(!expectsOverflow)grid.scrollLeft=0;else this.snapCardRailToWholeCard(grid,'x');
       const verifyOverflow=()=>{
         if(!grid.isConnected)return;
-
-
 
         const actualOverflow=expectsOverflow&&(Number(grid.scrollWidth)||0)>(Number(grid.clientWidth)||0)+2;
         grid.style.setProperty('overflow-x',actualOverflow?'auto':'hidden','important');
@@ -2479,8 +2281,6 @@ export class IntegratedDuelController {
     const naturalPromptScroll=Math.max(Number(this.prompt.scrollHeight)||0,naturalGridScroll);
     const nonGridHeight=Math.max(48,naturalPromptScroll-naturalGridScroll+8);
     let availableGridHeight=Math.max(48,promptAvailable-nonGridHeight);
-
-
 
     let scale=1;
     if(availableWidth+1<first.width)scale=Math.min(scale,availableWidth/Math.max(1,first.width));
@@ -2559,8 +2359,6 @@ export class IntegratedDuelController {
     const T=this.mod?.OcgMessageType||{};
     if(!message||!this.chainVisuals?.size)return false;
 
-
-
     if(message.type===T.SELECT_IDLECMD||message.type===T.SELECT_BATTLECMD||message.type===T.SELECT_POSITION)return false;
     const live=[...this.chainVisuals.values()].some(item=>!item.resolved&&item.state!=='resolved'&&!item.outcomeState);
     return live||Number(this.resolvingChainLink)>0||message.type===T.SELECT_CHAIN;
@@ -2600,9 +2398,6 @@ export class IntegratedDuelController {
     const heading=document.createElement('div');heading.className='duel-chain-heading';heading.textContent='CHAIN LINKS';
     const links=document.createElement('div');links.className='duel-chain-links';frame.append(heading,links);node.append(frame);
 
-
-
-
     host.append(node);
     this.chainVisualNode=node;return node;
   }
@@ -2633,12 +2428,7 @@ export class IntegratedDuelController {
     const node=this.chainVisualNode;if(!node)return;
     const hide=()=>{
 
-
-
       const liveDecision=this.authoritativePendingDecision&&!this.authoritativePendingDecision.submitted&&this.currentPrompt&&this.pendingResolve;
-
-
-
 
       const liveChainDecision=liveDecision&&this.promptBelongsToActiveChain(this.currentPrompt);
       if(liveChainDecision){
@@ -2647,8 +2437,6 @@ export class IntegratedDuelController {
         this.chainVisualExitActive=false;this.clearChainIndicatorExitGhosts();
         (this.root?.isConnected?this.root:(typeof document!=='undefined'?document:null))?.querySelectorAll?.('.duel-chain-card-indicator-exiting:not(.duel-chain-card-indicator-exit-ghost)')?.forEach(ring=>ring.classList.remove('duel-chain-card-indicator-exiting'));
         this.syncChainSourceHighlights();
-
-
 
         if(!immediate)this.chainVisualHideTimer=setTimeout(hide,240);return;
       }
@@ -2704,12 +2492,6 @@ export class IntegratedDuelController {
     const source=this.chainHistory.get(link)||this.chainEffectSources.get(link)||{},prior=this.chainVisuals.get(link)||{};
     this.chainVisuals.set(link,{...prior,link,code,loc:{...loc},controller:Number(source.controller??loc.controller)||0,description:String(source.description||''),respondsToLink:Number(source.respondsToLink)||0,state:prior.state||'waiting',outcomeState:prior.outcomeState||'',resolved:!!prior.resolved});
     this.renderChainVisualization();this.syncChainSourceHighlights();
-  }
-
-  showChainSourceEffect(link,code,loc={}) {
-
-
-    return;
   }
 
   chainOutcomeDescriptor(outcome='Resolved') {
@@ -2845,7 +2627,6 @@ export class IntegratedDuelController {
   showAnchoredActionIndicator(anchor,state='source',duration=1250) {
     if(!anchor?.isConnected||typeof document==='undefined')return;
 
-
     const marker=document.createElement('div');marker.className=`duel-anchored-action-indicator ${String(state).replace(/[^a-z0-9-]+/gi,'-').toLowerCase()}`;marker.setAttribute('aria-hidden','true');anchor.classList.add('duel-action-indicator-host');anchor.append(marker);setTimeout(()=>{marker.remove();if(!anchor.querySelector?.('.duel-anchored-action-indicator'))anchor.classList.remove('duel-action-indicator-host');},Math.max(250,Number(duration)||1250));
   }
 
@@ -2854,15 +2635,12 @@ export class IntegratedDuelController {
     const descriptor=this.chainOutcomeDescriptor(outcome),normalized=descriptor.key;
     if(!this.duelAnimationsEnabled||!this.chainOutcomeEffectsEnabled||!this.boardWrap)return;
 
-
     if(normalized==='resolving'||normalized==='resolved'||normalized==='moved')return;
     const duration=Math.max(900,descriptor.duration);
     const targetKey=[Number(loc.controller)||0,Number(loc.location)||0,Number(loc.sequence)||0,Number(code)||0].join(':');
     const recentTarget=normalized==='targeted'&&Date.now()-Number(this.effectTargetPresentationHistory?.get?.(targetKey)||0)<6000;
     if(recentTarget){this.traceSession?.('duplicate-target-result-suppressed',{code:Number(code)||0,chainLink:Number(chainLink)||0});return;}
     const queued=this.queueAffectedCardOutcomePresentation({code,outcome:normalized,chainLink,controller:Number(loc.controller)||0,location:Number(loc.location)||0,sequence:Number(loc.sequence)||0,presentationIdentity:loc.presentationIdentity||null,ordered:!!options?.ordered});
-
-
 
     if(queued){this.traceSession?.('chain-result-uses-primary-popup',{code:Number(code)||0,chainLink:Number(chainLink)||0,outcome:normalized});return;}
     if(Number(chainLink)>0&&Number(code)){this.traceSession?.('duplicate-chain-result-presentation-suppressed',{code:Number(code),chainLink:Number(chainLink),outcome:normalized});return;}
@@ -2904,7 +2682,6 @@ export class IntegratedDuelController {
     const terminal=['negated','disabled','failed'].includes(String(state));
     const outcomeState=terminal?String(state):(prior.outcomeState||'');
 
-
     this.chainVisuals.set(link,{...prior,state:outcomeState||state,outcomeState});this.renderChainVisualization();this.syncChainSourceHighlights();
   }
 
@@ -2915,7 +2692,6 @@ export class IntegratedDuelController {
     this.chainVisuals.set(link,{...prior,state,outcomeState:prior.outcomeState||'',resolved:true});this.renderChainVisualization();this.syncChainSourceHighlights();
 
     const complete=[...this.chainVisuals.values()].length>0&&[...this.chainVisuals.values()].every(item=>item.resolved||item.state==='resolved'||item.outcomeState);
-
 
     if(complete)this.traceSession('chain-links-visually-resolved-awaiting-chain-end',{links:this.chainVisuals.size});
   }
@@ -2958,8 +2734,6 @@ export class IntegratedDuelController {
     const links=[...wrap.querySelectorAll('.duel-chain-link')],connectors=[...wrap.querySelectorAll('.duel-chain-connector')];
     if(!links.length)return;
 
-
-
     const boardWidth=Math.max(1,Number(this.boardWrap?.clientWidth)||Number(this.root?.clientWidth)||Number(globalThis.innerWidth)||1);
     const available=Math.max(1,Math.min(1080,Number(node.clientWidth)||boardWidth-24));
     const baseLink=188,baseConnector=45,minScale=.24;
@@ -2969,7 +2743,6 @@ export class IntegratedDuelController {
     node.style.setProperty('--duel-chain-scale',scale.toFixed(3));
     node.style.setProperty('--duel-chain-link-w',`${Math.round(baseLink*scale)}px`);
     node.style.setProperty('--duel-chain-connector-w',`${Math.round(baseConnector*scale)}px`);
-
 
     wrap.classList.remove('duel-chain-overflow');
   }
@@ -3009,8 +2782,6 @@ export class IntegratedDuelController {
       return;
     }
 
-
-
     const opponentHand=board.querySelector?.('.duel-hand.opponent'),mat=board.querySelector?.('.duel-mat');
     const handRect=opponentHand?.getBoundingClientRect?.(),matRect=mat?.getBoundingClientRect?.();
     const handBottom=handRect?.height?handRect.bottom-boardRect.top:0;
@@ -3025,8 +2796,6 @@ export class IntegratedDuelController {
     const scope=this.root?.isConnected?this.root:(typeof document!=='undefined'?document:null);if(!scope?.querySelectorAll)return[];
     const key=this.locationKey(Number(item.location)||0);if(!['hand','mzone','szone'].includes(key))return[];
     const nodes=[...scope.querySelectorAll('.duel-card[data-player][data-location][data-sequence]')];
-
-
 
     return nodes.filter(node=>this.chainIndicatorNodeMatches(node,item));
   }
@@ -3105,9 +2874,6 @@ export class IntegratedDuelController {
     else matches=matches.filter(node=>{const key=String(node?.dataset?.location||'');if(player===0||['grave','removed'].includes(key))return true;const src=String(node.querySelector?.('img')?.getAttribute?.('src')||'').toLowerCase();return !!src&&!src.includes('placeholder')&&!src.includes('card_back');});
     if(!matches.length)return[];
 
-
-
-
     const identities=new Set(matches.map(node=>`${node.dataset.player}|${node.dataset.location}|${node.dataset.sequence}|${this.normalizeActionCode(node.dataset.code)}`));
     if(identities.size===1)return matches;
     if(allowMoved){const locations=new Set(matches.map(node=>String(node.dataset.location||'')));if(locations.size===1){const key=[...locations][0];if(['grave','removed','extra'].includes(key)){const scope=this.root?.isConnected?this.root:(typeof document!=='undefined'?document:null),pile=scope?.querySelector?.(`.duel-pile[data-player="${player}"][data-location="${key}"]`);if(pile)return[pile];}}}
@@ -3134,12 +2900,7 @@ export class IntegratedDuelController {
     if(deckToHand){
       const toPlayer=Number(to.controller)||0,moveCode=this.animationCodeVisible(message.card,to),arrivalKey=this.drawArrivalKey(toPlayer,Number(to.sequence)||0);
 
-
-
       if(toPlayer===1&&!this.opponentCardsVisible&&!moveCode)return null;
-
-
-
 
       if(this.consumePendingDrawMove(toPlayer,moveCode)||this.pendingDrawArrivals.has(arrivalKey))return null;
       this.pendingDrawArrivals.add(arrivalKey);this.pendingDrawPresentationCounts[toPlayer]=(Number(this.pendingDrawPresentationCounts[toPlayer])||0)+1;this.rememberPendingDrawMove(toPlayer,moveCode);
@@ -3155,8 +2916,6 @@ export class IntegratedDuelController {
     if(this.isReplaySeekReconstruction())return;
     const item={kind,player:Number(player)||0,location:Number(location)||0,sequence:Number(sequence)||0,code:Number(code)||0,delay:Math.max(0,Number(delay)||0),chainLink:Number(chainLink)||0,actionLabel:String(actionLabel||''),showcase:showcase!==false};
     if(kind==='flip'){
-
-
 
       const duplicate=this.animationQueue.find(entry=>entry?.kind==='flip'&&Number(entry.player)===item.player&&Number(entry.location)===item.location&&Number(entry.sequence)===item.sequence);
       if(duplicate){if(item.code)duplicate.code=item.code;return duplicate;}
@@ -3189,15 +2948,11 @@ export class IntegratedDuelController {
     const L=this.mod?.OcgLocation||{};const start=this.rectForLocation({controller:player,location:L.DECK,sequence:0},{preferCard:false});
     const arrivalKey=this.drawArrivalKey(player,sequence),normalized=this.normalizeActionCode(code);
 
-
-
     const prior=this.animationQueue.find(item=>item?.kind==='draw-flight'&&item.origin==='move'&&!item.drawMatched&&Number(item.to?.controller)===Number(player)&&this.normalizeActionCode(item.code)===normalized);
-
 
     const dealerBeat=140;
     if(prior){const others=this.animationQueue.filter(item=>item!==prior&&item?.kind==='draw-flight'&&Number(item.to?.controller)===Number(player));if(others.length)delay=Math.max(delay,...others.map(item=>Math.max(0,Number(item.delay)||0)+dealerBeat));if(prior.arrivalKey)this.pendingDrawArrivals.delete(prior.arrivalKey);prior.to={controller:player,location:L.HAND,sequence};prior.arrivalKey=arrivalKey;prior.delay=delay;prior.drawMatched=true;prior.origin='draw+move';this.pendingDrawArrivals.add(arrivalKey);this.consumePendingDrawMove(player,code);return;}
     const queued=this.animationQueue.filter(item=>item?.kind==='draw-flight'&&Number(item.to?.controller)===Number(player));if(queued.length)delay=Math.max(delay,...queued.map(item=>Math.max(0,Number(item.delay)||0)+dealerBeat));
-
 
     this.pendingDrawArrivals.add(arrivalKey);this.pendingDrawPresentationCounts[Number(player)||0]=(Number(this.pendingDrawPresentationCounts[Number(player)||0])||0)+1;this.rememberPendingDrawMove(player,code);
     this.animationQueue.push({kind:'draw-flight',origin:'draw',drawMatched:true,from:{controller:player,location:L.DECK,sequence:0},to:{controller:player,location:L.HAND,sequence},code:Number(code)||0,start,delay,arrivalKey});
@@ -3211,7 +2966,6 @@ export class IntegratedDuelController {
   expectedBattleDamage(attacker={},target=null,direct=false) {
     const atk=Math.max(0,Number(attacker?.attack)||0);if(direct)return atk;if(!target)return 0;
     const P=this.mod?.OcgPosition||{},attackMask=Number(P.ATTACK||0)||Number(P.FACEUP_ATTACK||0)||1;
-
 
     if(!(Number(target.position)&attackMask))return 0;
     return Math.abs(atk-Math.max(0,Number(target.attack)||0));
@@ -3257,17 +3011,12 @@ export class IntegratedDuelController {
     setTimeout(()=>{source?.classList.remove('duel-attack-source-cue');target?.classList.remove('duel-attack-target-cue','duel-direct-target-cue');},500);
   }
 
-
   queueLpAnimation(player,delta,context={}) {
     if(this.isReplaySeekReconstruction()){const p=Number(player)||0,value=Number(context?.displayValue);if(!Array.isArray(this.displayLp))this.displayLp=[...(this.lp||[8000,8000])];this.displayLp[p]=Number.isFinite(value)?value:Number(this.lp?.[p]??this.displayLp[p]??8000);return;}
     const item={kind:'lp',player:Number(player)||0,delta:Number(delta)||0,...(context||{})};this.animationQueue.push(item);
     if(item.delta<0&&item.lethalPresentation){
       const now=(typeof performance!=='undefined'&&typeof performance.now==='function')?performance.now():Date.now();
       const startsAt=now+Math.max(0,Number(item.delay)||0);
-
-
-
-
 
       const damageAnimationMs=1450;
       const postDamageResultDelayMs=250;
@@ -3295,7 +3044,6 @@ export class IntegratedDuelController {
     },500);
   }
 
-
   showLpScreenFlash(player,delta,{directAttack=false,attackerCode=0,lethal=false}={}) {
     if(!this.boardWrap||typeof document==='undefined')return;const loss=Number(delta)<0;if(!loss)return;
     const damagedPlayer=Number(player)===1?1:0,amountValue=Math.abs(Number(delta)||0),tier=lethal?'lethal':amountValue>=3000?'massive':amountValue>=1500?'heavy':'standard';
@@ -3311,14 +3059,11 @@ export class IntegratedDuelController {
     const screen=document.createElement('div');screen.className=`duel-damage-screen ${damagedPlayer===0?'player':'opponent'}${directAttack?' direct-attack':''} duel-damage-${tier}`;screen.style.setProperty('--battle-intensity',String(this.battleEffectScale()));screen.setAttribute('aria-hidden','true');this.boardWrap.append(screen);
     const particles=document.createElement('div');particles.className=`duel-damage-particles duel-damage-${tier}`;const count=tier==='standard'?8:tier==='heavy'?14:22;for(let i=0;i<count;i++){const particle=document.createElement('i');particle.style.setProperty('--particle-angle',`${(360/count)*i}deg`);particle.style.setProperty('--particle-distance',`${48+(i%5)*13}px`);particles.append(particle);}flash.append(particles);if(tier!=='standard'){this.boardWrap.classList.add(`duel-damage-shake-${tier}`);setTimeout(()=>this.boardWrap?.classList.remove(`duel-damage-shake-${tier}`),520);}
 
-
     setTimeout(()=>{flash.remove();screen.remove();},2400);
   }
 
   playLpAnimation(item) {
     const player=Number(item?.player)||0;const node=this.lpNodes[player];const wrap=node?.closest?.('.duel-player-summary');if(!node||!wrap)return;
-
-
 
     if(Number.isFinite(Number(item?.displayValue))){
       if(!Array.isArray(this.displayLp))this.displayLp=[Number(this.lp?.[0])||0,Number(this.lp?.[1])||0];
@@ -3358,13 +3103,10 @@ export class IntegratedDuelController {
       if(settled){
         settled.classList.remove('duel-arrival-pending');
 
-
-
         if(isDraw){settled.classList.add('duel-arrival-quiet');setTimeout(()=>settled?.classList.remove('duel-arrival-quiet'),180);}
       }
     };
     if(typeof img.animate==='function'){
-
 
       const frames=[
         {transform:`translate(-50%,-50%) scale(1)${startRot}`,opacity:1},
@@ -3394,8 +3136,6 @@ export class IntegratedDuelController {
     const transform=(z,y)=>`translate(-50%,-50%) rotate(${z}deg) rotateY(${y}deg)`;
     const finish=()=>{overlay.remove();destination.classList.remove('duel-flip-pending');};
     if(typeof overlay.animate!=='function'){finish();return;}
-
-
 
     const first=overlay.animate([
       {transform:transform(fromAngle,0),filter:'brightness(1)'},
@@ -4177,7 +3917,6 @@ export class IntegratedDuelController {
   showPrompt({dismissible=false}={}) {
     if (!this.prompt) return;
 
-
     if(this.currentPrompt&&Number(this.promptDecisionIds?.get(this.currentPrompt)||0)===Number(this.activeDecisionId||0)){
       this.prompt.classList.remove('duel-prompt-awaiting-ack');
       this.prompt.querySelector?.('.duel-prompt-ack-status')?.remove();
@@ -4212,9 +3951,6 @@ export class IntegratedDuelController {
   minimizePrompt() {
     if(!this.prompt||this.prompt.classList.contains('duel-prompt-hidden'))return;
 
-
-
-
     const inlineChainSelection=!!(this.chainPromptAttached&&this.prompt.classList.contains('inline-surface-selection-prompt'));
     if(inlineChainSelection){this.restorePromptHome();this.chainVisualNode?.classList?.add('duel-chain-inline-selection-minimized');}
     this.promptMinimized=true;
@@ -4231,8 +3967,6 @@ export class IntegratedDuelController {
     this.prompt.classList.remove('duel-prompt-hidden');
     if(this.promptRestoreButton)this.promptRestoreButton.hidden=true;
 
-
-
     this.syncChainPromptAttachment(this.currentPrompt);
     this.scheduleSelectionPromptSizing();this.schedulePromptFit();
     if(this.chainVisualNode&&!this.chainVisualNode.hidden){const run=()=>this.positionChainVisualization();if(typeof requestAnimationFrame==='function')requestAnimationFrame(run);else run();}
@@ -4240,8 +3974,6 @@ export class IntegratedDuelController {
   }
 
   revealPromptForInspection() {
-
-
 
     const wasMinimized=!!this.promptMinimized;if(!this.prompt)return wasMinimized;
     if(wasMinimized){this.promptMinimized=false;this.prompt.classList.remove('duel-prompt-hidden');if(this.promptRestoreButton)this.promptRestoreButton.hidden=true;}
@@ -4261,15 +3993,11 @@ export class IntegratedDuelController {
     const explicitPileViewer=this.promptView==='pile'&&!!this.openPileContext;
     if(this.prompt.classList.contains('duel-direct-pile-viewer-prompt')&&explicitPileViewer){this.prompt.classList.remove('duel-prompt-scroll','duel-prompt-compact','duel-prompt-tight');this.fitPileViewer();return;}
 
-
-
     if(this.prompt.classList.contains('duel-extra-deck-viewer-prompt')||this.prompt.classList.contains('duel-direct-pile-viewer-prompt'))this.clearExtraDeckViewerPresentation();
 
     this.prompt.classList.remove('duel-prompt-scroll','duel-prompt-compact','duel-prompt-tight');
     const available=this.selectionPromptAvailableHeight();
     this.prompt.style.setProperty('--duel-prompt-max-height',`${available}px`);
-
-
 
     const overflows=()=>Number(this.prompt.scrollHeight)>available+2;
     if(overflows())this.prompt.classList.add('duel-prompt-compact');
@@ -4289,20 +4017,12 @@ export class IntegratedDuelController {
     this.clearChainSummaryHoverPortal();this.hideDirectSurfaceSelectionDock();
     if (!this.prompt) return false;
 
-
-
     if(!force&&this.promptView==='details'&&!this.detailsCloseRequested)return false;
-
-
 
     if(!force&&this.running&&this.authoritativePendingDecision&&!this.authoritativePendingDecision.submitted&&this.promptUsesVisibleSurface(this.authoritativePendingDecision.message)){
       const restore=()=>this.restoreAuthoritativeDecisionSurface();if(typeof queueMicrotask==='function')queueMicrotask(restore);else setTimeout(restore,0);
       return false;
     }
-
-
-
-
 
     if(!force&&this.running&&this.currentPrompt&&this.pendingResolve&&this.promptUsesVisibleSurface(this.currentPrompt)){
       const restore=()=>this.ensureCurrentPromptVisible({forceRender:true});if(typeof queueMicrotask==='function')queueMicrotask(restore);else setTimeout(restore,0);
@@ -4454,16 +4174,6 @@ export class IntegratedDuelController {
     } catch (error) {
       try { this.core.destroyDuel(handle); } catch {}
       throw error;
-    }
-  }
-
-  smokeQuery(handle, player, location) {
-    const Q = this.mod.OcgQueryFlags;
-    const flags = Q.CODE | Q.POSITION;
-    try {
-      return (this.core.duelQueryLocation(handle, {controller:player, location, flags}) || []).filter(Boolean);
-    } catch {
-      return [];
     }
   }
 
@@ -4681,8 +4391,6 @@ export class IntegratedDuelController {
     try { raw = BigInt(value); } catch { return null; }
     if (raw <= 0n) return null;
 
-
-
     const code = Number(raw >> 20n);
     const index = Number(raw & 0xfffffn);
     if (!(code > 0 && index >= 0 && index < 16)) return null;
@@ -4700,9 +4408,6 @@ export class IntegratedDuelController {
     code=this.normalizeActionCode(code);if(!code)return'';
     const ref=this.descriptionReference(description);
 
-
-
-
     if(!ref||this.normalizeActionCode(ref.code)!==code)return'';
     const label=this.conciseEffectText(ref.text||'');if(!label)return'';
     if(this.effectChoiceGateText(label))return label;
@@ -4711,19 +4416,14 @@ export class IntegratedDuelController {
     if(!candidates.length)return label;
     const needle=this.normalizedEffectMatchText(label);
 
-
     const exactMatches=candidates.filter(candidate=>this.normalizedEffectMatchText(candidate)===needle);
     if(exactMatches.length===1)return exactMatches[0];
     const containment=candidates.filter(candidate=>{const n=this.normalizedEffectMatchText(candidate);return !!n&&!!needle&&(n.includes(needle)||needle.includes(n));});
     if(containment.length===1)return containment[0];
 
-
-
-
     const stop=new Set(['this','card','the','a','an','to','from','your','you','it','of','and','or','that','its','is','be','as','effect','activate','choose','one','can']);
     const tokens=[...new Set(needle.split(' ').filter(token=>token.length>1&&!stop.has(token)))];
     if(tokens.length>=3){const tokenMatches=candidates.filter(candidate=>{const words=new Set(this.normalizedEffectMatchText(candidate).split(' '));return tokens.every(token=>words.has(token));});if(tokenMatches.length===1)return tokenMatches[0];}
-
 
     return label;
   }
@@ -4740,14 +4440,12 @@ export class IntegratedDuelController {
     const exact=this.conciseEffectText(this.exactEffectTextFromDescription(code,description,{allowIndexFallback:false}));
     const exactGate=[exact,rawClient].find(value=>value&&this.effectChoiceGateText(value))||'';
 
-
     if(exactGate&&storedText&&!this.effectChoiceGateText(storedText)&&!this.genericEffectText(storedText))return{text:storedText,specific:true,full,gate:false};
     if(exact&&!this.effectChoiceGateText(exact)&&!this.genericEffectText(exact))return{text:exact,specific:true,full,gate:false};
     if(exactGate)return{text:exactGate,specific:false,full,gate:true};
     if(storedText&&this.effectChoiceGateText(storedText))return{text:storedText,specific:false,full,gate:true};
     if(storedText&&!this.genericEffectText(storedText))return{text:storedText,specific:true,full,gate:false};
     if(candidates.length===1&&full)return{text:candidates[0],specific:true,full,gate:false};
-
 
     return{text:'',specific:false,full,gate:false};
   }
@@ -4780,9 +4478,6 @@ export class IntegratedDuelController {
 
   cardEffectVerbiage(code, label='') {
 
-
-
-
     code=this.normalizeActionCode(code);const raw=this.conciseEffectText(label);if(!code)return raw;
     if(!raw||this.genericEffectText(raw))return'';
     const candidates=this.effectSentenceCandidates(this.cardDescription(code)||'').map(v=>this.conciseEffectText(v)).filter(Boolean);if(!candidates.length)return raw;
@@ -4807,7 +4502,6 @@ export class IntegratedDuelController {
 
   renderIntegratedEffectChoice(label,description,onSelect,{code=0,decline=false,singleText=false}={}) {
 
-
     const button=document.createElement('button');button.type='button';button.className=`duel-option-choice duel-effect-choice${decline?' decline':''}${singleText?' single-text':''}`;
     const heading=document.createElement('strong');heading.className='duel-option-choice-label';if(singleText&&code)this.setStyledCardText(heading,String(label||'Choose'),code);else heading.textContent=String(label||'Choose');button.append(heading);
     if(description){const detail=document.createElement('div');detail.className='duel-option-choice-effect';if(code)this.setStyledCardText(detail,String(description),code);else detail.textContent=String(description);button.append(detail);}
@@ -4825,19 +4519,6 @@ export class IntegratedDuelController {
     const label=this.actionShortLabel(action?.label||'Action');const effectAction=action?.label==='Activate'||action?.label==='Chain';
     if(effectAction){const choice=this.renderIntegratedEffectChoice(label,String(action?.detail||'').trim(),onSelect,{code:Number(code)||0});choice.classList.add('duel-viewed-card-effect-action');this.decorateActionVisual(choice,action,code);return choice;}
     const button=this.button(label,onSelect,{ghost:action?.label!=='Attack'});button.classList.add('duel-viewed-card-action');this.decorateActionVisual(button,action,code);return button;
-  }
-
-  effectDecisionActionLabel(effectText='',code=0,{responding=false}={}) {
-    const exact=this.conciseEffectText(effectText);const name=code?this.cardName(code):'this card';
-    if(!exact)return responding?`Respond with ${name}`:`Activate ${name}'s effect`;
-
-
-
-    let operation=exact;const colon=operation.indexOf(':');if(colon>=0&&colon<operation.length-1)operation=operation.slice(colon+1).trim();
-    operation=operation.replace(/^you can\s+/i,'').trim();
-    const sentences=operation.split(/(?<=[.!?])\s+/).filter(Boolean);if(sentences.length)operation=sentences[0].trim();
-    if(operation.length>92){const cut=operation.slice(0,92);const at=Math.max(cut.lastIndexOf(';'),cut.lastIndexOf(','),cut.lastIndexOf(' '));operation=`${cut.slice(0,at>48?at:92).trim()}…`;}
-    return responding?`Respond: ${operation}`:operation;
   }
 
   renderOptionChoice(option,index,prompt,onSelect) {
@@ -4880,7 +4561,6 @@ export class IntegratedDuelController {
     for(const m of text.matchAll(/LOCATION_[A-Z0-9_]+/g))locations.add(m[0]);
     for(const m of text.matchAll(/RACE_[A-Z0-9_]+/g))races.add(m[0]);
     for(const m of text.matchAll(/TYPE_[A-Z0-9_]+/g))cardTypes.add(m[0]);
-
 
     if(/Duel\.(?:CheckReleaseGroupCost|SelectReleaseGroupCost|SelectTribute)\s*\(/.test(text))locations.add('LOCATION_MZONE');
     return{tags:[...tags],hints:[...hints],locations:[...locations],races:[...races],cardTypes:[...cardTypes],hasSelection:tags.has('select-card')||hints.size>0};
@@ -4945,13 +4625,8 @@ export class IntegratedDuelController {
     const locTokens=new Set();const L=this.mod?.OcgLocation||{};for(const item of selected){const loc=Number(item?.location)||0;if(loc&Number(L.HAND||0))locTokens.add('LOCATION_HAND');if(loc&Number(L.DECK||0))locTokens.add('LOCATION_DECK');if(loc&Number(L.GRAVE||0))locTokens.add('LOCATION_GRAVE');if(loc&Number(L.REMOVED||0))locTokens.add('LOCATION_REMOVED');if(loc&Number(L.MZONE||0))locTokens.add('LOCATION_MZONE');if(loc&Number(L.SZONE||0))locTokens.add('LOCATION_SZONE');if(loc&Number(L.EXTRA||0))locTokens.add('LOCATION_EXTRA');}
     const matchesSelection=(effect,role)=>{const meta=effect?.handlerSemantics?.[role];if(!meta?.hasSelection)return null;const known=new Set(meta.locations||[]);if(locTokens.size&&known.size&&![...locTokens].some(token=>known.has(token)||known.has('LOCATION_ONFIELD')))return null;return{role,effect,meta,code,source:'ProjectIgnis/CardScripts'};};
 
-
     const exact=this.projectIgnisEffectSemantic(code,context?.descriptionId??m?.description??0,context||{});
     if(exact){for(const role of order){const match=matchesSelection(exact,role);if(match)return match;}return null;}
-
-
-
-
 
     const matches=[];for(const effect of model.effects){for(const role of order){const match=matchesSelection(effect,role);if(match){matches.push(match);break;}}}
     return matches.length===1?matches[0]:null;
@@ -5048,12 +4723,6 @@ export class IntegratedDuelController {
     if(key.includes('send to the gy'))return'sent to the GY';if(key.includes('add to your hand'))return'added to your hand';if(key.includes('return to the deck'))return'returned to the Deck';if(key.includes('return to the hand'))return'returned to the hand';if(key.includes('special summon'))return'Special Summoned';if(key==='target')return'targeted';return'';
   }
 
-  projectIgnisEffectRoleSummary(code,description=0,context={}) {
-    const effect=this.projectIgnisEffectSemantic(code,description,context);if(!effect)return'';const parts=[];
-    if(effect.handlers?.cost)parts.push('cost');if(effect.handlers?.target)parts.push('target');if(effect.handlers?.operation)parts.push('resolution');
-    return parts.length?`Project Ignis script semantics: ${parts.join(' + ')}`:'';
-  }
-
   cardScriptFallbackCodes(code) {
     code=Number(code)||0;if(!code||!this.db)return[];const row=this.queryCardRow(code);if(!row)return[];const out=[],seen=new Set([code]),add=value=>{value=Number(value)||0;if(value&&!seen.has(value)){seen.add(value);out.push(value);}};
     add(row.alias);
@@ -5073,14 +4742,11 @@ export class IntegratedDuelController {
     if(!source&&cardMatch){const requested=Number(cardMatch[1])||0;for(const fallback of this.cardScriptFallbackCodes(requested)){const fallbackPath=`official/c${fallback}.lua`;source=await this.fetchCardScriptSource(fallbackPath);if(source){if(!this.cardScriptFallbacks)this.cardScriptFallbacks=new Map();this.cardScriptFallbacks.set(requested,fallback);break;}}}
     if (!source) {
 
-
       const optionalCardScript = /^(?:official\/)?c\d+\.lua$/i.test(path);
       const optionalCompatibilityScript = new Set(['proc_unofficial.lua']).has(path.toLowerCase());
       if (!optionalCardScript && !optionalCompatibilityScript) this.log(`Missing script: ${path}`);
       return null;
     }
-
-
 
     this.ingestProjectIgnisScript(path,source);
     return source;
@@ -5090,11 +4756,8 @@ export class IntegratedDuelController {
     const modes=this.mod?.OcgDuelMode||{};
     const base=modes.MODE_MR5??0;
 
-
-
     let flags=typeof base==='bigint'?BigInt(base):BigInt(Number(base)||0);
     if(this.duelFormat==='tcg')for(const value of [modes.TCG_SEGOC_NONPUBLIC,modes.TCG_SEGOC_FIRSTTRIGGER])if(value!=null)flags|=BigInt(value);
-
 
     return typeof base==='bigint'?flags:Number(flags);
   }
@@ -5171,8 +4834,6 @@ export class IntegratedDuelController {
     const adverse=type===T.CHAIN_NEGATED||type===T.CHAIN_DISABLED;
     const result=successful||adverse;
 
-
-
     const minimum=Math.round((type===T.CHAINING?360:type===T.CHAIN_SOLVING?0:adverse?520:successful?0:300)*scale);
     const comprehension=Math.round((adverse?620:successful?0:type===T.CHAINING?120:0)*scale);
     return{result,successful,adverse,minimum,comprehension};
@@ -5182,9 +4843,6 @@ export class IntegratedDuelController {
     const chainMessages=(messages||[]).filter(message=>this.isChainPresentationMessage(message));
     if(!chainMessages.length||!this.duelAnimationsEnabled||!this.actionPresentationEnabled)return;
     const message=chainMessages.at(-1),profile=this.chainPresentationProfile(message),started=Date.now();
-
-
-
 
     const barrier=profile.result?Math.max(
       started+profile.minimum,
@@ -5233,11 +4891,6 @@ export class IntegratedDuelController {
     this.informationalGateSerial+=1;const resolve=this.informationalGateResolve;this.informationalGateResolve=null;if(resolve)resolve(false);
   }
 
-  presentCardInspectionGate(data={}) {
-
-    return Promise.resolve(true);
-  }
-
   gameplayCardCountWidth(count=0) {
     count=Math.max(1,Number(count)||1);if(count===1)return 300;if(count===2)return 390;if(count===3)return 500;if(count===4)return 610;return 780;
   }
@@ -5258,9 +4911,6 @@ export class IntegratedDuelController {
         const inspectionGate=this.playerInspectionGateData(message);
         if(inspectionGate){
 
-
-
-
           if(this.recentRevealBatch)this.recentRevealBatch.gated=false;
         }
         if(message.type===T.NEW_PHASE){
@@ -5273,9 +4923,6 @@ export class IntegratedDuelController {
       }
       this.refreshField();
       if(!this.isReplaySeekReconstruction()){this.renderAll();this.playQueuedAnimations();if(deferred.length)await this.presentationDelay(deferred);}
-
-
-
 
       if(this.pendingResult){
         this.running=false;
@@ -5295,15 +4942,9 @@ export class IntegratedDuelController {
         return;
       }
 
-
-
-
       const emittedPrompt=[...messages].reverse().find(m=>this.isPrompt(m));
       if(emittedPrompt)this.traceSession('core-prompt',{status:Number(status),signature:this.replayPromptSignature(emittedPrompt),prompt:this.traceSafeObject(emittedPrompt)});
       if (status === R.CONTINUE && !emittedPrompt) {
-
-
-
 
         continue;
       }
@@ -5318,9 +4959,6 @@ export class IntegratedDuelController {
       if (rejected && !prompt) prompt = this.lastSubmittedPrompt;
       if (!prompt && this.awaitingPlayerResponseAck?.prompt && Number(this.awaitingPlayerResponseAck.prompt.player)===0) {
 
-
-
-
         prompt=this.awaitingPlayerResponseAck.prompt;
         rejected=true;
         this.pendingRestoredStagedSelection=this.awaitingPlayerResponseAck.stagedCardSelection?{...this.awaitingPlayerResponseAck.stagedCardSelection,indices:[...(this.awaitingPlayerResponseAck.stagedCardSelection.indices||[])]}:null;
@@ -5332,7 +4970,6 @@ export class IntegratedDuelController {
       if (!prompt) {
         throw new Error(`Rules Engine paused without a supported player decision. Message types: ${messages.map(m=>m.type).join(', ') || 'none'}.`);
       }
-
 
       if(!rejected){this.awaitingPlayerResponseAck=null;this.acknowledgePendingDecisionLease({preserveVisible:!!prompt});}
 
@@ -5351,10 +4988,6 @@ export class IntegratedDuelController {
       if(!response&&this.liveReplayBranch?.ready&&this.liveReplayBranch.awaitingContinue&&Number(prompt.player)===1){await this.awaitLiveReplayBranchContinue();if(!this.running||!this.handle||loopSerial!==this.processLoopSerial)return;}
       if(!response&&Number(prompt.player)===1){
 
-
-
-
-
         if(rejected)dummyPromptToken=Number(this.lastSubmittedPromptToken)||Number(this.dummyPromptSerial)||1;
         else{dummyPromptToken=(Number(this.dummyPromptSerial)||0)+1;this.dummyPromptSerial=dummyPromptToken;}
         const retryKey=`${dummyPromptToken}|${this.dummyPromptKey(prompt)}`;
@@ -5367,9 +5000,6 @@ export class IntegratedDuelController {
           if(attempt>64)throw new Error(`Practice Dummy exceeded the bounded recovery limit for duel decision ${prompt.type}.`);
           this.dummySafeModeThisTurn=true;
           const escape=this.dummyMode==='passive'?this.dummyPassiveResponse(prompt,attempt):this.dummyEscapeResponse(prompt,attempt);const rejectedSet=this.dummyRejectedResponses.get(retryKey)||new Set();
-
-
-
 
           if(escape&&!rejectedSet.has(this.dummyResponseFingerprint(escape)))response=escape;
           else response=this.nextDummyResponse(prompt,retryKey,attempt);
@@ -5462,11 +5092,8 @@ export class IntegratedDuelController {
       if(n)this.insertKnownLinear(this.knownDecks[player],loc,{...card,isHidden:player===1&&!this.opponentCardsVisible});
     } else if(key==='hand'){
 
-
-
       if(n)this.insertKnownLinear(this.knownHands[player],loc,card);
     } else if(key==='extra'){
-
 
       const faceup=!!(pos & (P.FACEUP||0));
       if((player===0&&n)||(player===1&&faceup&&n))this.insertKnownLinear(this.knownExtras[player],loc,card);
@@ -5484,8 +5111,6 @@ export class IntegratedDuelController {
         const faceup=!!(pos & (P.FACEUP||0));
         const rulesKnown=player===0||faceup||!!legallyKnown;
         const displayKnown=rulesKnown||this.opponentCardsVisible;
-
-
 
         this.knownField[player][key][seq]={...card,code:displayKnown?n:0,isHidden:!displayKnown,legallyKnown:rulesKnown,testerVisible:player===1&&!rulesKnown&&this.opponentCardsVisible};
       }
@@ -5626,8 +5251,6 @@ export class IntegratedDuelController {
     const location=locations.length===1?locations[0]:0;
     const locationName=location?formatLocation(this.mod,location):'';
 
-
-
     const rulesVisible=recipient===0||actor===0;
     const visibleCards=rulesVisible?cards:[];
     return {recipient,actor,mode,cards,visibleCards,location,locationName,effect:active,rulesVisible};
@@ -5649,7 +5272,6 @@ export class IntegratedDuelController {
   consumeMessage(m) {
     const T = this.mod.OcgMessageType;
     const P = this.mod.OcgPosition||{};
-
 
     if(m?.type!==T.RETRY)this.duelStateRevision+=1;
     if (m.type === T.NEW_TURN) {
@@ -5677,9 +5299,6 @@ export class IntegratedDuelController {
     }
     else if (T.CONFIRM_CARDS!=null&&m.type===T.CONFIRM_CARDS) {
 
-
-
-
       const ctx=this.confirmCardsPresentation(m),{recipient,actor,mode,cards,visibleCards,locationName,effect}=ctx;
       const count=cards.length,ownerWord=actor===0?'their':'its';
       const place=locationName?` from ${ownerWord} ${locationName}`:'';
@@ -5695,7 +5314,6 @@ export class IntegratedDuelController {
       }
     }
     else if ((T.CONFIRM_DECKTOP!=null&&m.type===T.CONFIRM_DECKTOP)||(T.CONFIRM_EXTRATOP!=null&&m.type===T.CONFIRM_EXTRATOP)) {
-
 
       const player=Number(m.player)||0,source=Array.isArray(m.cards)?m.cards:Array.isArray(m.decktop)?m.decktop:Array.isArray(m.extratop)?m.extratop:[];
       const cards=source.map(card=>({code:Number(card?.code??card)||0,position:Number(card?.position)||0,controller:Number(card?.controller??card?.player??player),location:Number(card?.location)||0,sequence:Number(card?.sequence)||0})).filter(card=>card.code);
@@ -5748,7 +5366,6 @@ export class IntegratedDuelController {
     else if (T.SHUFFLE_HAND != null && m.type === T.SHUFFLE_HAND) {
       const player=Number(m.player);if(Array.isArray(m.cards)){this.knownHands[player]=m.cards.map((code,sequence)=>({code:Number(code)||0,position:0,sequence,controller:player,location:this.mod.OcgLocation.HAND})).filter(c=>c.code);}
 
-
     }
     else if (T.SHUFFLE_EXTRA != null && m.type === T.SHUFFLE_EXTRA) {
       const player=Number(m.player)||0;if(Array.isArray(m.cards)){this.knownExtras[player]=m.cards.map((code,sequence)=>({code:Number(code)||0,position:P.FACEDOWN_ATTACK||0,sequence,controller:player,location:this.mod.OcgLocation.EXTRA,isHidden:player===1&&!this.opponentCardsVisible}));}this.log(`${player===0?'Player':'Practice Dummy'} Extra Deck is shuffled/reordered.`);
@@ -5762,8 +5379,6 @@ export class IntegratedDuelController {
       const amount=Number(m.amount)||0,directCtx=this.directAttackContextForDamage(m.player),attackCtx=this.lastAttackContext&&Number(this.lastAttackContext.turn)===Number(this.turn)?this.lastAttackContext:null,cause=directCtx?null:this.currentResolutionCause();
       this.lp[m.player]=Math.max(0,this.lp[m.player]-amount);
       if(attackCtx)this.updateAttackFxDamage(attackCtx,amount,{lethal:Number(this.lp[m.player])<=0});
-
-
 
       const now=(typeof performance!=='undefined'&&typeof performance.now==='function'?performance.now():Date.now());
       const damageDelay=attackCtx?Math.max(0,Number(attackCtx.damageAnimationNotBeforeAt||0)-now):0;
@@ -5832,10 +5447,7 @@ export class IntegratedDuelController {
     }
     else if (T.CHAIN_END!=null && m.type===T.CHAIN_END) {
 
-
-
       this.finalizeChainSummary();this.chainHistory.clear();this.chainEffectSources.clear();this.chainEffectCodes.clear();this.resolvingChainLink=0;this.lastActivatedChainLink=0;this.activeEffectCode=0;this.activeEffectDescription='';this.pendingEffectSource=null;this.meaningfulResponseWindow=false;
-
 
       this.scheduleChainVisualizationCompletion(900,{waitForAssociated:true});
     }
@@ -5906,8 +5518,6 @@ export class IntegratedDuelController {
     else if (T.BECOME_TARGET!=null && m.type===T.BECOME_TARGET) {const cards=Array.isArray(m.cards)?m.cards:[],cause=this.currentResolutionCause();if(cards.length){this.log(`Target selected: ${cards.map(loc=>{const c=this.cardAtLoc(loc);return c?.code?this.cardName(c.code):formatLocation(this.mod,loc.location);}).join(', ')}${cause?` by ${this.cardName(cause.code)}'s effect`:''}.`,{type:'target',cards:cards.map(loc=>this.cardAtLoc(loc)?.code).filter(Boolean).map(code=>({code})),cause:cause||undefined,controller:cause?.controller});if(cause?.chainLink)cards.forEach(loc=>{const targetCode=Number(this.cardAtLoc(loc)?.code)||0;this.recordChainSummaryCardOutcome(cause.chainLink,{...loc,code:targetCode,outcome:'Targeted'});this.showCardOutcomeEffect(loc,'Targeted',cause.chainLink,targetCode);});}}
     else if (m.type === T.WIN) {
 
-
-
       if(!this.pendingResult&&!this.finalResult){
         const text=m.player===0?'Player wins the duel.':m.player===1?'Practice Dummy wins the duel.':'The duel ends in a draw.';
         this.log(text);
@@ -5948,8 +5558,6 @@ export class IntegratedDuelController {
   showOpponentEvent({title='',code=0,effect='',detail='',chainLink=0,hiddenCard=false,duration=1400,critical=false,effectDriven=false,chainPlayback=false}={}) {
     if(this.isReplaySeekReconstruction())return;
     if(!this.boardWrap||!title)return;
-
-
 
     const shouldOverlay=Number(chainLink)>0||!!effectDriven;
     if(!shouldOverlay)return;
@@ -6023,9 +5631,6 @@ export class IntegratedDuelController {
     if(this.isReplaySeekReconstruction()){options.onStart?.();return Promise.resolve();}
     if(!this.phasePresentationEnabled||!this.duelAnimationsEnabled||!this.phaseAnnouncement||!label){options.onStart?.();return Promise.resolve();}
 
-
-
-
     const duration=Math.max(400,Number(options.duration)||680);
     return new Promise(resolve=>{let settled=false;const settle=()=>{if(settled)return;settled=true;resolve();};this.phaseAnnouncementQueue.push({label:String(label),duration,phase:options.phase,onStart:options.onStart,settle});this.traceSession?.('phase-presentation-queued',{label:String(label),depth:this.phaseAnnouncementQueue.length});this.presentNextPhaseAnnouncement();});
   }
@@ -6051,9 +5656,6 @@ export class IntegratedDuelController {
     if(this.turnPlayer!==0||!prompt||Number(prompt.player)===1)return false;
 
     if(prompt.type===T.SELECT_BATTLECMD)return Array.isArray(prompt.attacks)&&prompt.attacks.length>0;
-
-
-
 
     if(prompt.type!==T.SELECT_IDLECMD||!prompt.to_bp)return false;
     const faceupAttack=Number(P.FACEUP_ATTACK)||1;
@@ -6092,15 +5694,12 @@ export class IntegratedDuelController {
     const gapStart=tr.right-wr.left+8,gapEnd=wr.width-8,gapWidth=Math.max(0,gapEnd-gapStart);const top=tr.top-wr.top+tr.height/2;
     const desired=Math.min(gapWidth,Math.max(150,Math.min(390,gapWidth-16)));
 
-
     const centerX=gapStart+gapWidth/2;
     node.style.width=`${Math.round(desired)}px`;node.style.maxWidth=`${Math.round(desired)}px`;
     node.style.left=`${Math.round(centerX)}px`;node.style.top=`${Math.round(top)}px`;node.style.bottom='auto';node.style.transform='translate(-50%,-50%)';
   }
 
   phaseLabel(phase) {
-
-
 
     if (!this.mod?.OcgPhase) return phase == null ? 'Preparing...' : `Phase ${phase}`;
     const P = this.mod.OcgPhase;
@@ -6113,10 +5712,6 @@ export class IntegratedDuelController {
       const coreController=this.corePlayer(controller);
       const card = this.core.duelQuery(this.handle, {controller:coreController, location, sequence, overlaySequence:0, flags});
       if (!card) return null;
-
-
-
-
 
       const L = this.mod?.OcgLocation;
       const isFixedFieldSlot = !!L && (location === L.MZONE || location === L.SZONE);
@@ -6165,8 +5760,6 @@ export class IntegratedDuelController {
       if(this.knownDecks[p].length>deckCount)this.knownDecks[p]=this.knownDecks[p].slice(0,deckCount);
       target.deck=Array.from({length:deckCount},(_,i)=>{const known=this.knownDecks[p][i];if(known?.code&&(p===0||this.opponentCardsVisible))return{...known,sequence:i,controller:p,location:M.OcgLocation.DECK,isHidden:false};return this.hiddenLocationCard(p,M.OcgLocation.DECK,i);});
 
-
-
       for(const [name,key,knownList] of [
         ['GRAVE','grave',this.knownPiles[p].grave],
         ['REMOVED','removed',this.knownPiles[p].removed],
@@ -6180,7 +5773,6 @@ export class IntegratedDuelController {
           const known=knownList?.[i]||null;
           let card=this.mergeKnownCard(queried,known,{controller:p,location:loc,sequence:i,forceFaceup:key==='grave'});
           if(!card)card=this.hiddenLocationCard(p,loc,i);
-
 
           if(p===1 && key==='extra' && !this.opponentCardsVisible)card={...card,code:0,isHidden:true};
           if(p===1 && key==='removed' && !this.opponentCardsVisible){
@@ -6257,8 +5849,6 @@ export class IntegratedDuelController {
     const P=this.mod?.OcgPosition||{};
     const position=Number(card.position)||0;
 
-
-
     if ((locationKey==='mzone'||locationKey==='szone') && (position & (P.FACEDOWN||0))) return 0;
     if (!opponent) return Number(card.code)||0;
     if(this.opponentCardsVisible)return Number(card.code)||0;
@@ -6296,12 +5886,7 @@ export class IntegratedDuelController {
     const handLoc=this.locationValue('hand');
     const inHand=!!(handLoc && ((itemLoc||ctx.location)&handLoc));
 
-
-
-
     const sameCodeInHand=inHand&&b?(this.field?.players?.[ctx.player]?.hand||[]).filter(card=>this.normalizeActionCode(card?.code)===b).length:0;
-
-
 
     if(!inHand || !(a&&b) || sameCodeInHand>1) {
       if(Number.isFinite(Number(item.sequence)) && Number.isFinite(ctx.sequence) && Number(item.sequence)!==ctx.sequence)return false;
@@ -6327,12 +5912,7 @@ export class IntegratedDuelController {
     if(m.type===T.SELECT_IDLECMD){add(m.activates,I.SELECT_ACTIVATE,'Activate');add(m.summons,I.SELECT_SUMMON,'Normal Summon');add(m.special_summons,I.SELECT_SPECIAL_SUMMON,'Special Summon');add(m.pos_changes,I.SELECT_POS_CHANGE,'Change Position');add(m.monster_sets,I.SELECT_MONSTER_SET,'Set Monster');add(m.spell_sets,I.SELECT_SPELL_SET,'Set Spell/Trap');}
     else if(m.type===T.SELECT_BATTLECMD){add(m.attacks,B.SELECT_BATTLE,'Attack',R.SELECT_BATTLECMD);add(m.chains,B.SELECT_CHAIN,'Activate',R.SELECT_BATTLECMD);}
 
-
-
-
     else if(m.type===T.SELECT_CHAIN){/* universal selector owns this decision */}
-
-
 
     return this.dedupeLegalActions(out);
   }
@@ -6352,21 +5932,9 @@ export class IntegratedDuelController {
   handleCardClick(code,card,ctx) {
     const n=Number(code)||0;if(!n)return;
 
-
-
-
     const info={...(card||{}),controller:Number(card?.controller??ctx?.player??0),location:Number(card?.location??ctx?.location??0),sequence:Number(card?.sequence??ctx?.sequence??0)};
 
     this.pinnedInspector={code:n,info};this.inspectCard(n,info);this.renderCardDetailsModal(n,info);
-  }
-
-  renderContextActions(code,actions) {
-    this.showPrompt({dismissible:true});this.promptBody.replaceChildren();
-    this.promptTitle.textContent=code?this.cardName(code):'Card actions';
-    const hint=document.createElement('p');hint.textContent='Available actions';this.promptBody.append(hint);
-    const group=document.createElement('div');group.className='duel-context-actions';
-    actions.forEach(action=>{const b=this.button(this.actionShortLabel(action.label),action.run,{ghost:action.label!=='Activate'&&action.label!=='Chain'});this.decorateActionVisual(b,action,code);group.append(b);});
-    this.promptBody.append(group);
   }
 
   renderPileActions(player,key) {
@@ -6424,9 +5992,6 @@ export class IntegratedDuelController {
     if(this.promptView==='details'||this.cardDetailsOverlay)return;
     if(!Number(code)||!anchor||typeof document==='undefined'||!document.body)return;
 
-
-
-
     const boardCard=!!(anchor.classList?.contains('duel-card')&&anchor.closest?.('#duelBoardWrap'));
     const promptEffectText=String(info?._promptEffectText||'').trim();
     const promptCard=!!(promptEffectText&&anchor.classList?.contains('duel-prompt-card')&&anchor.closest?.('.duel-field-prompt'));
@@ -6471,15 +6036,6 @@ export class IntegratedDuelController {
   bindInspectorHover(node,code,info={}) {
     const n=Number(code)||0;if(!node||!n)return;
     const chainPreview=/chain|trigger/i.test(String(info?._promptEffectRole||''));
-
-
-
-
-
-
-
-
-
 
     node.addEventListener('pointerenter',()=>{if(chainPreview&&!this.chainEffectHoverEnabled)return;if(!chainPreview&&!this.cardHoverPreviewEnabled)return;if(this.hoverExitTimer){clearTimeout(this.hoverExitTimer);this.hoverExitTimer=null;}this.inspectCard(n,info,{transient:true});this.showCardHoverOverlay(n,info,node);this.setLogCardFocus(n,info,'hover');});
     node.addEventListener('pointerleave',()=>{this.hideCardHoverOverlay({delay:70});});
@@ -6646,7 +6202,6 @@ export class IntegratedDuelController {
       [...actions].sort((a,b)=>actionPriority(a.label)-actionPriority(b.label)).forEach(action=>{
         const b=document.createElement('button');b.type='button';b.className='duel-card-action';const effectAction=action.label==='Activate'||action.label==='Chain';const effectText=effectAction?String(action.detail||'').trim():'';if(effectAction)b.classList.add('duel-card-effect-action');
 
-
         b.textContent=this.actionShortLabel(action.label);b.title=action.label;b.setAttribute('aria-label',effectText?`${action.label}: ${effectText}`:action.label);this.decorateActionVisual(b,action,realCode,card);
         b.addEventListener('click',event=>{event.stopPropagation();this.selectedCardContext=ctx;if(realCode)this.inspectCard(realCode,card);if(action.label==='Activate'||action.label==='Chain')this.rememberEffectItem(action.item||{},realCode);const kind=action.label==='Attack'?'attack':action.label==='Activate'||action.label==='Chain'?'activate':action.label==='Change Position'?'position':action.label.includes('Set')?'set':action.label.includes('Special')?'special':'summon';node.classList.add(`duel-anim-${kind}`);setTimeout(()=>node.classList.remove(`duel-anim-${kind}`),650);action.run();});
         bar.append(b);
@@ -6743,9 +6298,6 @@ export class IntegratedDuelController {
         const art=document.createElement('div');art.className='duel-pile-card-art';const img=document.createElement('img');img.src=visible?cardImage(visible):'assets/card_placeholder.png';img.alt=visible?displayName:'Face-down card';art.append(img);tile.append(art);
         const hiddenLabel=key==='extra'?'Face-down Extra Deck card':key==='removed'?'Face-down banished card':'Hidden card';const name=document.createElement('strong');name.textContent=visible?displayName:hiddenLabel;tile.append(name);
 
-
-
-
         const actions=player===0?this.legalActionsForContext(ctx):[],chainEligible=player===0&&this.visibleChainIndicatorCandidates().some(item=>this.actionItemMatchesContext(item,ctx));
         if(chainEligible&&this.actionablePileHighlightEnabled){tile.classList.add('duel-pile-card-actionable','duel-pile-card-activatable');const badge=document.createElement('b');badge.className='duel-pile-activate-badge';badge.textContent='ACTIVATE';art.append(badge);}
         if(actions.length){
@@ -6783,10 +6335,6 @@ export class IntegratedDuelController {
     if(typeof requestAnimationFrame==='function')requestAnimationFrame(run);else run();
   }
 
-  fitExtraDeckViewer(){
-    this.fitPileViewer();
-  }
-
   fitPileViewer(){
     if(this.promptView!=='pile'||!this.openPileContext||!this.prompt?.classList.contains('duel-direct-pile-viewer-prompt'))return;
     const grid=this.prompt.querySelector?.('.duel-direct-pile-grid');if(!grid)return;
@@ -6795,10 +6343,8 @@ export class IntegratedDuelController {
     const byWidth=(boardWidth-18-horizontalChrome-gap*Math.max(0,columns-1))/columns,byHeight=((boardHeight-14-verticalChrome-gap*Math.max(0,visibleRows-1))/visibleRows-labelAllowance)/ratio,cardWidth=Math.max(54,Math.min(124,byWidth,byHeight));
     this.prompt.style.setProperty('--duel-pile-card-w',`${cardWidth.toFixed(1)}px`);this.prompt.style.setProperty('--duel-pile-columns',String(columns));
 
-
     const tileHeight=Math.max(cardWidth*ratio+30,...tiles.map(tile=>Number(tile.getBoundingClientRect?.().height)||0)),gridHeight=visibleRows*tileHeight+gap*Math.max(0,visibleRows-1)+8,scrolling=totalRows>visibleRows,scrollbarAllowance=scrolling?16:0,promptWidth=Math.min(boardWidth-18,columns*cardWidth+gap*Math.max(0,columns-1)+horizontalChrome+scrollbarAllowance),promptHeight=Math.min(boardHeight-14,gridHeight+verticalChrome);
     this.prompt.style.setProperty('--duel-pile-row-height',`${tileHeight.toFixed(1)}px`);this.prompt.style.setProperty('--duel-pile-grid-height',`${gridHeight.toFixed(1)}px`);this.prompt.style.setProperty('--duel-pile-view-width',`${promptWidth.toFixed(1)}px`);this.prompt.style.setProperty('--duel-pile-view-height',`${promptHeight.toFixed(1)}px`);
-
 
     if(this.openPileContext.key==='extra'){this.prompt.style.setProperty('--duel-extra-card-w',`${cardWidth.toFixed(1)}px`);this.prompt.style.setProperty('--duel-extra-columns',String(columns));this.prompt.style.setProperty('--duel-extra-view-width',`${promptWidth.toFixed(1)}px`);this.prompt.style.setProperty('--duel-extra-view-height',`${promptHeight.toFixed(1)}px`);}
     grid.classList.toggle('duel-pile-grid-scroll',scrolling);grid.dataset.scrollRowStep=String(tileHeight+gap);grid.dataset.scrollRows=String(totalRows);grid.dataset.visibleRows=String(visibleRows);this.snapPileViewerToWholeRow(grid);
@@ -6892,8 +6438,6 @@ export class IntegratedDuelController {
   showPileHoverOverlay(player,key,node,label='') {
     if(!this.pileHoverCardListsEnabled||!node||this.promptView==='details'||this.cardDetailsOverlay)return;
 
-
-
     if(Number(player)===1&&!this.opponentCardsVisible)return;
     if(Number(player)===0&&key==='deck'&&!this.ownDeckViewEnabled)return;
     const cards=this.visiblePileHoverCards(player,key);if(!cards.length)return;
@@ -6909,7 +6453,6 @@ export class IntegratedDuelController {
 
   bindPileHoverList(player,key,node,label='') {
     if(!node||node.dataset.pileHoverBound==='1')return;node.dataset.pileHoverBound='1';
-
 
     node.addEventListener('pointerover',event=>{if(event.relatedTarget&&node.contains(event.relatedTarget))return;this.cancelPileHoverHide();this.showPileHoverOverlay(player,key,node,label);});
     node.addEventListener('pointerout',event=>{if(event.relatedTarget&&(node.contains(event.relatedTarget)||this.pileHoverOverlay?.contains?.(event.relatedTarget)))return;this.schedulePileHoverHide();});
@@ -6983,8 +6526,6 @@ export class IntegratedDuelController {
     const printed=semantic?this.projectIgnisPrintedEffectMatch(resolvedCode,semantic):'';
     if(!text||this.genericEffectText(text)||this.effectChoiceGateText(text))text=this.conciseEffectText(printed||this.choiceGateActivationContext(resolvedCode,text)||text);
     if(this.effectChoiceGateText(text))text=this.conciseEffectText(this.choiceGateActivationContext(resolvedCode,text));
-
-
 
     if(!text&&resolvedCode)text=String(this.cardDescription(resolvedCode)||'').replace(/\s+/g,' ').trim();
     return text;
@@ -7069,7 +6610,6 @@ export class IntegratedDuelController {
     if(title)title.textContent=code?this.cardName(code):'\u00a0';
     if(art){art.src=code?cardImage(code):'assets/card_placeholder.png';art.alt=code?this.cardName(code):'Card placeholder';art.onclick=code?(()=>this.openArtwork(code)):null;art.title=code?'Click to enlarge artwork':'';}
     if(code)this.populateBuilderDetails(code,info,meta,stats,textNode,status);else{if(meta)meta.replaceChildren();if(stats)stats.textContent='';if(textNode)textNode.textContent='Select a visible card on the field or in your hand.';if(status)status.textContent='Select a card';}
-
 
     if(actionsNode){actionsNode.replaceChildren();const locationKey=Number(info.location)?this.locationKey(Number(info.location)):'';const ctx=locationKey?this.contextForCard(info,{player:Number(info.controller)||0,locationKey,sequence:Number(info.sequence)||0}):null;const legal=ctx?this.legalActionsForContext(ctx):[];const priority=label=>label==='Activate'||label==='Chain'?0:label==='Attack'?1:label.includes('Summon')?2:label.includes('Set')?3:4;[...legal].sort((a,b)=>priority(a.label)-priority(b.label)).forEach(action=>actionsNode.append(this.renderViewedCardAction(action,code,()=>action.run())));}
     this.syncStyledTextToggle();
@@ -7324,15 +6864,11 @@ export class IntegratedDuelController {
     const text=this.conciseEffectText(this.effectLabel(item,'')||this.descriptionText(item?.description,''));
     if(!text||/\(Quick Effect\)/i.test(text))return false;
 
-
-
-
     return /^(?:If|When)\b[^.]{0,220}\b(?:Summon(?:ed|s|ing)?|activated|sent|destroyed|banished|discarded|drawn|leaves? the field|inflicts? battle damage|takes? damage|changes? position|added to (?:your|the) hand)\b/i.test(text);
   }
 
   chainPromptContainsTriggeredEffect(message={}) {
     const T=this.mod?.OcgMessageType||{};if(message?.type!==T.SELECT_CHAIN)return false;
-
 
     const specialCount=Number(message.spe_count??message.special_count??message.trigger_count??0)||0;if(specialCount>0)return true;
     return (message.selects||[]).some(item=>this.chainCandidateIsTriggeredEffect(item));
@@ -7355,9 +6891,6 @@ export class IntegratedDuelController {
     if(Number(item.controller??message.player)!==0)return false;
     const text=this.chainEffectPreviewText(item);if(!/\bnegat(?:e|es|ed|ing)\b/i.test(text))return false;
 
-
-
-
     return true;
   }
 
@@ -7366,19 +6899,10 @@ export class IntegratedDuelController {
     return selects.map((item,index)=>({item,index})).filter(entry=>!this.selfNegatingOptionalChainCandidate(entry.item,message));
   }
 
-  smartOptionalChainFingerprint(message={}) {
-    const selects=(message.selects||[]).map(item=>[this.normalizeActionCode(item?.code),Number(item?.controller)||0,Number(item?.location)||0,Number(item?.sequence)||0,String(item?.description??'')].join(':'));
-    return selects.join('|');
-  }
-
   smartOptionalChainResponse(message) {
     const T=this.mod?.OcgMessageType||{},R=this.mod?.OcgResponseType||{};
     if(!this.smartOptionalChainPromptsEnabled||message?.type!==T.SELECT_CHAIN||message.forced||Number(message.player)!==0)return null;
     const candidates=message.selects||[],visible=this.visibleChainCandidates(message);
-
-
-
-
 
     if(candidates.length&&!(this.phaseOnlyChainWindow(message)||visible.length===0))return null;
     return{type:R.SELECT_CHAIN,index:null};
@@ -7386,9 +6910,6 @@ export class IntegratedDuelController {
 
   passiveOpponentWindowResponse(message) {
     const T=this.mod?.OcgMessageType||{},R=this.mod?.OcgResponseType||{};
-
-
-
 
     if(message?.type===T.SELECT_CHAIN&&!message.forced&&!(message.selects||[]).length)return{type:R.SELECT_CHAIN,index:null};
     return null;
@@ -7508,8 +7029,6 @@ export class IntegratedDuelController {
     const id=Number(decision.id)||0;if(!id)return false;
     if(this.currentPrompt!==decision.message||Number(this.activeDecisionId)!==id||Number(this.promptDecisionIds?.get(decision.message)||0)!==id||this.pendingResolve!==decision.resolve)return false;
 
-
-
     if(this.promptView==='details'&&!this.detailsCloseRequested)return true;
     if(this.promptMinimized)return true;
     if(!this.promptUsesVisibleSurface(decision.message))return true;
@@ -7527,13 +7046,10 @@ export class IntegratedDuelController {
     if(this.authoritativeDecisionSurfaceHealthy(decision)){
       this.decisionGuardianRestores=0;
 
-
-
       return true;
     }
     const ownershipMismatch=this.currentPrompt!==decision.message||Number(this.activeDecisionId)!==id||Number(this.promptDecisionIds?.get(decision.message)||0)!==id||this.pendingResolve!==decision.resolve;
     this.activeDecisionId=id;this.currentPrompt=decision.message;this.currentPromptRevision=Number(decision.revision)||this.currentPromptRevision||1;this.promptDecisionIds?.set(decision.message,id);this.pendingResolve=decision.resolve;this.renderedDecisionId=id;
-
 
     if(!this.promptMinimized&&this.promptView!=='details'){
       this.auxiliaryReturnToMinimized=false;
@@ -7582,11 +7098,8 @@ export class IntegratedDuelController {
       if(index>=0){this.hidePrompt();return Promise.resolve({type:R.SELECT_OPTION,index});}
     }else if(this.pendingEffectOptionIntent){
 
-
       this.pendingEffectOptionIntent=null;
     }
-
-
 
     const heldPass=!manualOnly?this.heldRightPassResponse(message):null;
     if(heldPass){
@@ -7607,14 +7120,11 @@ export class IntegratedDuelController {
     this.promptRevision+=1;this.currentPromptRevision=this.promptRevision;this.promptRecoveryCount=0;
     const decisionId=++this.decisionSerial;this.promptDecisionIds?.set(message,decisionId);this.activeDecisionId=decisionId;
 
-
     if(this.authoritativePendingDecision&&Number(this.authoritativePendingDecision.id)!==decisionId)this.stopDecisionGuardianFor(Number(this.authoritativePendingDecision.id)||0);
     this.authoritativePendingDecision={id:decisionId,message,revision:this.currentPromptRevision,resolve:null,submitted:false,createdAt:Date.now()};
     this.stagedCardSelection=this.pendingRestoredStagedSelection?{...this.pendingRestoredStagedSelection,indices:[...(this.pendingRestoredStagedSelection.indices||[])]}:null;this.pendingRestoredStagedSelection=null;
     if(message?.type!==T.SELECT_CHAIN)this.stagedChainSelection=null;
     this.currentPrompt=message;this.selectedCardContext=null;this.promptMinimized=false;this.auxiliaryReturnToMinimized=false;if(this.promptRestoreButton)this.promptRestoreButton.hidden=true;
-
-
 
     if(this.pendingPlayerAttack&&Number(this.currentPromptRevision)>Number(this.pendingPlayerAttack.expectedPromptRevision)+4)this.pendingPlayerAttack=null;
     this.renderField();this.renderPhaseDock();
@@ -7637,7 +7147,6 @@ export class IntegratedDuelController {
     if(!prompt||!response||!this.mod)return;
     const T=this.mod.OcgMessageType||{},I=this.mod.SelectIdleCMDAction||{},B=this.mod.SelectBattleCMDAction||{};
 
-
     if((prompt.type===T.SELECT_EFFECTYN||prompt.type===T.SELECT_YESNO)&&response.yes===false){
       if(!Number(this.pendingEffectSource?.chainLink))this.pendingEffectSource=null;
       return;
@@ -7657,8 +7166,6 @@ export class IntegratedDuelController {
     const previous=this.pendingEffectSource||{};
     const code=this.normalizeActionCode(item?.code||(continuation?previous.code:prompt.code)||this.activeEffectCode);if(!code)return;
     const priorTop=this.latestChainEffectContext();
-
-
 
     const next=continuation?{...previous}:{chainLink:0};
     next.code=code;
@@ -7699,14 +7206,10 @@ export class IntegratedDuelController {
     const directBattleTarget=this.isDirectBattleTargetSurface(prompt);
     this.pendingDecisionLease={prompt,response,revision:this.currentPromptRevision,decisionId:Number(this.promptDecisionIds?.get(prompt)||this.activeDecisionId)||0,submittedAt:Date.now()};
 
-
-
     if(this.prompt){this.prompt.classList.remove('duel-prompt-awaiting-ack');this.prompt.querySelector?.('.duel-prompt-ack-status')?.remove();this.prompt.classList.add('duel-prompt-hidden');}
     if(this.promptRestoreButton)this.promptRestoreButton.hidden=true;
     if(this.chainPromptAttached)this.restorePromptHome();
     if(directBattleTarget)return;
-
-
 
     if(this.promptView==='details'){this.detailsBackgroundPromptDirty=true;return;}
     return;
@@ -7727,8 +7230,6 @@ export class IntegratedDuelController {
     const lease=this.pendingDecisionLease,ack=this.awaitingPlayerResponseAck;
     if(!this.running||!decision?.submitted||!lease?.prompt||!ack?.prompt)return false;
 
-
-
     return true;
   }
 
@@ -7741,8 +7242,6 @@ export class IntegratedDuelController {
     if(this.authoritativePendingDecision?.id===submittedDecisionId){this.authoritativePendingDecision={...this.authoritativePendingDecision,id:submittedDecisionId,message:prompt,submitted:true,response,submittedAt:Date.now()};this.startDecisionGuardian();}
     if(this.promptVisibilityTimer){clearTimeout(this.promptVisibilityTimer);this.promptVisibilityTimer=0;}if(this.interactionWatchdogTimer){clearTimeout(this.interactionWatchdogTimer);this.interactionWatchdogTimer=0;}this.interactionWatchdogMisses=0;this.promptRecoveryCount=0;
 
-
-
     this.renderField();this.renderPhaseDock();const targetPresentationMs=this.playEffectTargetPresentation(effectTargets);if(targetPresentationMs>0){this.traceSession('player-response-held-for-target-presentation',{durationMs:targetPresentationMs,targets:effectTargets.map(item=>item.code)});setTimeout(()=>resolve(response),targetPresentationMs);}else resolve(response);
   }
 
@@ -7750,18 +7249,11 @@ export class IntegratedDuelController {
 
   button(label,onClick,{ghost=false,disabled=false}={}){const b=document.createElement('button');b.type='button';b.className=`duel-action${ghost?' ghost':''}`;b.textContent=label;b.disabled=disabled;b.addEventListener('click',event=>{onClick(event);this.playSelectionSoundSoon();});return b;}
 
-
-
-
-
-
-
   actionCard(item,onClick,label='',options={}){
     const b=document.createElement('div');b.className='duel-prompt-card duel-selection-card-clean duel-universal-card-choice';b.tabIndex=0;b.setAttribute('role','button');
     b.dataset.player=String(Number(item?.controller)||0);b.dataset.location=this.locationKey(Number(item?.location)||0);b.dataset.sequence=String(Number(item?.sequence)||0);b.dataset.code=String(this.normalizeActionCode(item?.code)||'');if(this.isAttachedXyzMaterial(item)){b.dataset.overlaySequence=String(Number(item.overlay_sequence));b.dataset.overlayNumber=String(Number(item.overlay_sequence)+1);b.classList.add('duel-xyz-material-choice');}
     const promptAtBind=this.currentPrompt,revisionAtBind=this.currentPromptRevision,T=this.mod?.OcgMessageType||{};
     const confirmSelection=!!options.confirmSelection,isSelected=typeof options.isSelected==='function'?options.isSelected:()=>false,onDeselect=typeof options.onDeselect==='function'?options.onDeselect:null;
-
 
     b.title=this.cardName(item.code)||'';
     const art=document.createElement('span');art.className='duel-prompt-card-art';
@@ -7785,18 +7277,6 @@ export class IntegratedDuelController {
     if(confirmSelection&&onDeselect)this.bindStagedCardDeselect(b,()=>isSelected(),deselect);
     b.addEventListener('click',event=>{if(event.target.closest?.('.duel-prompt-details-btn'))return;activate();});
     b.addEventListener('keydown',event=>{if(event.target.closest?.('.duel-prompt-details-btn'))return;if(event.key==='Enter'||event.key===' '){event.preventDefault();activate();}});return b;
-  }
-
-  cardDetailMeta(code,info={}) {
-    const card=this.getCardById?.(Number(code))||{};const bits=[];
-    const type=card.type||card.humanReadableCardType||'';if(type)bits.push(type);
-    if(card.attribute)bits.push(card.attribute);if(card.race)bits.push(card.race);
-    if(Number.isFinite(Number(card.level))&&Number(card.level)>0)bits.push(`Level ${card.level}`);
-    if(Number.isFinite(Number(card.rank))&&Number(card.rank)>0)bits.push(`Rank ${card.rank}`);
-    if(Number.isFinite(Number(card.linkval))&&Number(card.linkval)>0)bits.push(`Link ${card.linkval}`);
-    const atk=card.atk??info.attack,def=card.def??info.defense;if(Number.isFinite(Number(atk)))bits.push(`ATK ${atk}`);if(Number.isFinite(Number(def))&&Number(def)>=0)bits.push(`DEF ${def}`);
-    if(this.isAttachedXyzMaterial(info)){const host=this.xyzMaterialHostCard(info),hostName=host?.code?this.cardName(host.code):'Xyz Monster';bits.push(`Xyz Material ${Number(info.overlay_sequence)+1} - ${hostName}`);}else if(Number(info.location))bits.push(`Location: ${formatLocation(this.mod,Number(info.location))}`);
-    return bits;
   }
 
   captureDetailsReturnSnapshot() {
@@ -7874,8 +7354,6 @@ export class IntegratedDuelController {
     if(!text)return true;
     const special=!!context.special,hasEffectContext=!!context.hasEffectContext,hasSummonTarget=!!context.hasSummonTarget;
 
-
-
     if(special&&hasSummonTarget)return true;
     const genericLabel=/^(?:summon materials required|summon requirement|activation cost|target selection|effect resolution|required by this effect|current required action|required battle action)$/i.test(label);
     const proceduralOnly=/\b(?:select|choose)\b/i.test(text)&&/\b(?:confirm|press|click|selection)\b/i.test(text)&&!/\b(?:exactly|at least|at most|between|must include|cannot|different|minimum|maximum|immediately|automatically)\b/i.test(text);
@@ -7921,10 +7399,6 @@ export class IntegratedDuelController {
 
   choiceGateActivationContext(code,effectText='') {
 
-
-
-
-
     code=this.normalizeActionCode(code);const exact=this.conciseEffectText(effectText);if(!code||!exact||!this.effectChoiceGateText(exact))return exact;
     const full=this.conciseEffectText(this.cardDescription(code)||'');if(!full)return exact;
     const gateRe=/(?:activate|apply|choose|select)\s+(?:1|one)\s+of\s+(?:these|the following)\s+effects?\s*[:;]/ig;
@@ -7964,26 +7438,6 @@ export class IntegratedDuelController {
     return this.effectChoiceGateText(text)?this.choiceGateActivationContext(code,text):text;
   }
 
-  printedEffectGateChoices(code,effectText='') {
-    code=this.normalizeActionCode(code);if(!code)return[];
-    const full=String(this.cardDescription(code)||'').replace(/\r/g,' ').replace(/\n/g,' ').replace(/\s+/g,' ').trim();
-    const context=String(effectText||'').replace(/\s+/g,' ').trim();
-    if(!full||!/[●•]/.test(full))return[];
-    const gateRe=/(?:activate|apply|choose|select)\s+(?:1|one)\s+of\s+(?:these|the following)\s+effects?\s*[:;]/ig;
-    let match=null,chosen=null;
-    while((match=gateRe.exec(full))){
-      if(!chosen)chosen={index:match.index,end:gateRe.lastIndex,text:match[0]};
-      if(context&&this.effectChoiceGateText(context)){
-        const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
-        if(norm(context).includes(norm(match[0]))||norm(match[0]).includes(norm(context))){chosen={index:match.index,end:gateRe.lastIndex,text:match[0]};break;}
-      }
-    }
-    if(!chosen)return[];
-    const tail=full.slice(chosen.end);
-    const bullets=[...tail.matchAll(/[●•]\s*([^●•]+)/g)].map(m=>String(m[1]||'').trim()).filter(Boolean);
-    return bullets.map(text=>this.conciseEffectText(text)).filter(text=>text&&!this.genericEffectText(text));
-  }
-
   normalizedEffectMatchText(value='') {
     return String(value||'').toLowerCase().replace(/graveyard/g,'gy').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
   }
@@ -8006,17 +7460,6 @@ export class IntegratedDuelController {
     const fallback=Number(intent.index);return Number.isInteger(fallback)&&fallback>=0&&fallback<options.length?fallback:-1;
   }
 
-  chainCandidateVisibleInPlace(item={}) {
-    const L=this.mod?.OcgLocation||{};const loc=Number(item.location)||0;
-    return Number(item.controller)===0&&!!(loc&(Number(L.HAND||0)|Number(L.MZONE||0)|Number(L.SZONE||0)));
-  }
-
-  selectionContextEffect(m={}) {
-
-
-    const code=this.effectSourceCode(m);return code?this.selectionMatchedEffectText(code,m):'';
-  }
-
   latestChainEffectContext() {
     const links=[...this.chainHistory.keys(),...this.chainEffectSources.keys()].map(Number).filter(Number.isFinite);
     const link=links.length?Math.max(...links):Number(this.lastActivatedChainLink)||0;
@@ -8026,9 +7469,6 @@ export class IntegratedDuelController {
   }
 
   expandActivatedEffectContinuation(code,exactText='') {
-
-
-
 
     code=this.normalizeActionCode(code);const exact=String(exactText||'').replace(/\s+/g,' ').trim();
     const full=String(this.cardDescription(code)||'').replace(/\r/g,'').trim();
@@ -8057,8 +7497,6 @@ export class IntegratedDuelController {
   responseEffectContext(m={}) {
     const T=this.mod?.OcgMessageType||{};
     if(m?.type!==T.SELECT_CHAIN||this.chainPromptContainsTriggeredEffect(m))return null;
-
-
 
     const source=this.latestChainEffectContext();if(!source?.code)return null;
     const resolved=this.resolvedEffectDisplay(source.code,source.descriptionId,(source.specific||source.gate)?source.description||'':'');
@@ -8112,11 +7550,7 @@ export class IntegratedDuelController {
     return'';
   }
 
-
   locationMatchedEffectText(code,location=0) {
-
-
-
 
     code=this.normalizeActionCode(code);const L=this.mod?.OcgLocation||{},loc=Number(location)||0;if(!code||!loc)return'';
     const candidates=this.effectSentenceCandidates(this.cardDescription(code)||'').map(v=>this.conciseEffectText(v)).filter(Boolean);if(candidates.length<2)return candidates[0]||'';
@@ -8130,9 +7564,6 @@ export class IntegratedDuelController {
   }
 
   selectionMatchedEffectText(code,m={}) {
-
-
-
 
     code=this.normalizeActionCode(code);if(!code)return'';
     const T=this.mod?.OcgMessageType||{},L=this.mod?.OcgLocation||{};
@@ -8189,7 +7620,6 @@ export class IntegratedDuelController {
     return'';
   }
 
-
   selectionActionDescriptor(m={},effectText='') {
     const T=this.mod?.OcgMessageType||{},L=this.mod?.OcgLocation||{};
     if(m.type===T.SELECT_TRIBUTE)return{verb:'Tribute',title:'Choose Tribute(s)',action:'Tribute',destination:''};
@@ -8199,8 +7629,6 @@ export class IntegratedDuelController {
     const text=String(effectText||'').replace(/\r?\n/g,' ').replace(/\s+/g,' ').trim();
     const lower=text.toLowerCase();
     const has=loc=>locations.has(Number(loc||0));
-
-
 
     const rules=[];
     const add=(when,re,action,title,destination='',priority=0)=>{if(when&&re.test(text))rules.push({action,title,destination,priority,index:lower.search(re)});};
@@ -8212,8 +7640,6 @@ export class IntegratedDuelController {
       add(true,/banish[^.;]*from (?:your )?hand/i,'banish','Choose a card to banish','',80);
       add(true,/discard[^.;]*(?:from )?(?:your )?hand|discard\s+(?:\d+|one|a)\s+card/i,'discard','Choose a card to discard','',80);
       add(true,/special summon[^.;]*from (?:your )?hand/i,'Special Summon','Choose a card to Special Summon','',75);
-
-
 
       add(true,/reveal\s+(?!(?:this|it)\b)(?:\d+|one|a)?[^.;]*(?:card|monster)[^.;]*(?:in|from) (?:your )?hand/i,'reveal','Choose a card to reveal','',40);
       add(true,/target[^.;]*(?:card|monster)[^.;]*(?:in|from) (?:your )?hand/i,'target','Choose a card to target','',30);
@@ -8237,8 +7663,6 @@ export class IntegratedDuelController {
       add(true,/(?:shuffle|return)[^.;]*(?:banish|banished)[^.;]*(?:into|to) (?:your )?deck/i,'return to the Deck','Choose a card to return to the Deck','to the Deck',80);
     }
     if(has(L.MZONE)||has(L.SZONE)){
-
-
 
       add(true,/target[^.;]*(?:card|monster|spell|trap)[^.;]*[.;]\s*(?:then,?\s*|and if you do,?\s*)?banish\s+(?:it|that target|them)/i,'banish','Choose a card to banish','',96);
       add(true,/target[^.;]*(?:card|monster|spell|trap)[^.;]*[.;]\s*(?:then,?\s*|and if you do,?\s*)?destroy\s+(?:it|that target|them)/i,'destroy','Choose a card to destroy','',96);
@@ -8271,11 +7695,6 @@ export class IntegratedDuelController {
     const scriptedAction=normalize(scripted.action),contextualAction=normalize(contextual.action);
     if(scriptedAction===contextualAction)return{...contextual,...scripted,destination:contextual.destination||scripted.destination||'',priority:Math.max(Number(contextual.priority)||0,Number(scripted.priority)||0)};
 
-
-
-
-
-
     if(Number(contextual.priority)>=90){
       return{...scripted,...contextual,role:scripted.role||contextual.role||'',roleLabel:scripted.roleLabel||contextual.roleLabel||'',semantic:scripted.semantic,meta:scripted.meta,effect:scripted.effect,code:scripted.code,source:'Current OCGCore selection + effect text'};
     }
@@ -8304,8 +7723,6 @@ export class IntegratedDuelController {
       return{title,intro,effectText,action:actionText,role,roleLabel:action.roleLabel||(role==='cost'?'Activation Cost':role==='target'?'Target Selection':'Effect Resolution')};
     }
     const candidate=this.selectionCandidateDescriptor(m),source=this.selectionSourceLabel(m),noun=max===1?candidate:`${candidate}s`,countText=min===max?`Select ${min}`:`Select ${min} to ${max}`;
-
-
 
     return{title:sourceName?`${sourceName} - Choose ${noun}`:(m.type===T.SELECT_SUM?'Choose materials':'Choose card(s)'),intro:'',effectText,action:'Selection',role:'selection',roleLabel:''};
   }
@@ -8384,16 +7801,9 @@ export class IntegratedDuelController {
       if(triggeredWindow)this.promptTitle.textContent=sourceCode?`Activate ${this.cardName(sourceCode)}'s triggered effect?`:'Choose a triggered effect to activate';
       else this.promptTitle.textContent=Number(m.player)===0&&sourceController===1&&sourceCode?`Respond to Practice Dummy's ${this.cardName(sourceCode)}?`:(sourceCode?`Respond to ${this.cardName(sourceCode)}?`:'Chain response');
 
-
-
       this.prompt?.classList.add('selection-prompt','duel-universal-card-selector','duel-chain-choice-prompt');
 
-
-
-
-
       const sourceBanner=triggeredWindow?null:this.effectSourceBanner(m);if(sourceBanner)this.promptBody.append(sourceBanner);
-
 
       const grid=document.createElement('div');grid.className='duel-select-card-grid duel-chain-card-grid duel-universal-selection-grid';
       const identityCounts=new Map(),identitySeen=new Map(),cards=[];
@@ -8414,23 +7824,15 @@ export class IntegratedDuelController {
     return false;
   }
 
-
-
   renderPrompt(m){const T=this.mod.OcgMessageType,R=this.mod.OcgResponseType;this.hideDirectSurfaceSelectionDock();this.traceSession('prompt-render',{signature:this.replayPromptSignature(m),prompt:this.traceSafeObject(m),state:this.sessionStateSnapshot()});
     const renderDecisionId=Number(this.promptDecisionIds?.get(m)||0);if(renderDecisionId&&renderDecisionId!==Number(this.activeDecisionId))return;
     if(this.prompt){this.prompt.dataset.decisionId=String(Number(this.promptDecisionIds?.get(m)||this.activeDecisionId)||0);this.prompt.classList.remove('duel-prompt-awaiting-ack');}
     this.hideCardHoverOverlay({clearInspector:false});
     if(m.type!==T.SELECT_CHAIN)this.clearChainPromptPhysicalFocus();
 
-
-
-
     if(this.promptView==='details'&&!this.detailsCloseRequested){this.detailsBackgroundPromptDirty=true;return;}
     if(m.type!==T.SELECT_PLACE&&m.type!==T.SELECT_DISFIELD)this.clearPlacePrompt();this.promptView='engine';this.openPileContext=null;this.resetEnginePromptPresentationState();this.promptBody.replaceChildren();this.applyGameplayPromptWidth(m);this.showPrompt();
     if(this.renderPromptHome(m))return;
-
-
-
 
     const battleReplay=this.isBattleReplayPrompt(m);const sourceBanner=this.effectSourceBanner(m);if(sourceBanner&&!battleReplay)this.promptBody.append(sourceBanner);
     if(battleReplay){this.promptTitle.textContent='Attack replay - choose a new target?';const detail=document.createElement('p');detail.className='duel-selection-purpose duel-battle-replay-copy';detail.textContent='The number of monsters on the Practice Dummy field changed during the Battle Step. Continue the attack and choose a new legal target, or cancel this attack.';this.promptBody.append(detail);this.promptBody.append(this.button('Choose New Attack Target',()=>this.submitResponse({type:R.SELECT_YESNO,yes:true})),this.button('Cancel Attack',()=>this.submitResponse({type:R.SELECT_YESNO,yes:false}),{ghost:true}));return;}
@@ -8488,14 +7890,6 @@ export class IntegratedDuelController {
     const ops=[];for(const key of initial)if(!desired.has(key))ops.push({action:'unselect',key});for(const key of desired)if(!initial.has(key))ops.push({action:'select',key});this.stagedUnselectCommit={ops};
     const response=this.nextStagedUnselectResponse(message);if(response){this.submitResponse(response);return;}this.toast('That material selection cannot be confirmed yet. Adjust the selected cards.');
   }
-
-
-
-
-
-
-
-
 
   canUseDirectSurfaceCardSelection(source=[]) {
     if(!this.directHandFieldSelectionEnabled||!Array.isArray(source)||!source.length)return false;
@@ -8692,12 +8086,6 @@ export class IntegratedDuelController {
     return true;
   }
 
-
-
-
-
-
-
   summonTargetRequirementText(code=0) {
     const card=this.getCardById?.(Number(code))||{};const raw=String(card.desc||card.description||'').trim();if(!raw)return'';
     const first=raw.split(/\r?\n/).map(v=>v.trim()).find(Boolean)||'';
@@ -8764,7 +8152,6 @@ export class IntegratedDuelController {
 
   makeSortResponse(order){
 
-
     return {type:this.mod.OcgResponseType.SORT_CARD,order:[...(order||[])].map(Number)};
   }
 
@@ -8786,10 +8173,6 @@ export class IntegratedDuelController {
 
   parsePlaces(mask,selectingPlayer=0){
     const L=this.mod.OcgLocation,out=[];
-
-
-
-
 
     const selector=Number(selectingPlayer)===1?1:0;
     for(let relativeSide=0;relativeSide<2;relativeSide++){
@@ -8834,9 +8217,6 @@ export class IntegratedDuelController {
     const T=this.mod?.OcgMessageType||{};
     const itemKey=item=>`${this.normalizeActionCode(item?.code)}@${Number(item?.controller)||0}:${Number(item?.location)||0}:${Number(item?.sequence)||0}#${String(item?.description??'')}#${Number(item?.position)||0}`;
     const listKey=list=>(list||[]).slice(0,24).map(itemKey).join(',');
-
-
-
 
     const parts=[Number(m.type)||0,Number(m.player)||0];
     if(m.type===T.SELECT_IDLECMD)parts.push(listKey(m.activates),listKey(m.summons),listKey(m.special_summons),listKey(m.monster_sets),listKey(m.spell_sets),listKey(m.pos_changes),Number(!!m.to_bp),Number(!!m.to_ep));
@@ -8952,36 +8332,36 @@ export class IntegratedDuelController {
 
   dummyBoardSnapshot() {
     const players=this.field?.players||[];
-    const side=p=>{const pl=players[p]||{};const monsters=(pl.mzone||[]).filter(Boolean),spells=(pl.szone||[]).filter(Boolean);const value=list=>list.reduce((sum,card)=>sum+Math.abs(this.dummyCardStrategicValue(card,{opponent:p===0})),0);return{monsters,spells,monsterValue:value(monsters),spellValue:value(spells)};};
+    const side=p=>{const pl=players[p]||{},monsters=(pl.mzone||[]).filter(Boolean),spells=(pl.szone||[]).filter(Boolean),value=list=>list.reduce((sum,card)=>sum+Math.abs(this.dummyCardStrategicValue(card,{opponent:p===0})),0);return{monsters,spells,monsterValue:value(monsters),spellValue:value(spells)};};
     return{own:side(1),opponent:side(0)};
   }
 
   // rc242: refuse activations whose only legal outcome hurts the Dummy (board wipes into an empty opponent field,
   // targeted removal with no opponent target). OCGCore still decides legality; this only ranks the Dummy's own choices.
   dummyActivationBoardAssessment(item={}) {
-    const none={blocked:false,penalty:0,reason:''};
+    const none=DUMMY_OK;
     const text=String(this.dummyEffectTextForItem(item)||'').toLowerCase().replace(/\s+/g,' ');if(!text)return none;
     const board=this.dummyBoardSnapshot(),policy=this.dummyDifficultyPolicy();
-    const opponentOnly=/your opponent(?:'s)? (?:controls|monsters?|spells?|traps?|cards?|field|attack position|spell & trap zone|monster zone)|opponent's (?:monster|spell|trap|card)s?\b|monsters? your opponent controls|cards? your opponent controls/.test(text);
-    const selfOnly=/\byou control\b|from your (?:hand|field|gy|graveyard|deck|extra deck)|in your (?:gy|graveyard|hand|deck)|your (?:gy|graveyard)/.test(text)&&!/on the field|on either field|either player|each player|both players/.test(text);
+    const opponentOnly=/your opponent(?:'s)? (?:controls|monsters?|spells?|traps?|cards?|field|attack position|spell & trap zone|monster zone)|opponent's (?:monster|spell|trap|card)/.test(text);
+    const selfOnly=/\byou control\b|(?:from|in) your (?:hand|field|gy|graveyard|deck|extra deck)/.test(text)&&!/on the field|on either field|either player|each player|both players/.test(text);
     if(opponentOnly||selfOnly)return none;
-    const symmetricWipe=/(?:destroy|banish|return|shuffle|send) all (?:face-up |face-down |other )?(?:monsters|cards|spells?(?: and| &|\/)? ?traps?|spell\/trap cards?)(?: on the field| on either field)?|all (?:monsters|cards) on the field/.test(text);
+    const symmetricWipe=/(?:destroy|banish|return|shuffle|send) all (?:face-up |face-down |other )?(?:monsters|cards|spells?(?: and| &|\/)? ?traps?)|all (?:monsters|cards) on the field/.test(text);
     if(symmetricWipe){
-      const hitsMonsters=/all (?:face-up |face-down |other )?(?:monsters|cards)/.test(text),hitsSpells=/all (?:face-up |face-down |other )?(?:cards|spells?)/.test(text);
+      const hitsMonsters=/all (?:face-up |face-down |other )?(?:monsters|cards)/.test(text),hitsSpells=/all (?:face-up |face-down |other )?(?:cards|spell)/.test(text);
       const oppCount=(hitsMonsters?board.opponent.monsters.length:0)+(hitsSpells?board.opponent.spells.length:0);
-      if(!oppCount)return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'would only remove the Dummy own cards'};
+      if(!oppCount)return DUMMY_BLOCK('only hits own cards');
       const opp=(hitsMonsters?board.opponent.monsterValue:0)+(hitsSpells?board.opponent.spellValue:0),own=(hitsMonsters?board.own.monsterValue:0)+(hitsSpells?board.own.spellValue:0);
-      if(own>opp)return{blocked:Number.isFinite(policy.coveredPenalty)===false,penalty:Number.isFinite(policy.coveredPenalty)?policy.coveredPenalty:Number.POSITIVE_INFINITY,reason:'would cost the Dummy more than the opponent'};
+      if(own>opp)return{blocked:!Number.isFinite(policy.coveredPenalty),penalty:policy.coveredPenalty,reason:'costs more than it removes'};
       return none;
     }
     if(!/\b(?:destroy|banish|negate|return|shuffle|send|take control)\b/.test(text))return none;
-    const targetsSpellTrap=/\b(?:1|2|3|up to \d) (?:face-up |face-down |set )?(?:spells?\/traps?|spells? or traps?|spells? and traps?|spell cards?|trap cards?|cards? in (?:the |a )?spell & trap zone)/.test(text);
-    const targetsMonster=/\b(?:1|2|3|up to \d) (?:face-up |face-down |set |attack position |defense position |special summoned |effect |level \d+ (?:or (?:lower|higher) )?)?monsters?/.test(text);
-    const targetsAnyCard=/\b(?:1|2|3|up to \d) (?:face-up |face-down |set )?cards? (?:on the field|on either field|your opponent controls)/.test(text);
+    const targetsSpellTrap=/\b(?:\d|up to \d) (?:face-up |face-down |set )?(?:spells?\/traps?|spells? (?:or|and) traps?|spell cards?|trap cards?|cards? in (?:the |a )?spell & trap zone)/.test(text);
+    const targetsMonster=/\b(?:\d|up to \d) (?:face-up |face-down |set |attack position |defense position |special summoned |effect |level \d+ (?:or (?:lower|higher) )?)?monsters?/.test(text);
+    const targetsAnyCard=/\b(?:\d|up to \d) (?:face-up |face-down |set )?cards? on (?:the|either) field/.test(text);
     const oppCards=board.opponent.monsters.length+board.opponent.spells.length,ownCards=board.own.monsters.length+board.own.spells.length;
-    if(targetsAnyCard&&!oppCards&&ownCards)return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'has no opponent card to target'};
-    if(targetsSpellTrap&&!targetsMonster&&!board.opponent.spells.length&&board.own.spells.length)return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'has no opponent Spell/Trap to target'};
-    if(targetsMonster&&!targetsSpellTrap&&!board.opponent.monsters.length&&board.own.monsters.length)return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'has no opponent monster to target'};
+    if(targetsAnyCard&&!oppCards&&ownCards)return DUMMY_BLOCK('no opponent card to target');
+    if(targetsSpellTrap&&!targetsMonster&&!board.opponent.spells.length&&board.own.spells.length)return DUMMY_BLOCK('no opponent Spell/Trap to target');
+    if(targetsMonster&&!targetsSpellTrap&&!board.opponent.monsters.length&&board.own.monsters.length)return DUMMY_BLOCK('no opponent monster to target');
     return none;
   }
 
@@ -8989,21 +8369,20 @@ export class IntegratedDuelController {
   // summon/attack event exposed through the window timing and the tracked summon/attack context.
   dummyChainWindowThreat(m={}) {
     const chainThreat=this.dummyLatestOpponentThreat();if(chainThreat.code)return{...chainThreat,event:'chain'};
-    const H=this.mod?.OcgHintTiming||{},bit=(name,fallback)=>Number(H[name]??fallback)||0;
-    const timing=Number(m?.hint_timing)||0,turn=Number(this.turn)||0;
-    const summonBits=bit('SUMMON',0x40)|bit('SPSUMMON',0x80)|bit('FLIPSUMMON',0x100),attackBits=bit('ATTACK',0x1000),damageBits=bit('DAMAGE_STEP',0x2000)|bit('DAMAGE_CAL',0x4000)|bit('BATTLED',0x8000000);
+    const H=this.mod?.OcgHintTiming||{},bit=(name,fallback)=>Number(H[name]??fallback)||0,timing=Number(m?.hint_timing)||0,turn=Number(this.turn)||0;
+    const summonBits=bit('SUMMON',64)|bit('SPSUMMON',128)|bit('FLIPSUMMON',256),attackBits=bit('ATTACK',4096),damageBits=bit('DAMAGE_STEP',8192)|bit('DAMAGE_CAL',16384)|bit('BATTLED',134217728);
     const attack=this.lastAttackContext;
     if(attack&&Number(attack.attackerController)===0&&Number(attack.turn)===turn&&(!timing||(timing&(attackBits|damageBits)))){
       const db=attack.attackerCode?this.cardData(attack.attackerCode):null,atk=Math.max(0,Number(db?.attack)||0,Number(attack.expectedDamage)||0);
-      return{score:80+Math.min(220,Math.round(atk/15)),code:0,event:'attack',description:''};
+      return{score:80+Math.min(220,Math.round(atk/15)),code:0,event:'attack'};
     }
     const summon=this.lastSummonContext?.[0];
     if(summon&&Number(summon.controller)===0&&Number(summon.turn)===turn&&(!timing||(timing&summonBits))&&Math.max(0,Number(this.duelStateRevision)-Number(summon.revision))<=8){
       const card=this.cardAtLoc(summon)||{code:summon.code,controller:0,location:summon.location,sequence:summon.sequence};
-      return{score:70+Math.min(200,Math.round(Math.abs(this.dummyCardStrategicValue(card,{opponent:true}))/4)),code:0,event:'summon',description:''};
+      return{score:70+Math.min(200,Math.round(Math.abs(this.dummyCardStrategicValue(card,{opponent:true}))/4)),code:0,event:'summon'};
     }
-    if(Number(this.turnPlayer)===1&&attack&&Number(attack.attackerController)===1&&Number(attack.turn)===turn&&timing&&(timing&damageBits))return{score:80,code:0,event:'own-battle',description:''};
-    return{score:0,code:0,event:'',description:''};
+    if(Number(this.turnPlayer)===1&&attack&&Number(attack.attackerController)===1&&Number(attack.turn)===turn&&timing&&(timing&damageBits))return{score:80,code:0,event:'own-battle'};
+    return{score:0,code:0,event:''};
   }
 
   dummyRecentOwnSummon() {
@@ -9013,22 +8392,22 @@ export class IntegratedDuelController {
   }
 
   dummyChainCandidateAssessment(item={},m={}) {
-    if(m.forced||this.dummyChainCandidateIsTrigger(item))return{blocked:false,penalty:0,reason:''};
+    if(m.forced||this.dummyChainCandidateIsTrigger(item))return DUMMY_OK;
     const board=this.dummyActivationBoardAssessment(item);if(board.blocked)return board;
     const text=this.dummyEffectTextForItem(item),lower=String(text||'').toLowerCase(),top=this.dummyCurrentChainTop();
     const directActivationNegate=/negate (?:the|that|this|its) (?:activation|summon)\b|negate (?:the )?summon or activation\b|negate (?:that|this|the activated) effect\b/.test(lower);
     const summonNegate=/negate (?:the|that|this) summon\b|negate (?:the )?summon or activation\b/.test(lower);
     const candidateKinds=this.dummyEffectInteractionKinds(text);
-    if(Number(top?.controller)===1&&(directActivationNegate||candidateKinds.has('negate')))return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'would negate or stop the Dummy current Chain Link'};
-    if(!top&&this.dummyRecentOwnSummon()&&summonNegate)return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'would negate the Dummy own summon'};
+    if(Number(top?.controller)===1&&(directActivationNegate||candidateKinds.has('negate')))return DUMMY_BLOCK('would stop own Chain Link');
+    if(!top&&this.dummyRecentOwnSummon()&&summonNegate)return DUMMY_BLOCK('would negate own summon');
     if(Number(top?.controller)!==1||Number(top?.respondsToController)!==0)return board;
     const topText=String(top.description||this.cardDescription(top.code)||''),topKinds=this.dummyEffectInteractionKinds(topText);
     const overlap=[...candidateKinds].some(kind=>topKinds.has(kind));if(!overlap)return board;
     const sameCode=this.normalizeActionCode(item.code)===this.normalizeActionCode(top.code);
-    if(sameCode)return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'would repeat the same interruption already covering the opponent action'};
+    if(sameCode)return DUMMY_BLOCK('repeats the covering interruption');
     const policy=this.dummyDifficultyPolicy();
-    if(!Number.isFinite(policy.coveredPenalty))return{blocked:true,penalty:Number.POSITIVE_INFINITY,reason:'would spend another interruption on an opponent action already covered'};
-    return{blocked:false,penalty:policy.coveredPenalty+board.penalty,reason:'duplicates an interruption already covering the opponent action'};
+    if(!Number.isFinite(policy.coveredPenalty))return DUMMY_BLOCK('opponent action already covered');
+    return{blocked:false,penalty:policy.coveredPenalty+board.penalty,reason:'duplicates the covering interruption'};
   }
 
   dummyCurrentDamagePotential() {
@@ -9173,16 +8552,12 @@ export class IntegratedDuelController {
     const solutions=[],seen=new Set(),push=indices=>{const normalized=[...indices].sort((a,b)=>a-b),key=normalized.join(',');if(!seen.has(key)&&this.dummySelectSumSelectionIsLegal(m,normalized)){seen.add(key);solutions.push(normalized);}};
     if(!greaterEqual){
 
-
-
       let mandatorySums=new Set([0]);for(const item of must){const vals=values(item);if(!vals.length)return[];const next=new Set();for(const base of mandatorySums)for(const v of vals)if(base+v<=amount)next.add(base+v);mandatorySums=next;if(!mandatorySums.size)return[];}
       const residuals=new Set([...mandatorySums].map(sum=>amount-sum).filter(v=>v>=0));if(!residuals.size)return[];
       const dp=Array.from({length:max+1},()=>new Map());dp[0].set(0,[[]]);const maxResidual=Math.max(...residuals);
       for(let index=0;index<optional.length;index++){const vals=values(optional[index]);if(!vals.length)continue;for(let count=Math.min(max,index+1);count>=1;count--){for(const [sum,paths] of [...dp[count-1]])for(const v of vals){const total=sum+v;if(total>maxResidual)continue;let bucket=dp[count].get(total);if(!bucket){bucket=[];dp[count].set(total,bucket);}for(const path of paths){if(bucket.length>=32)break;const candidate=[...path,index];if(!bucket.some(existing=>existing.length===candidate.length&&existing.every((x,i)=>x===candidate[i])))bucket.push(candidate);}}}}
       for(let count=min;count<=max&&solutions.length<limit;count++)for(const residual of residuals){for(const path of dp[count].get(residual)||[]){push(path);if(solutions.length>=limit)break;}if(solutions.length>=limit)break;}
     }else{
-
-
 
       const entries=optional.map((item,index)=>{const vals=values(item);return{index,min:vals.length?Math.min(...vals):0,max:vals.length?Math.max(...vals):0};}).filter(x=>x.max>0);
       let mandatoryMin=0,mandatoryMax=0,mandatorySmallest=Number.POSITIVE_INFINITY;for(const item of must){const vals=values(item);if(!vals.length)return[];mandatoryMin+=Math.min(...vals);mandatoryMax+=Math.max(...vals);mandatorySmallest=Math.min(mandatorySmallest,Math.min(...vals));}
@@ -9216,20 +8591,16 @@ export class IntegratedDuelController {
     if(m.type===T.SELECT_EFFECTYN)return{type:R.SELECT_EFFECTYN,yes:false};
     if(m.type===T.SELECT_YESNO)return{type:R.SELECT_YESNO,yes:false};
 
-
     return this.dummyResponse(m,Math.max(0,Number(attempt)||0));
   }
 
   // rc242: a face-up monster's own quick effect that tributes or removes itself is held during the Dummy's idle
   // command; it stays available as a chain response (where the threat context justifies the cost).
   dummyIdleSelfCostActivation(item={}) {
-    const L=this.mod?.OcgLocation||{},P=this.mod?.OcgPosition||{};
-    if(!((Number(item?.location)||0)&Number(L.MZONE||0)))return false;
-    const text=String(this.dummyEffectTextForItem(item)||'').toLowerCase();
-    if(!/tribute this card|banish this (?:face-up )?card|send this (?:face-up )?card (?:you control )?to the (?:gy|graveyard)|destroy this card/.test(text))return false;
+    const L=this.mod?.OcgLocation||{},P=this.mod?.OcgPosition||{};if(!((Number(item?.location)||0)&Number(L.MZONE||0)))return false;
+    if(!/tribute this card|banish this (?:face-up )?card|send this (?:face-up )?card (?:you control )?to the (?:gy|graveyard)|destroy this card/.test(String(this.dummyEffectTextForItem(item)||'').toLowerCase()))return false;
     const live=this.cardAtLoc(item)||item,position=Number(live?.position)||0;if(position&&!(position&Number(P.FACEUP||5)))return false;
-    const semantic=this.projectIgnisEffectForActionItem(this.normalizeActionCode(item?.code),item),types=semantic?.types||[];
-    if(semantic&&!types.some(token=>/QUICK/i.test(String(token))))return false;
+    const semantic=this.projectIgnisEffectForActionItem(this.normalizeActionCode(item?.code),item);if(semantic&&!(semantic.types||[]).some(token=>/QUICK/i.test(String(token))))return false;
     return this.dummyBattleValue(live,'attack')>=1500;
   }
 
@@ -9247,7 +8618,6 @@ export class IntegratedDuelController {
 
   dummyPreferredPosition(m,attempt=0) {
     const P=this.mod?.OcgPosition||{},positions=this.mod.ocgPositionParse(m.positions)||[];if(!positions.length)return null;
-
 
     const faceup=positions.filter(pos=>!!(Number(pos)&Number(P.FACEUP||0))),pool=faceup.length?faceup:positions;
     const atkPos=pool.find(pos=>Number(pos)===Number(P.FACEUP_ATTACK)),defPos=pool.find(pos=>Number(pos)===Number(P.FACEUP_DEFENSE));
@@ -9289,7 +8659,6 @@ export class IntegratedDuelController {
     selects.forEach((target,index)=>{const live=this.cardAtLoc(target)||target,score=this.dummyBattleTargetScore(atk,live);if(score>bestScore){bestScore=score;best=index;}});
     return best;
   }
-
 
   dummyBattleChoices(m){
     const R=this.mod.OcgResponseType,B=this.mod.SelectBattleCMDAction,ranked=[];
@@ -9349,8 +8718,6 @@ export class IntegratedDuelController {
     }
     if(m?.can_finish){this.dummyMaterialPlanner=null;return{type:R.SELECT_UNSELECT_CARD,index:null};}
     if(plan.steps>2048){
-
-
 
       if(m?.can_cancel){this.dummyMaterialPlanner=null;return{type:R.SELECT_UNSELECT_CARD,index:null};}
       if(unselects.length){const parent=plan.parents.get(stateKey),idx=parent?.added?unselects.findIndex(item=>this.selectionIdentity(item)===parent.added):unselects.length-1;if(idx>=0)return{type:R.SELECT_UNSELECT_CARD,index:selects.length+idx};}
