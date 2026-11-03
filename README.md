@@ -33,17 +33,34 @@ A **Windows desktop deck builder and integrated test-duel application**, with a 
 
 Captured from the application's browser UI with a fictional sample card list. Official card artwork is not shown; plain placeholder images stand in for card art.
 
-**Deck and search in List view**
+### Build
 
-<img src="docs/images/list-view.png" alt="Deck and search in List view" width="900">
+<table>
+  <tr>
+    <td><strong>Deck and search in List view</strong><br><img src="docs/images/list-view.png" alt="Deck and search in List view" width="440"></td>
+    <td><strong>Search options and filters</strong><br><img src="docs/images/search-options.png" alt="Search options and filters" width="440"></td>
+  </tr>
+  <tr>
+    <td><strong>Readable deck list</strong><br><img src="docs/images/readable-view.png" alt="Readable deck list" width="440"></td>
+    <td><strong>YDK deck text</strong><br><img src="docs/images/ydk-view.png" alt="YDK deck text" width="440"></td>
+  </tr>
+  <tr>
+    <td><strong>Deck statistics</strong><br><img src="docs/images/statistics.png" alt="Deck statistics" width="440"></td>
+    <td><strong>Draw 5 opening hand</strong><br><img src="docs/images/opening-hand.png" alt="Draw 5 opening hand" width="440"></td>
+  </tr>
+</table>
 
-**Deck statistics**
+### Practice
 
-<img src="docs/images/statistics.png" alt="Deck statistics" width="900">
+**Test Duel setup: Practice Dummy intelligence, turn order and deck**
 
-**Test Duel setup**
+<img src="docs/images/test-duel.png" alt="Test Duel setup: Practice Dummy intelligence, turn order and deck" width="900">
 
-<img src="docs/images/test-duel.png" alt="Test Duel setup" width="900">
+### Commands
+
+**Application menu with deck, view, database and file commands**
+
+<img src="docs/images/app-menu.png" alt="Application menu with deck, view, database and file commands" width="900">
 
 ## Download
 
