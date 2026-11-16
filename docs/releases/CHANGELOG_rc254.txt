@@ -1,0 +1,15 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc254
+
+Battle, summon and effect sounds now use the sound effects the owner chose.
+
+Sound
+- Activation is the owner's magical whoosh; chain links use the shorter magical whoosh; targeting an incoming spell impact.
+- Summons: Special (magic surprise), Fusion and Synchro (elemental spell casts), Xyz (magical rock spell), Link (spell casting), Ritual (earth spell with a spell cast).
+- Attacks: sword slice for blade attacks, violent sword slice with a roar for beasts and dragons, energy beam blast for magic, fire spell impact for fire. Impact is a sword clash and block.
+- LP damage is the epic spell impact; destroyed the medium explosion; negated the supernatural explosion; banished an outgoing spell impact.
+- LP gain, stat changes and equip use the magic spell, magic burst, spellcast and sword slash recordings.
+- Victory is the epic cinematic explosion; defeat the large underwater explosion.
+- Each sound is trimmed to at most two seconds so the set fits in the application. Card handling, the Deck shuffle and the phase whoosh are unchanged.
+
+Sources
+- Sound effects from Pixabay under the Pixabay Content License; contributors are credited in docs/LEGAL_NOTICE.txt.
