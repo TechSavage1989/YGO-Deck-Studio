@@ -5955,3 +5955,6 @@ body.duel-mode-active{overflow:hidden}
 .duel-activation-pulse{position:fixed;z-index:128800;pointer-events:none;border-radius:7px;border:3px solid #9fe0ff;box-shadow:0 0 26px 6px rgba(120,210,255,.9),inset 0 0 20px rgba(160,225,255,.7);animation:duelActivationPulse .85s cubic-bezier(.2,.7,.3,1) both}
 @keyframes duelActivationPulse{0%{transform:scale(.9);opacity:0}20%{opacity:1}100%{transform:scale(1.75);opacity:0}}
 @media (prefers-reduced-motion:reduce){.duel-card.duel-attack-lunge,.duel-card.duel-attack-recoil,.duel-attack-slash::before,.duel-attack-slash::after,.duel-destroy-burst,.duel-destroy-burst::before,.duel-destroy-burst::after,.duel-destroy-tile,.duel-destroy-burst b,.duel-summon-ring,.duel-summon-ring::after,.duel-summon-pillar,.duel-summon-flash,.duel-summon-spark,.duel-summon-wash,.duel-activation-pulse{animation-duration:.01s}}
+
+/* rc252: particle effects layer (see playFx in duel-core.js) */
+.duel-fx-canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:129500;pointer-events:none}

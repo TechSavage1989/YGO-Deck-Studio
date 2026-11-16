@@ -1,0 +1,22 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc252
+
+Detailed card-action effects and simpler sounds, both requested by the owner.
+
+Effects
+- A new particle effects layer draws detailed, glowing effects on the board for card actions.
+- Summons: Normal (golden shockwave, light rays and dust), Special (cyan magic circle and pillar of light), Fusion (purple and orange streams spiral into a burst), Synchro (green rings close in, then a beam of light), Xyz (a dark galaxy opens and collapses into a yellow burst), Link (blue frames expand and bolts fire in the eight arrow directions), Ritual (a ring of blue flames around a magic circle).
+- Activations: a rotating magic circle under the card, green for Spells, pink for Traps, amber for monster effects.
+- Negated: two blades of red light cross the card and it shatters into shards. Destroyed: cracks, embers, sparks and smoke.
+- Sent to the Graveyard: the card dissolves into smoke and motes of light that fly to the Graveyard. Banished: a rift opens and pulls the card in. Returned to the hand or Deck: streaks of light fly to where the card goes.
+- Targeting (a lock-on reticle), ATK/DEF changes (rising green or falling red arrows), unaffected cards and attack impacts have effects too.
+- The same effects play around the large card popup that announces an outcome.
+- Effects follow the existing animation setting and battle effect intensity, and are skipped when the system asks for reduced motion.
+
+Sound
+- Phase changes are a plain whoosh.
+- Card moves (draw, set, Normal Summon, sent to the Graveyard, returned, discarded, used as material) use only card-handling recordings.
+- No bells, chimes or dings remain. Extra Deck and Ritual Summons, activations, attacks, destruction, victory and defeat now use magical blasts, explosions, thunder, roars and blades.
+- Magic recordings are used for effects: activation, chain links, targeting, negation and stat changes, as well as Special and Extra Deck Summons.
+
+Validation
+- tests/test_rc252_particle_fx.py runs every effect in a real browser and checks it draws and cleans up.
