@@ -11,3 +11,5 @@ The test-duel feature may download or use third-party rules components and data,
 The application may open external services or websites selected by the user. Those services are governed by their own terms, privacy policies, and availability.
 
 This development build is provided for testing and deck-development purposes. Users are responsible for maintaining backups of their deck files and for verifying tournament legality under the rules and banlist applicable to their event.
+
+Duel sound effects (since rc251) are short clips mixed from recordings their authors dedicated to the public domain under Creative Commons Zero (CC0 1.0): "Casino Audio" by Kenney (kenney.nl); "80 CC0 RPG SFX", "100 CC0 SFX", "100 CC0 SFX #2", "100 CC0 wood and metal SFX" and "50 CC0 Sci-Fi SFX" by rubberduck; and "RPG Sound Pack" by artisticdude, all obtained from OpenGameArt.org. CC0 requires no attribution; the authors are credited here with thanks.
