@@ -1,0 +1,12 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc255
+
+Every sound was checked against the action it plays for, by measuring where each recording's main event falls and how it sounds (swell or hit, bright or deep).
+
+Sound
+- Synchro Summon: the spell cast builds for two seconds, and rc254 cut it off before its climax. It now plays the build's last second and the climax.
+- LP gain: now the bright, airy spell-casting sound instead of a deep thump.
+- Link Summon: now the punchy magic burst.
+- ATK/DEF increase: the bright magical whoosh, pitched up. ATK/DEF decrease: the spellcast, pitched down.
+- Equip: a short spell cast instead of a sword slash, since equipped cards are not always weapons.
+- Counter placed: a short magic thump.
+- All other assignments were confirmed: swelling whoosh for activation, sword slice on attack, clash on impact, instant hit for LP damage, explosions for destruction, negation, victory and defeat.
