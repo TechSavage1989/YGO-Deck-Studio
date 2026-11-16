@@ -1,5 +1,5 @@
 """rc257: the owner's sound assignments. A Field Spell activation has its own sound kind; other
-activations keep the normal one; Fusion, Synchro, Link and Ritual Summons share the Special Summon clip."""
+activations keep the normal one; since rc258 every summon type plays the Normal Summon clip."""
 import os,re,json
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -7,9 +7,9 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 core=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
 app=(root/'web/js/app.js').read_text(encoding='utf-8')
-assert "duelcore.1-rc257" in core
+assert "duelcore.1-rc258" in core
 table={**json.loads(re.search(r'globalThis\.YGO_DUEL_SFX=(\{.*?\});',app).group(1)),**json.loads(re.search(r'const DUEL_SFX_LONG=(\{.*?\});',core).group(1))}
-assert 'fieldspell' in table and 'special' in table and 'xyz' in table
+assert 'fieldspell' in table and 'summon' in table and 'activate' in table and 'xyz' not in table and 'special' not in table
 js=core.replace('export function ','function ').replace('export class ','class ')+'\nwindow.IntegratedDuelController=IntegratedDuelController;'
 
 with sync_playwright() as p:
@@ -25,7 +25,7 @@ with sync_playwright() as p:
       const played=[];const cbs=ctx.createBufferSource.bind(ctx);ctx.createBufferSource=()=>{const s=cbs();const st=s.start.bind(s);s.start=(...a)=>{played.push(s.buffer);return st(...a)};return s};
       const buf=k=>{c.soundLastPlayed.clear();played.length=0;c.playSound(k);return played[0]||null};
       const S=c.soundSamples;
-      return{kinds,fieldUsesOwn:buf('fieldspell')===S.fieldspell,fusion:buf('fusion')===S.special,synchro:buf('synchro')===S.special,link:buf('link')===S.special,ritual:buf('ritual')===S.special,xyzOwn:buf('xyz')===S.xyz&&S.xyz!==S.special,category:c.soundCategoryForKind('fieldspell')};
+      return{kinds,fieldUsesOwn:buf('fieldspell')===S.fieldspell,fusion:buf('fusion')===S.summon,synchro:buf('synchro')===S.summon,link:buf('link')===S.summon,ritual:buf('ritual')===S.summon,xyzOwn:buf('xyz')===S.summon&&buf('special')===S.summon&&buf('activate')===S.activate&&S.activate!==S.fieldspell,category:c.soundCategoryForKind('fieldspell')};
     }''')
     browser.close()
 
