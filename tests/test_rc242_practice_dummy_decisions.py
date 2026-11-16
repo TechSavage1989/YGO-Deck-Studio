@@ -4,7 +4,7 @@ from playwright.sync_api import sync_playwright
 
 root=Path(__file__).resolve().parents[1]
 js_source=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
-assert "duelcore.1-rc254" in js_source
+assert "duelcore.1-rc255" in js_source
 # Field refresh must not request QUERY_TYPE: the ocgcore-wasm reader has no branch for it and loses every later field.
 assert 'const flags = Q.CODE|Q.POSITION|Q.LEVEL|Q.RANK|Q.ATTRIBUTE|Q.ATTACK|Q.DEFENSE|Q.OWNER|Q.IS_PUBLIC|Q.LINK|Q.OVERLAY_CARD|Q.COUNTERS;' in js_source
 assert 'Q.TYPE' not in js_source
