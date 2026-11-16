@@ -4,7 +4,7 @@ from playwright.sync_api import sync_playwright
 
 root=Path(__file__).resolve().parents[1]
 js_source=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
-assert "duelcore.1-rc252" in js_source
+assert "duelcore.1-rc253" in js_source
 # Cards in the duel carry an accessible name, not a hover tooltip that covers neighbouring cards.
 assert "identity is known; card remains face-down on the field" not in js_source
 assert ".title=this.cardName(item.code)" not in js_source and ".title=this.cardName(visible)" not in js_source
