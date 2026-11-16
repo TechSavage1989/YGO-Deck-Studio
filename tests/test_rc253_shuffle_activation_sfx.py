@@ -6,7 +6,7 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 core=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
 app=(root/'web/js/app.js').read_text(encoding='utf-8')
-assert "duelcore.1-rc256" in core
+assert "duelcore.1-rc257" in core
 table=json.loads(re.search(r'globalThis\.YGO_DUEL_SFX=(\{.*?\});',app).group(1))
 assert 'shuffle' in table
 js=core.replace('export function ','function ').replace('export class ','class ')+'\nwindow.IntegratedDuelController=IntegratedDuelController;'

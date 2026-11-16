@@ -1,0 +1,13 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc257
+
+Sound assignments chosen by the owner.
+
+Sound
+- Normal Summon: the "spellcast" recording.
+- Special, Fusion, Synchro, Link and Ritual Summons: the "spell casting" recording. Xyz Summon keeps the "magical rock spell".
+- Negated: the "magic surprise" recording.
+- Activating a Field Spell: the "magical rock spell", separate from the whoosh used for other activations.
+- Sent to the Graveyard stays the "earth spell".
+
+Validation
+- tests/test_rc257_owner_sound_map.py checks the Field Spell activation sound and the shared summon recording.
