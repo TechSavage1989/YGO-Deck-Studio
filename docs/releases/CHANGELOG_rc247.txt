@@ -1,0 +1,19 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc247
+
+Battle and action animations, and a new sound set.
+
+Animations
+- Attacks: the attacking monster lunges toward its target as the beam fires, and the target flinches on impact.
+- Battle destruction: a monster destroyed by battle now breaks apart where it stood, timed to the attack's impact, instead of simply moving to the Graveyard.
+- Summons: a ring pulses on the zone a monster is summoned to, coloured and shaped by summon type (Normal, Special, Fusion, Synchro, Xyz, Link, Ritual).
+- All new effects respect the Battle Effect Intensity setting, the animation toggle, and the system reduced-motion preference.
+
+Sound
+- Every action sound is now a layered synthesized sound instead of a single beep: draw, card movement, Set, position change, activation, flip, Chain Link, phase change, LP damage and recovery, victory and defeat.
+- Each summon type has its own sound: Normal, Special, Fusion, Synchro, Xyz, Link and Ritual.
+- Effect outcomes are audible: negated, destroyed, banished, sent to the Graveyard, returned to hand or Deck, targeted, ATK/DEF raised or lowered, used as material or Tributed, discarded. A new "Effect Outcomes" volume control covers them.
+- LP damage sound scales with the amount of damage.
+- The nine attack styles by monster type are unchanged.
+- No audio files were added; everything is synthesized at runtime.
+
+Tests: tests/test_rc247_battle_fx_sound.py (new) checks that every sound recipe produces audio and belongs to a volume category, the summon-type and outcome mappings, and that each effect appears, cleans up after itself and stays off when animations are disabled.
