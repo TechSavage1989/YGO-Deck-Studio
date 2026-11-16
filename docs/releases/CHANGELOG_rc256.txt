@@ -1,0 +1,7 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc256
+
+Two sound changes requested by the owner.
+
+Sound
+- Normal Summon: a magical spell cast (by the same sound designer as the Xyz Summon's rock spell) over a light card slap, instead of the card sound alone.
+- Sent to the Graveyard: the earth spell, over a quiet card slide.
