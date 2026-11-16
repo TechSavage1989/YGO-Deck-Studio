@@ -11,7 +11,7 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 core=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
 app=(root/'web/js/app.js').read_text(encoding='utf-8')
-assert "duelcore.1-rc257" in core
+assert "duelcore.1-rc258" in core
 match=re.search(r'globalThis\.YGO_DUEL_SFX=(\{.*?\});',app)
 assert match,'app.js must define the recorded clip table'
 table=json.loads(match.group(1))
@@ -56,7 +56,7 @@ assert set(result['clips'])==set(table),sorted(set(table)-set(result['clips']))
 for kind,clip in result['clips'].items():
     assert 0.12<=clip['seconds']<=2.1,(kind,clip)
     assert clip['peak']>=0.25,(kind,clip)
-SHARED={'fusion','synchro','link','ritual'}  # rc257: these play the Special Summon recording
+SHARED={'special','fusion','synchro','xyz','link','ritual'}  # rc258: these play the Normal Summon recording
 assert set(result['kinds'])-SHARED<=set(table),sorted(set(result['kinds'])-SHARED-set(table))
 assert not SHARED&set(table)
 assert sorted(result['viaClip'])==sorted(result['kinds']),sorted(set(result['kinds'])-set(result['viaClip']))
