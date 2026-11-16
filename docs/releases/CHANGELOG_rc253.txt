@@ -4,7 +4,7 @@ Two sound changes requested by the owner.
 
 Sound
 - The Deck shuffle now plays a fast riffle made from recordings of a real deck being shuffled and fanned, including the first shuffle at the start of a duel.
-- Activating a Spell, Trap or card effect (when the magic circle appears) now plays a magical whoosh (an airy sweep under layered spell recordings) instead of the previous spell blast.
+- Activating a Spell, Trap or card effect (when the magic circle appears) now plays a magical whoosh (a breathy sweep that swells into layered spell recordings, with no wobbling tone at the start) instead of the previous spell blast.
 
 Sources
 - The shuffle recording is from Kenney's CC0 "Casino Audio" pack, already credited in docs/LEGAL_NOTICE.txt.
