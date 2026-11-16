@@ -2,9 +2,9 @@
 
 ## Latest version
 
-3.0.0-alpha.221-duelcore.1-rc243 (unpublished; duel core and Practice Dummy review, see docs/releases/CHANGELOG_rc243.txt and docs/validation/DUELCORE_VALIDATION_alpha221_duelcore1_rc243.txt).
+3.0.0-alpha.221-duelcore.1-rc244 (unpublished; build pipeline only: terser minification of the embedded JavaScript and patching of web/duel-core.css, see docs/releases/CHANGELOG_rc244.txt).
 
-Previous published baseline: 3.0.0-alpha.221-duelcore.1-rc242 (tag v3.0.0-alpha.221-duelcore.1-rc242, published 2026-11-03; the published manifest, executable, archives and checksums were verified from the live feed and the unchanged rc241 updater client found, downloaded and validated it). Before that: rc241. The owner confirmed the rc240 desktop icon is fixed. Native Windows installation and restart are not inferred from icon confirmation.
+Previous published baseline: 3.0.0-alpha.221-duelcore.1-rc243 (published 2026-11-04; assets, manifest and checksums verified from the live feed, and the unchanged rc242 updater client found, downloaded and validated it). Before that: rc242 (published 2026-11-03; the published manifest, executable, archives and checksums were verified from the live feed and the unchanged rc241 updater client found, downloaded and validated it). Before that: rc241. The owner confirmed the rc240 desktop icon is fixed. Native Windows installation and restart are not inferred from icon confirmation.
 
 ## Source and repository state
 
@@ -95,6 +95,7 @@ The release builder:
 
 ## Current focused tests
 
+- tests/test_rc244_minified_embed.py
 - tests/test_rc243_duel_review.py
 - tests/test_rc242_practice_dummy_decisions.py
 - tests/test_rc236_update_client_timers.py
@@ -177,4 +178,8 @@ Not performed here: native Windows build and packaging (no recovered baseline in
 The duel controller, the Best-of-3 match flow and the Dummy decision functions were reviewed against the Rules Engine contract and exercised with a 24-duel headless campaign (vanilla, Blue-Eyes, Salamangreat and Traptrix lists; Casual, Competitive and Expert; Dummy first and second; passive and mirrored Player). Fixed: the Player's optional-chain auto-pass swallowed event windows such as the Damage Step of the Player's own attack; the Dummy toggled battle positions every Main Phase 2 and flipped walls; LP-cost prompts were always accepted; weak attackers rammed set monsters. tools/patch_embedded_web.py now compacts whitespace on literal-free JavaScript lines so the review fixes fit the duel-core.js slot with about 1.5 KB to spare; tests/test_rc243_duel_review.py guards the compactor and the fixes. Rules legality remains the engine's: every Dummy response is still validated by OCGCore, and the campaign recorded no RETRY.
 
 Not performed here: native Windows build, packaging and owner playtesting.
+
+## Minified embed and improvement roadmap — 2026-11-16 (rc244)
+
+The release build now needs Node.js with npx: tools/patch_embedded_web.py minifies app.js and duel-core.js with a pinned terser (local names only) and also patches web/duel-core.css. This is phase 1 of an owner-approved plan: (1) make room and fix the pipeline, (2) test every feature of the deck builder and Test Duel headlessly, (3) present the engine events that are currently silent (coin, dice, counters, equips, control changes, missed timing) and fix log wording, (4) battle and action animations, (5) layered synthesized sound, (6) importance-based pacing. Synthesized audio only; no recorded samples.
 

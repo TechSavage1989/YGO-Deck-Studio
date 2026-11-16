@@ -1,0 +1,8 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc244
+
+Build pipeline only; no change to how the app behaves.
+
+- The embedded JavaScript is now minified with terser (version pinned in tools/patch_embedded_web.py, fetched through npx). Only local names are shortened; class names and every property and method name are kept. duel-core.js drops from about 797 KB to 654 KB inside its 798,551-byte slot and app.js from 437 KB to 297 KB, which frees roughly 140 KB and 165 KB for the planned presentation, animation and sound work. If npx is unavailable the patcher falls back to the earlier whitespace compaction and warns.
+- web/duel-core.css is now patched into the executable (compacted like styles.css). Until now the build never replaced it, so installed copies kept the rc189 stylesheet and any edit to it would not have shipped. The current file is identical to the embedded one, so nothing changes visually in this release.
+
+Validation: the compacted stylesheets parse to the same rules as their sources (2,453 and 3,375 rules; differences are whitespace inside values only); all behaviour regressions pass against the minified duel-core.js; the minified app boots and plays engine-backed duels headlessly with zero rejections. tests/test_rc244_minified_embed.py guards the slot sizes, the preserved names and the fallback.

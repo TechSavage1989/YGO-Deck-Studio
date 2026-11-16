@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Patch the verified rc243 browser assets into the exact rc189 Go executable.
+"""Patch the verified rc244 browser assets into the exact rc189 Go executable.
 
 This script intentionally supports only the supplied rc189 baseline. It verifies the
 baseline SHA-256 before modifying the Go embed.FS payload, updates the embedded file
@@ -9,6 +9,9 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
+import shutil
+import subprocess
 import struct
 import sys
 from dataclasses import dataclass
@@ -19,10 +22,11 @@ EMBED_TABLE_VA = 0xD6A578
 EMBED_ENTRY_COUNT = 87
 EMBED_ENTRY_SIZE = 48
 NATIVE_VERSION_OLD = b"3.0.0-alpha.221-duelcore.1-rc189"
-NATIVE_VERSION_NEW = b"3.0.0-alpha.221-duelcore.1-rc243"
+NATIVE_VERSION_NEW = b"3.0.0-alpha.221-duelcore.1-rc244"
 PATCH_FILES = (
     "web/index.html",
     "web/styles.css",
+    "web/duel-core.css",
     "web/js/app.js",
     "web/js/duel-core.js",
 )
@@ -198,13 +202,62 @@ def compact_literal_free_js_line(line: str) -> str:
         index = end
     return "".join(out)
 
+TERSER_VERSION = "5.44.0"
+TERSER_ARGS = ("--module", "--compress", "passes=2", "--mangle", "--keep-classnames", "--comments", "false")
+_terser_cache: dict[bytes, bytes | None] = {}
+
+def terser_command() -> list[str] | None:
+    """Locate the pinned terser: YGO_TERSER (path to its bin script), else npx with the exact version."""
+    explicit = os.environ.get("YGO_TERSER")
+    node = shutil.which("node")
+    if explicit and node and Path(explicit).is_file():
+        return [node, explicit]
+    npx = shutil.which("npx") or shutil.which("npx.cmd")
+    if npx:
+        return [npx, "--yes", f"terser@{TERSER_VERSION}"]
+    return None
+
+def minify_js(data: bytes) -> bytes | None:
+    """Minify an ES module with terser (local names only; class names and all properties are kept).
+
+    Returns None when terser cannot run, so the caller can fall back to the whitespace compaction.
+    Set YGO_NO_TERSER=1 to force that fallback.
+    """
+    if os.environ.get("YGO_NO_TERSER"):
+        return None
+    key = hashlib.sha256(data).digest()
+    if key in _terser_cache:
+        return _terser_cache[key]
+    result = None
+    command = terser_command()
+    if command:
+        try:
+            done = subprocess.run([*command, *TERSER_ARGS], input=data, capture_output=True, timeout=600, check=False)
+            if done.returncode == 0 and done.stdout.strip():
+                result = done.stdout if done.stdout.endswith(b"\n") else done.stdout + b"\n"
+            else:
+                print(f"WARNING: terser failed ({done.returncode}): {done.stderr.decode('utf-8', 'replace')[:400]}", file=sys.stderr)
+        except (OSError, subprocess.SubprocessError) as error:
+            print(f"WARNING: terser could not run: {error}", file=sys.stderr)
+    else:
+        print("WARNING: terser is unavailable (no npx); using whitespace compaction only.", file=sys.stderr)
+    _terser_cache[key] = result
+    return result
+
+def compact_js_bytes(data: bytes) -> bytes:
+    """Whitespace-only fallback used when terser is unavailable."""
+    return _compact_js_text(data.decode("utf-8")).encode("utf-8")
+
 def replacement_bytes(path: Path, embedded_name: str) -> bytes:
     data = path.read_bytes()
-    if embedded_name == "web/styles.css":
+    if embedded_name in ("web/styles.css", "web/duel-core.css"):
         return compact_css_text(data.decode("utf-8")).encode("utf-8")
     if embedded_name not in ("web/js/app.js", "web/js/duel-core.js"):
         return data
-    text = data.decode("utf-8")
+    minified = minify_js(data)
+    return minified if minified is not None else compact_js_bytes(data)
+
+def _compact_js_text(text: str) -> str:
     for comment in (
         " // Blue-Eyes White Dragon: inert Level 8 normal monster.",
         " // Alexandrite Dragon: deterministic normal-summon smoke test.",
@@ -235,7 +288,7 @@ def replacement_bytes(path: Path, embedded_name: str) -> bytes:
         if index < len(lines) - 1 and not line.rstrip().endswith((";", "{", "}", ",")):
             chunks.append("\n")
     chunks.append("\n")
-    return "".join(chunks).encode("utf-8")
+    return "".join(chunks)
 
 def verify_original_entry(image: PEImage, entry: EmbeddedFile) -> None:
     if entry.original_size == 0:
@@ -262,7 +315,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("base_exe", type=Path, help="Exact rc189 baseline executable")
     parser.add_argument("web_root", type=Path, help="Patched web source root")
-    parser.add_argument("output_exe", type=Path, help="Output rc243 executable")
+    parser.add_argument("output_exe", type=Path, help="Output rc244 executable")
     args = parser.parse_args()
     base_bytes = args.base_exe.read_bytes()
     actual_sha = hashlib.sha256(base_bytes).hexdigest()
@@ -294,7 +347,7 @@ def main() -> int:
     print(f"SHA-256: {output_sha}")
     for name, old_size, new_size in changed:
         print(f"{name}: {old_size} bytes -> {new_size} bytes")
-    print(f"Native version constant: rc189 -> rc243 at file offset {native_offset:#x}")
+    print(f"Native version constant: rc189 -> rc244 at file offset {native_offset:#x}")
     return 0
 
 if __name__ == "__main__":
