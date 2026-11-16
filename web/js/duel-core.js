@@ -1,4 +1,4 @@
-const DUEL_BRANCH = 'duelcore.1-rc249';
+const DUEL_BRANCH = 'duelcore.1-rc250';
 
 const DUMMY_CARD_CODE = 89631139;
 const DUMMY_OK=Object.freeze({blocked:false,penalty:0,reason:''}),DUMMY_BLOCK=reason=>({blocked:true,penalty:Infinity,reason}); // Blue-Eyes White Dragon: inert Level 8 normal monster.
@@ -1891,48 +1891,78 @@ export class IntegratedDuelController {
     },p=P[style]||P.laser;(p.t||[]).forEach(x=>tone(...x));(p.n||[]).forEach(x=>noise(...x));return true;
   }
 
-  // rc247: layered synthesized sounds. Each recipe is tones [at,fromHz,toHz,seconds,gain,wave] and noise bursts [at,seconds,gain,filterHz,filterType].
+  // rc250: sound set v2. Each recipe: t = tones [at,fromHz,toHz,seconds,gain,wave], n = noise bursts
+  // [at,seconds,gain,filterHz,filterType,sweepToHz], r = reverb send (0..1). Tones are doubled with a slight
+  // detune for body; everything passes through a shared compressor and a generated reverb.
   soundRecipes() {
     if(this.soundRecipeCache)return this.soundRecipeCache;
+    const C4=261.6,E4=329.6,G4=392,A4=440,C5=523.3,D5=587.3,E5=659.3,G5=784,A5=880,C6=1046.5,E6=1318.5,G6=1568;
     return this.soundRecipeCache={
-      select:{t:[[0,880,660,.05,.035,'sine']],n:[[0,.02,.018,3000,'highpass']]},
-      draw:{t:[[.02,520,780,.08,.02,'triangle']],n:[[0,.11,.055,2600,'bandpass']]},
-      move:{n:[[0,.09,.04,1800,'bandpass']]},
-      summon:{t:[[0,196,196,.22,.06,'triangle'],[0,294,294,.22,.04,'triangle'],[.05,392,392,.25,.035,'sine']],n:[[0,.06,.05,900,'lowpass']]},
-      special:{t:[[0,330,660,.22,.045,'sine'],[.06,495,990,.24,.035,'sine'],[.14,880,1320,.22,.03,'triangle']],n:[[0,.2,.018,5200,'highpass']]},
-      fusion:{t:[[0,220,440,.35,.05,'sawtooth'],[0,330,277,.35,.04,'sine'],[.3,554,554,.25,.05,'triangle']],n:[[.05,.3,.03,1200,'bandpass']]},
-      synchro:{t:[[0,784,784,.12,.04,'sine'],[.08,988,988,.12,.04,'sine'],[.16,1175,1175,.12,.04,'sine'],[.24,1568,1568,.3,.05,'triangle']],n:[[.22,.2,.02,6000,'highpass']]},
-      xyz:{t:[[0,440,82,.3,.06,'sawtooth'],[.28,110,110,.28,.07,'sine'],[.3,660,880,.2,.03,'triangle']],n:[[.28,.16,.06,700,'lowpass']]},
-      link:{t:[[0,660,660,.06,.04,'square'],[.07,880,880,.06,.04,'square'],[.14,1320,1320,.06,.04,'square'],[.21,1760,880,.2,.045,'square']],n:[[.2,.08,.02,5000,'highpass']]},
-      ritual:{t:[[0,147,147,.5,.06,'sine'],[0,220,220,.5,.04,'triangle'],[.1,440,435,.4,.03,'sine']]},
-      set:{t:[[0,180,120,.1,.05,'triangle']],n:[[0,.05,.04,700,'lowpass']]},
-      position:{t:[[.03,300,240,.09,.03,'triangle']],n:[[0,.12,.04,1400,'bandpass']]},
-      activate:{t:[[0,660,990,.14,.045,'sine'],[.04,990,1320,.16,.03,'triangle']],n:[[0,.1,.015,4500,'highpass']]},
-      flip:{t:[[.06,740,988,.12,.035,'sine']],n:[[0,.1,.05,2000,'bandpass']]},
-      chain:{t:[[0,988,988,.07,.04,'triangle'],[.06,1319,1319,.1,.04,'triangle']],n:[[0,.04,.03,3800,'highpass']]},
-      phase:{t:[[0,392,392,.2,.035,'sine'],[0,587,587,.22,.03,'sine'],[.1,784,784,.24,.025,'sine']]},
-      attack:{t:[[0,150,70,.24,.06,'sawtooth']],n:[[0,.12,.04,1800,'bandpass']]},
-      impact:{t:[[0,90,45,.2,.07,'sine']],n:[[0,.14,.07,600,'lowpass']]},
-      damage:{t:[[0,150,60,.26,.06,'sawtooth'],[0,90,45,.3,.07,'sine']],n:[[0,.2,.07,600,'lowpass']]},
-      recover:{t:[[0,523,523,.12,.035,'sine'],[.09,659,659,.12,.035,'sine'],[.18,784,1047,.22,.04,'sine']]},
-      victory:{t:[[0,523,523,.14,.045,'triangle'],[.13,659,659,.14,.045,'triangle'],[.26,784,784,.14,.045,'triangle'],[.39,1047,1047,.5,.055,'triangle'],[.39,523,523,.5,.03,'sine']]},
-      defeat:{t:[[0,392,370,.25,.045,'triangle'],[.22,311,294,.25,.045,'triangle'],[.44,196,98,.6,.06,'sawtooth']],n:[[.44,.4,.03,400,'lowpass']]},
-      coin:{t:[[0,2100,2100,.05,.04,'triangle'],[.05,2600,2600,.18,.04,'sine']]},
-      dice:{n:[[0,.03,.05,2500,'bandpass'],[.07,.03,.045,2200,'bandpass'],[.13,.04,.04,1900,'bandpass']]},
-      counter:{t:[[0,1175,1568,.07,.035,'sine']]},
-      equip:{t:[[0,330,330,.06,.04,'square']],n:[[0,.06,.05,2500,'bandpass']]},
-      missed:{t:[[0,330,220,.18,.04,'triangle'],[.16,220,147,.22,.04,'triangle']]},
-      negated:{t:[[0,880,110,.22,.055,'sawtooth']],n:[[0,.14,.055,1500,'bandpass']]},
-      destroyed:{t:[[0,120,40,.3,.08,'sine']],n:[[0,.3,.09,500,'lowpass'],[0,.12,.05,3000,'highpass']]},
-      banished:{t:[[0,1200,200,.35,.04,'sine'],[.03,1500,300,.35,.03,'triangle']],n:[[0,.3,.03,4000,'highpass']]},
-      togy:{t:[[0,260,130,.16,.04,'triangle']],n:[[0,.1,.03,900,'lowpass']]},
-      returned:{t:[[0,400,800,.14,.025,'sine']],n:[[0,.16,.045,2400,'bandpass']]},
-      targeted:{t:[[0,1400,1400,.05,.03,'square'],[.08,1400,1400,.05,.03,'square']]},
-      statup:{t:[[0,440,880,.16,.035,'sine']]},
-      statdown:{t:[[0,660,330,.18,.035,'sine']]},
-      material:{t:[[0,520,260,.2,.035,'triangle']],n:[[0,.14,.03,1800,'bandpass']]},
-      discarded:{n:[[0,.1,.04,1500,'bandpass']]},
+      select:{t:[[0,1200,900,.045,.16,'sine'],[0,2400,1800,.03,.05,'sine']],n:[[0,.018,.08,4200,'highpass']],r:.05},
+      draw:{t:[[.05,700,1100,.07,.07,'triangle']],n:[[0,.14,.3,2200,'bandpass',5200],[.1,.03,.12,6000,'highpass']],r:.12},
+      move:{n:[[0,.13,.22,1500,'bandpass',3600]],t:[[.08,300,220,.06,.06,'sine']],r:.1},
+      summon:{t:[[0,120,52,.38,.55,'sine'],[.02,C4,C4,.5,.13,'triangle'],[.02,E4,E4,.5,.11,'triangle'],[.02,G4,G4,.55,.11,'triangle'],[.1,C5,C5,.5,.07,'sine']],n:[[0,.09,.35,700,'lowpass'],[0,.25,.08,5200,'highpass']],r:.35},
+      special:{t:[[0,180,720,.34,.12,'sawtooth'],[.3,95,48,.4,.5,'sine'],[.3,A4,A4,.6,.12,'triangle'],[.3,E5,E5,.6,.1,'triangle'],[.36,A5,A5,.14,.12,'sine'],[.44,C6,C6,.14,.11,'sine'],[.52,E6,E6,.3,.1,'sine']],n:[[0,.34,.14,900,'bandpass',5200],[.3,.5,.07,6200,'highpass']],r:.5},
+      fusion:{t:[[0,110,330,.6,.13,'sawtooth'],[0,330,165,.6,.11,'sawtooth'],[0,220,222,.6,.08,'sine'],[.58,80,40,.5,.55,'sine'],[.58,A4,A4,.8,.13,'triangle'],[.58,554.4,554.4,.8,.11,'triangle'],[.58,E5,E5,.8,.11,'triangle'],[.66,A5,A5,.6,.07,'sine']],n:[[0,.6,.16,500,'bandpass',2600],[.58,.4,.12,5000,'highpass']],r:.6},
+      synchro:{t:[[0,G5,G5,.16,.13,'sine'],[.09,A5,A5,.16,.13,'sine'],[.18,C6,C6,.16,.13,'sine'],[.27,E6,E6,.16,.13,'sine'],[.36,G6,G6,.7,.14,'triangle'],[.36,C6,C6,.7,.1,'sine'],[.36,E6,E6,.7,.09,'sine'],[.36,100,50,.4,.4,'sine']],n:[[0,.36,.07,7000,'highpass'],[.36,.6,.1,8000,'highpass']],r:.65},
+      xyz:{t:[[0,700,60,.46,.16,'sawtooth'],[0,350,45,.46,.12,'square'],[.44,62,30,.7,.7,'sine'],[.44,C4/2,C4/2,.7,.14,'sawtooth'],[.5,E6,E6,.5,.07,'sine'],[.5,G6,G6,.5,.05,'sine']],n:[[.44,.3,.45,420,'lowpass'],[.1,.34,.1,2400,'bandpass',300]],r:.5},
+      link:{t:[[0,E5,E5,.07,.12,'square'],[.07,A5,A5,.07,.12,'square'],[.14,E6,E6,.07,.12,'square'],[.21,1975.5,1975.5,.09,.1,'square'],[.3,110,55,.4,.5,'sine'],[.3,220,220,.5,.12,'sawtooth'],[.3,330,330,.5,.1,'sawtooth'],[.3,440,440,.5,.1,'sawtooth']],n:[[.3,.1,.2,6500,'highpass'],[0,.3,.05,9000,'highpass']],r:.35},
+      ritual:{t:[[0,110,110,1.1,.3,'sine'],[0,220,220,1.1,.16,'sine'],[0,277.2,277.2,1,.1,'sine'],[0,330,328,1,.1,'triangle'],[.5,440,440,.7,.07,'sine'],[0,55,40,.6,.4,'sine']],n:[[0,.9,.05,3000,'bandpass',800]],r:.75},
+      set:{t:[[0,170,85,.14,.4,'sine'],[0,340,200,.06,.08,'triangle']],n:[[0,.07,.25,650,'lowpass']],r:.12},
+      position:{t:[[.06,360,250,.1,.12,'triangle']],n:[[0,.16,.22,1100,'bandpass',2600]],r:.12},
+      activate:{t:[[.08,A5,A5,.3,.14,'sine'],[.16,E6,E6,.42,.13,'sine'],[.08,A4,A4,.3,.07,'triangle']],n:[[0,.26,.2,700,'bandpass',4800]],r:.4},
+      flip:{t:[[.1,600,1200,.14,.13,'sine']],n:[[0,.16,.26,1700,'bandpass',4200]],r:.2},
+      chain:{t:[[0,740,740,.09,.14,'square'],[0,1110,1110,.09,.1,'square'],[.02,370,366,.3,.14,'triangle'],[.02,1480,1480,.2,.05,'sine']],n:[[0,.05,.3,5200,'highpass']],r:.3},
+      phase:{t:[[0,G4,G4,.5,.1,'sine'],[0,D5,D5,.5,.08,'sine'],[.12,G5,G5,.5,.07,'sine'],[0,98,98,.4,.12,'sine']],n:[[0,.3,.04,5000,'highpass']],r:.5},
+      attack:{t:[[0,200,60,.26,.3,'sawtooth']],n:[[0,.18,.3,1600,'bandpass',4200]],r:.2},
+      impact:{t:[[0,110,40,.3,.6,'sine']],n:[[0,.2,.4,600,'lowpass'],[0,.05,.2,5000,'highpass']],r:.3},
+      damage:{t:[[0,130,38,.5,.65,'sine'],[0,210,60,.3,.2,'sawtooth'],[.02,95,95,.18,.12,'square']],n:[[0,.34,.42,520,'lowpass'],[0,.07,.25,4800,'highpass']],r:.3},
+      recover:{t:[[0,C5,C5,.2,.12,'sine'],[.1,E5,E5,.2,.12,'sine'],[.2,G5,G5,.2,.12,'sine'],[.3,C6,C6,.6,.13,'sine'],[.3,E6,E6,.6,.06,'sine']],n:[[.3,.5,.04,7000,'highpass']],r:.55},
+      victory:{t:[[0,C5,C5,.18,.16,'triangle'],[.16,E5,E5,.18,.16,'triangle'],[.32,G5,G5,.18,.16,'triangle'],[.48,C6,C6,.9,.18,'triangle'],[.48,E5,E5,.9,.11,'triangle'],[.48,G5,G5,.9,.11,'triangle'],[.48,C4,C4,.9,.14,'sawtooth'],[.48,65,65,.7,.4,'sine']],n:[[.48,.7,.07,6500,'highpass']],r:.6},
+      defeat:{t:[[0,G4,G4,.3,.14,'triangle'],[.26,311.1,311.1,.3,.14,'triangle'],[.52,C4,C4,.3,.14,'triangle'],[.78,196,98,1,.2,'sawtooth'],[.78,65,33,1,.5,'sine']],n:[[.78,.8,.12,380,'lowpass']],r:.6},
+      coin:{t:[[0,2100,2100,.06,.14,'triangle'],[.05,2640,2640,.4,.13,'sine'],[.05,3960,3960,.3,.05,'sine']],r:.4},
+      dice:{n:[[0,.035,.3,2600,'bandpass'],[.08,.035,.26,2200,'bandpass'],[.15,.04,.24,1900,'bandpass'],[.23,.05,.2,1500,'bandpass']],t:[[.23,220,160,.06,.1,'sine']],r:.2},
+      counter:{t:[[0,C6,G6,.09,.13,'sine'],[.05,G6,G6,.2,.07,'sine']],r:.3},
+      equip:{t:[[0,300,300,.07,.14,'square'],[.06,150,90,.14,.3,'sine']],n:[[0,.07,.25,2800,'bandpass']],r:.2},
+      missed:{t:[[0,330,220,.2,.14,'triangle'],[.18,220,147,.3,.14,'triangle'],[.18,110,74,.3,.16,'sine']],r:.3},
+      negated:{t:[[0,900,90,.28,.2,'sawtooth'],[0,450,60,.28,.16,'square'],[.24,70,40,.3,.4,'sine']],n:[[0,.2,.28,1400,'bandpass',300]],r:.2},
+      destroyed:{t:[[0,95,28,.6,.7,'sine'],[0,180,50,.3,.18,'sawtooth']],n:[[0,.55,.5,420,'lowpass'],[0,.09,.3,5200,'highpass'],[.08,.3,.14,1800,'bandpass',500]],r:.4},
+      banished:{t:[[0,300,2400,.42,.12,'sine'],[.04,450,3200,.42,.08,'triangle'],[.4,E6,E6,.5,.07,'sine']],n:[[0,.45,.12,1500,'bandpass',7000]],r:.65},
+      togy:{t:[[0,260,110,.22,.2,'triangle'],[0,130,60,.22,.25,'sine']],n:[[0,.14,.14,800,'lowpass']],r:.2},
+      returned:{t:[[0,380,900,.18,.11,'sine']],n:[[0,.2,.24,1600,'bandpass',4600]],r:.2},
+      targeted:{t:[[0,1400,1400,.06,.13,'square'],[.09,1870,1870,.09,.13,'square'],[.09,935,935,.09,.06,'sine']],r:.2},
+      statup:{t:[[0,A4,A5,.2,.13,'sine'],[.1,E5,E6,.24,.1,'sine']],r:.3},
+      statdown:{t:[[0,A5,A4,.24,.13,'sine'],[.1,E5,E4,.28,.1,'sine']],r:.3},
+      material:{t:[[0,520,180,.26,.13,'triangle'],[.2,90,50,.2,.25,'sine']],n:[[0,.2,.16,1500,'bandpass',4000]],r:.3},
+      discarded:{n:[[0,.13,.24,1400,'bandpass',600]],t:[[.04,220,140,.1,.1,'sine']],r:.12},
     };
+  }
+
+  // Shared output chain for a context: compressor for punch, generated impulse response for space.
+  soundBus(ctx) {
+    if(this.soundBusCache?.ctx===ctx)return this.soundBusCache;
+    const bus={ctx,dry:ctx.destination,wet:null};
+    try{
+      if(ctx.createDynamicsCompressor){const comp=ctx.createDynamicsCompressor();comp.threshold.value=-16;comp.knee.value=18;comp.ratio.value=3.5;comp.attack.value=.004;comp.release.value=.18;comp.connect(ctx.destination);bus.dry=comp;}
+      if(ctx.createConvolver&&ctx.createBuffer){const seconds=1.7,length=Math.floor(ctx.sampleRate*seconds),impulse=ctx.createBuffer(2,length,ctx.sampleRate);for(let ch=0;ch<2;ch++){const data=impulse.getChannelData(ch);for(let i=0;i<length;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/length,2.6);}const convolver=ctx.createConvolver();convolver.buffer=impulse;const wet=ctx.createGain();wet.gain.value=.55;convolver.connect(wet);wet.connect(bus.dry);bus.wet=convolver;}
+    }catch{}
+    return this.soundBusCache=bus;
+  }
+
+  // Schedules one recipe on any AudioContext (live or offline) at the given gain.
+  renderSoundRecipe(ctx,recipe,gain=1,when=null) {
+    const master=ctx.createGain();master.gain.value=Math.max(.0001,Math.min(1.6,gain));
+    const bus=this.soundBus(ctx),now=(when??ctx.currentTime)+.005;master.connect(bus.dry);
+    if(bus.wet&&recipe.r){const send=ctx.createGain();send.gain.value=recipe.r;master.connect(send);send.connect(bus.wet);}
+    for(const [at,f1,f2,d,v,type='sine'] of recipe.t||[]){
+      const t=now+at,g=ctx.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+Math.min(.012,d*.3));g.gain.exponentialRampToValueAtTime(.0001,t+d);g.connect(master);
+      for(const cents of (type==='square'||f1<140?[0]:[-7,7])){const o=ctx.createOscillator();o.type=type;if(cents&&o.detune)o.detune.value=cents;o.frequency.setValueAtTime(Math.max(20,f1),t);if(f2!==f1)o.frequency.exponentialRampToValueAtTime(Math.max(20,f2),t+d);o.connect(g);o.start(t);o.stop(t+d+.04);}
+    }
+    if(ctx.createBuffer&&ctx.createBufferSource&&ctx.createBiquadFilter)for(const [at,d,v,f=1600,type='bandpass',sweep=0] of recipe.n||[]){
+      const n=Math.max(1,Math.floor(ctx.sampleRate*d)),b=ctx.createBuffer(1,n,ctx.sampleRate),a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=(Math.random()*2-1)*(1-i/n*.5);
+      const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),g=ctx.createGain(),t=now+at;src.buffer=b;filter.type=type;filter.frequency.setValueAtTime?.(f,t);if(!filter.frequency.setValueAtTime)filter.frequency.value=f;if(sweep&&filter.frequency.exponentialRampToValueAtTime)filter.frequency.exponentialRampToValueAtTime(sweep,t+d);filter.Q.value=.9;
+      g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+d);src.connect(filter);filter.connect(g);g.connect(master);src.start(t);src.stop(t+d+.02);
+    }
   }
 
   // Outcome keys from chainOutcomeDescriptor mapped to a sound; unknown outcomes stay silent.
@@ -1957,11 +1987,7 @@ export class IntegratedDuelController {
     // The same sound retriggered within 45 ms (several cards resolving at once) is played once.
     const stamp=Date.now();if(!this.soundLastPlayed)this.soundLastPlayed=new Map();if(stamp-(this.soundLastPlayed.get(kind)||0)<45)return;this.soundLastPlayed.set(kind,stamp);
     const scale=kind==='damage'?.7+Math.min(1,Math.abs(Number(amount)||0)/4000)*.6:1;
-    try{
-      const now=ctx.currentTime+.005,master=ctx.createGain();master.gain.value=Math.max(.0001,Math.min(1.4,effectiveVolume*scale));master.connect(ctx.destination);
-      for(const [at,f1,f2,d,v,type='sine'] of recipe.t||[]){const o=ctx.createOscillator(),g=ctx.createGain(),t=now+at;o.type=type;o.frequency.setValueAtTime(Math.max(20,f1),t);if(f2!==f1)o.frequency.exponentialRampToValueAtTime(Math.max(20,f2),t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(master);o.start(t);o.stop(t+d+.03);}
-      if(ctx.createBuffer&&ctx.createBufferSource&&ctx.createBiquadFilter)for(const [at,d,v,f=1600,type='bandpass'] of recipe.n||[]){const n=Math.max(1,Math.floor(ctx.sampleRate*d)),b=ctx.createBuffer(1,n,ctx.sampleRate),a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=(Math.random()*2-1)*(1-i/n*.5);const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),g=ctx.createGain(),t=now+at;src.buffer=b;filter.type=type;filter.frequency.value=f;filter.Q.value=.8;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+d);src.connect(filter);filter.connect(g);g.connect(master);src.start(t);src.stop(t+d+.02);}
-    }catch{}
+    try{this.renderSoundRecipe(ctx,recipe,effectiveVolume*scale*.9);}catch{}
   }
 
   syncFieldGeometry() {
@@ -3065,13 +3091,25 @@ export class IntegratedDuelController {
     const item={kind:'attack-fx',player,from:{...card},target:target&&typeof target==='object'?{...target}:null,start,delay:Math.max(0,Number(delay)||0),damage,attackContext};if(attackContext)attackContext.fxItem=item;this.animationQueue.push(item);return item;
   }
 
-  // rc247: a ring pulse on the zone a monster is summoned to, coloured by summon type.
+  // rc250: summon entrance. A pillar of light drops onto the zone, a double ring bursts outward and the card
+  // flashes; Extra Deck and Ritual Summons also wash the board in the summon colour.
   playSummonRing(item={}) {
     if(typeof document==='undefined'||!this.boardWrap)return;
     const rect=this.rectForLocation({controller:item.player,location:item.location,sequence:item.sequence},{preferCard:true});if(!rect?.width)return;
-    const ring=document.createElement('div');ring.className=`duel-summon-ring type-${this.summonPresentationKind(item)}`;ring.setAttribute('aria-hidden','true');
-    ring.style.left=`${rect.left+rect.width/2}px`;ring.style.top=`${rect.top+rect.height/2}px`;ring.style.setProperty('--ring-size',`${Math.max(rect.width,rect.height)*1.25}px`);
-    document.body.append(ring);setTimeout(()=>ring.remove(),820);
+    const type=this.summonPresentationKind(item),big=['fusion','synchro','xyz','link','ritual'].includes(type),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2,scale=this.battleEffectScale();
+    const add=(cls,style={},ms=1100)=>{const node=document.createElement('div');node.className=`${cls} type-${type}`;node.setAttribute('aria-hidden','true');Object.assign(node.style,style);document.body.append(node);setTimeout(()=>node.remove(),ms);return node;};
+    const ring=add('duel-summon-ring',{left:`${cx}px`,top:`${cy}px`},1000);ring.style.setProperty('--ring-size',`${Math.max(rect.width,rect.height)*(big?2.4:1.8)*scale}px`);
+    const pillar=add('duel-summon-pillar',{left:`${cx}px`,top:`${rect.bottom}px`},1000);pillar.style.setProperty('--pillar-width',`${rect.width*(big?1.5:1.1)}px`);pillar.style.setProperty('--pillar-height',`${Math.max(260,rect.bottom)}px`);
+    add('duel-summon-flash',{left:`${rect.left}px`,top:`${rect.top}px`,width:`${rect.width}px`,height:`${rect.height}px`},700);
+    for(let i=0;i<(big?16:9);i++){const spark=add('duel-summon-spark',{left:`${cx}px`,top:`${cy}px`},950);spark.style.setProperty('--spark-angle',`${(360/(big?16:9))*i+(i%2?11:-7)}deg`);spark.style.setProperty('--spark-distance',`${(rect.height*(.8+(i%3)*.35)*scale).toFixed(0)}px`);}
+    if(big){const wash=document.createElement('div');wash.className=`duel-summon-wash type-${type}`;wash.setAttribute('aria-hidden','true');this.boardWrap.append(wash);setTimeout(()=>wash.remove(),900);}
+  }
+
+  // rc250: an activated card pulses where it sits so the source of an effect is obvious on the board.
+  playActivationPulse(item={}) {
+    if(typeof document==='undefined'||!this.boardWrap)return;
+    const rect=this.rectForLocation({controller:item.player,location:item.location,sequence:item.sequence},{preferCard:true});if(!rect?.width)return;
+    for(const delay of [0,160]){const pulse=document.createElement('div');pulse.className='duel-activation-pulse';pulse.setAttribute('aria-hidden','true');Object.assign(pulse.style,{left:`${rect.left}px`,top:`${rect.top}px`,width:`${rect.width}px`,height:`${rect.height}px`,animationDelay:`${delay}ms`});document.body.append(pulse);setTimeout(()=>pulse.remove(),900+delay);}
   }
 
   fieldCardNode(loc={}) {
@@ -3082,7 +3120,7 @@ export class IntegratedDuelController {
   playAttackLunge(item={},dx=0,dy=0) {
     const node=this.fieldCardNode(item.from||{}),dist=Math.hypot(dx,dy)||1,reach=Math.min(46,dist*.28)*this.battleEffectScale();
     if(node){node.style.setProperty('--lunge-x',`${(dx/dist*reach).toFixed(1)}px`);node.style.setProperty('--lunge-y',`${(dy/dist*reach).toFixed(1)}px`);node.classList.remove('duel-attack-lunge');void node.offsetWidth;node.classList.add('duel-attack-lunge');setTimeout(()=>node.classList.remove('duel-attack-lunge'),620);}
-    if(item.target)setTimeout(()=>{const target=this.fieldCardNode(item.target);if(!target)return;target.style.setProperty('--recoil-x',`${(dx/dist*9).toFixed(1)}px`);target.style.setProperty('--recoil-y',`${(dy/dist*9).toFixed(1)}px`);target.classList.remove('duel-attack-recoil');void target.offsetWidth;target.classList.add('duel-attack-recoil');setTimeout(()=>target.classList.remove('duel-attack-recoil'),460);},500);
+    if(item.target)setTimeout(()=>{const target=this.fieldCardNode(item.target);if(!target)return;target.style.setProperty('--recoil-x',`${(dx/dist*9).toFixed(1)}px`);target.style.setProperty('--recoil-y',`${(dy/dist*9).toFixed(1)}px`);target.classList.remove('duel-attack-recoil');void target.offsetWidth;target.classList.add('duel-attack-recoil');setTimeout(()=>target.classList.remove('duel-attack-recoil'),460);const r=target.getBoundingClientRect(),slash=document.createElement('div');slash.className='duel-attack-slash';slash.setAttribute('aria-hidden','true');Object.assign(slash.style,{left:`${r.left+r.width/2}px`,top:`${r.top+r.height/2}px`});slash.style.setProperty('--slash-size',`${Math.max(r.width,r.height)*1.9*this.battleEffectScale()}px`);slash.style.setProperty('--slash-angle',`${Math.atan2(dy,dx)*180/Math.PI+90}deg`);document.body.append(slash);setTimeout(()=>slash.remove(),520);},500);
   }
 
   // rc247: a monster destroyed by battle breaks apart where it stood, timed to the attack's impact.
@@ -3090,10 +3128,18 @@ export class IntegratedDuelController {
     if(this.isReplaySeekReconstruction()||!this.duelAnimationsEnabled||typeof document==='undefined')return;
     const rect=this.rectForLocation(loc,{preferCard:true});if(!rect?.width)return;
     const impactAt=Number(this.lastAttackContext?.impactPresentationAt)||0,delay=Math.max(0,Math.min(900,impactAt-Date.now()))+60;
+    const sourceNode=this.fieldCardNode(loc),image=sourceNode?.querySelector?.('img')?.src||'',cols=4,rows=5;
     setTimeout(()=>{
       const burst=document.createElement('div');burst.className='duel-destroy-burst';burst.setAttribute('aria-hidden','true');burst.style.left=`${rect.left}px`;burst.style.top=`${rect.top}px`;burst.style.width=`${rect.width}px`;burst.style.height=`${rect.height}px`;burst.style.setProperty('--battle-intensity',String(this.battleEffectScale()));
-      for(let i=0;i<12;i++){const shard=document.createElement('i'),angle=(360/12)*i+(i%2?14:-9);shard.style.setProperty('--shard-angle',`${angle}deg`);shard.style.setProperty('--shard-distance',`${(rect.height*(.55+(i%4)*.14)).toFixed(1)}px`);shard.style.setProperty('--shard-spin',`${(i%2?1:-1)*(120+i*23)}deg`);shard.style.left=`${20+(i*37)%60}%`;shard.style.top=`${15+(i*53)%70}%`;burst.append(shard);}
-      document.body.append(burst);this.playSound('destroyed');setTimeout(()=>burst.remove(),760);
+      for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
+        const tile=document.createElement('i'),dx=(col-(cols-1)/2)/cols,dy=(row-(rows-1)/2)/rows,spread=1.5+((row*cols+col)*37%10)/10;
+        tile.className='duel-destroy-tile';tile.style.left=`${col*100/cols}%`;tile.style.top=`${row*100/rows}%`;tile.style.width=`${100/cols}%`;tile.style.height=`${100/rows}%`;
+        if(image){tile.style.backgroundImage=`url("${image}")`;tile.style.backgroundSize=`${cols*100}% ${rows*100}%`;tile.style.backgroundPosition=`${col*100/(cols-1)}% ${row*100/(rows-1)}%`;}
+        tile.style.setProperty('--tile-x',`${(dx*rect.width*spread*2.2).toFixed(1)}px`);tile.style.setProperty('--tile-y',`${(dy*rect.height*spread*1.7+rect.height*.25).toFixed(1)}px`);tile.style.setProperty('--tile-spin',`${((col+row)%2?1:-1)*(90+((row*7+col*13)%9)*30)}deg`);tile.style.animationDelay=`${((row+col)%4)*18}ms`;burst.append(tile);
+      }
+      for(let i=0;i<12;i++){const shard=document.createElement('b'),angle=(360/12)*i+(i%2?14:-9);shard.style.setProperty('--shard-angle',`${angle}deg`);shard.style.setProperty('--shard-distance',`${(rect.height*(.9+(i%4)*.22)).toFixed(1)}px`);burst.append(shard);}
+      document.body.append(burst);if(sourceNode?.isConnected){sourceNode.classList.add('duel-destroy-hidden');setTimeout(()=>sourceNode.classList.remove('duel-destroy-hidden'),900);}
+      this.playSound('destroyed');setTimeout(()=>burst.remove(),1000);
     },delay);
   }
 
@@ -3374,7 +3420,7 @@ export class IntegratedDuelController {
         if(item.kind==='attack-fx'){this.playAttackFx(item);return;}
         if(item.kind==='lp'){this.playLpAnimation(item);return;}
         if(['activate','summon','special'].includes(item.kind)){
-          const shown=item.showcase!==false&&this.playActivationShowcase(item);if(item.kind!=='activate')this.playSummonRing(item);if(shown&&!item.chainLink)this.playSound(this.summonPresentationKind(item));
+          const shown=item.showcase!==false&&this.playActivationShowcase(item);if(item.kind!=='activate')this.playSummonRing(item);else this.playActivationPulse(item);if(shown&&!item.chainLink)this.playSound(this.summonPresentationKind(item));
           presentOrderedOutcome(shown?showcaseDuration(item):0);if(shown)return;
         }
         const key=this.locationKey(item.location);

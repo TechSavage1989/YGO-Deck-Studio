@@ -1,0 +1,17 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc250
+
+Animations and sound, second pass. The rc247 versions were too subtle to notice: measured afterwards, those sounds were about ten times quieter and three to five times shorter than intended.
+
+Sound
+- Every sound was rebuilt: about 20 dB louder, three to five times longer, with doubled detuned voices, low-end impact, a shared compressor and reverb.
+- Summons now sound distinct and weighty: Normal (impact and chord), Special (rising sweep into a hit and sparkle), Fusion (swirl into a chord), Synchro (ascending bells), Xyz (dive into a deep boom), Link (digital arpeggio into a power chord), Ritual (deep bell).
+- Destruction is an explosion, negation a harsh downward buzz, banishing a rising sweep, LP damage a heavy hit that scales with the amount.
+
+Animations
+- Summons: a pillar of light drops onto the zone, a double ring bursts outward, the card flashes and sparks fly. Extra Deck and Ritual Summons also wash the board in their colour (purple Fusion, white Synchro, yellow Xyz, blue Link).
+- Activations: the activated card pulses where it sits.
+- Attacks: a much stronger lunge, a crossing slash on the target at impact, and a harder recoil.
+- Battle destruction: the destroyed card itself shatters into pieces that fly apart, with a flash and shockwave.
+- All effects still respect Battle Effect Intensity, the animation toggle and the reduced-motion preference.
+
+Tests: tests/test_rc247_battle_fx_sound.py extended for the new effects.
