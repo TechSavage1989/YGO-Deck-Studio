@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 js_source=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
 css=(root/'web/duel-core.css').read_text(encoding='utf-8')
-assert "duelcore.1-rc251" in js_source
+assert "duelcore.1-rc252" in js_source
 for cls in ('.duel-attack-lunge','.duel-attack-recoil','.duel-destroy-burst','.duel-destroy-tile','.duel-summon-ring','.duel-summon-pillar','.duel-activation-pulse','.duel-attack-slash','prefers-reduced-motion'): assert cls in css,cls
 js=js_source.replace('export function ','function ').replace('export class ','class ')+'\nwindow.IntegratedDuelController=IntegratedDuelController;'
 
