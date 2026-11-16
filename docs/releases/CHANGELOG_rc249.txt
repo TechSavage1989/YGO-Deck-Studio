@@ -1,0 +1,7 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc249
+
+- Card Details window: clicking anywhere outside the window now closes it, and so does Escape. The Back button still works. Clicking inside the window, or using the enlarged-artwork viewer opened from it, does not close it.
+- Activatable effects state the actual effect. The Rules Engine often names an effect with a short hint such as "Special Summon", "Search", "Change position" or 'Apply the "●" effects'. When exactly one sentence of the card's text does what the hint says, the app now shows that sentence in the action menu, prompts and Duel Log. Across the card database this resolves about 3,500 more effect labels to their real text (for example Salamangreat Gazelle, Illusion of Chaos, Borrelsword Dragon, Mulcharmy Fuwalos, Traptrix Mantis, Knightmare Phoenix). When two sentences fit equally well the short hint is kept, so a wrong effect is never shown.
+- Effect text for Extra Deck monsters no longer starts with the summoning-material line.
+
+Tests: tests/test_rc249_effect_labels.py (new).
