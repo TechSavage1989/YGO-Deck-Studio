@@ -1,4 +1,4 @@
-const DUEL_BRANCH = 'duelcore.1-rc248';
+const DUEL_BRANCH = 'duelcore.1-rc249';
 
 const DUMMY_CARD_CODE = 89631139;
 const DUMMY_OK=Object.freeze({blocked:false,penalty:0,reason:''}),DUMMY_BLOCK=reason=>({blocked:true,penalty:Infinity,reason}); // Blue-Eyes White Dragon: inert Level 8 normal monster.
@@ -4516,7 +4516,7 @@ export class IntegratedDuelController {
     const label=this.conciseEffectText(ref.text||'');if(!label)return'';
     if(this.effectChoiceGateText(label))return label;
     if(this.genericEffectText(label))return'';
-    const candidates=this.effectSentenceCandidates(this.cardDescription(code)||'').map(v=>this.conciseEffectText(v)).filter(Boolean);
+    const candidates=this.effectSentenceCandidates(this.effectTextWithoutMaterials(code,this.cardDescription(code)||'')).map(v=>this.conciseEffectText(v)).filter(Boolean);
     if(!candidates.length)return label;
     const needle=this.normalizedEffectMatchText(label);
 
@@ -4528,13 +4528,14 @@ export class IntegratedDuelController {
     const stop=new Set(['this','card','the','a','an','to','from','your','you','it','of','and','or','that','its','is','be','as','effect','activate','choose','one','can']);
     const tokens=[...new Set(needle.split(' ').filter(token=>token.length>1&&!stop.has(token)))];
     if(tokens.length>=3){const tokenMatches=candidates.filter(candidate=>{const words=new Set(this.normalizedEffectMatchText(candidate).split(' '));return tokens.every(token=>words.has(token));});if(tokenMatches.length===1)return tokenMatches[0];}
+    const inferred=this.matchShortEffectLabel(label,candidates);if(inferred)return inferred;
 
     return label;
   }
 
   resolvedEffectDisplay(code,description,stored='') {
     code=this.normalizeActionCode(code);
-    const full=this.conciseEffectText(code?this.cardDescription(code):'');
+    const full=this.conciseEffectText(code?this.effectTextWithoutMaterials(code,this.cardDescription(code)):'');
     if(!code)return{text:this.conciseEffectText(stored),specific:false,full:'',gate:false};
     const candidates=this.effectSentenceCandidates(full).map(value=>this.conciseEffectText(value)).filter(Boolean);
     const storedText=this.conciseEffectText(stored);
@@ -4550,6 +4551,7 @@ export class IntegratedDuelController {
     if(storedText&&this.effectChoiceGateText(storedText))return{text:storedText,specific:false,full,gate:true};
     if(storedText&&!this.genericEffectText(storedText))return{text:storedText,specific:true,full,gate:false};
     if(candidates.length===1&&full)return{text:candidates[0],specific:true,full,gate:false};
+    const inferred=this.matchShortEffectLabel(rawClient,candidates);if(inferred)return{text:inferred,specific:false,full,gate:false,inferred:true};
 
     return{text:'',specific:false,full,gate:false};
   }
@@ -7556,6 +7558,17 @@ export class IntegratedDuelController {
     const article=document.createElement('article');article.className='card-details duel-card-details-article duel-modal-details-article';const heading=document.createElement('div');heading.className='card-details-heading';const h3=document.createElement('h3');h3.textContent=this.cardName(code);const toggle=document.createElement('button');toggle.type='button';toggle.className='card-text-style-toggle';toggle.setAttribute('aria-pressed',String(!!this.getCardTextStyling()));toggle.title='Toggle styled card text';const glyph=document.createElement('span');glyph.className='card-text-style-glyph';glyph.textContent='Aa';glyph.setAttribute('aria-hidden','true');const toggleLabel=document.createElement('span');toggleLabel.textContent=this.getCardTextStyling()?'Styled':'Plain';toggle.append(glyph,toggleLabel);toggle.addEventListener('click',()=>{this.toggleStyledText();toggleLabel.textContent=this.getCardTextStyling()?'Styled':'Plain';toggle.setAttribute('aria-pressed',String(!!this.getCardTextStyling()));});heading.append(h3,toggle);
     const summary=document.createElement('div');summary.className='card-details-summary';const primary=document.createElement('div');primary.className='card-details-primary';const meta=document.createElement('div');meta.className='detail-meta';const stats=document.createElement('div');stats.className='detail-stats';primary.append(meta,stats);summary.append(primary);const desc=document.createElement('div');desc.className='detail-text card-effect-layout';article.append(heading,summary,desc);this.populateBuilderDetails(code,info,meta,stats,desc,null);selected.append(article);panel.append(selected);
     const controls=document.createElement('div');controls.className='duel-prompt-controls';controls.append(this.button('Back',()=>this.closeIndependentCardDetails({restore:true}),{ghost:true}));panel.append(controls);overlay.append(panel);this.boardWrap?.append(overlay);this.cardDetailsOverlay=overlay;
+    // rc249: a click anywhere outside the Card Details window closes it (the enlarged-artwork viewer and other dialogs excepted). Escape closes it too.
+    let dialogClosedAt=0;const dismiss=event=>{
+      if(this.cardDetailsOverlay!==overlay){document.removeEventListener('click',dismiss,true);document.removeEventListener('keydown',dismiss,true);document.removeEventListener('close',dismiss,true);return;}
+      if(event.type==='close'){dialogClosedAt=Date.now();return;}
+      if(event.type==='keydown'){if(event.key!=='Escape'||document.querySelector('dialog[open]')||Date.now()-dialogClosedAt<400)return;}
+      else if(panel.contains(event.target)||event.target?.closest?.('dialog,[role="dialog"]'))return;
+      document.removeEventListener('click',dismiss,true);document.removeEventListener('keydown',dismiss,true);document.removeEventListener('close',dismiss,true);
+      if(event.type==='keydown'||event.target===overlay){event.preventDefault();event.stopPropagation();}
+      this.closeIndependentCardDetails({restore:true});
+    };
+    setTimeout(()=>{if(this.cardDetailsOverlay===overlay){document.addEventListener('click',dismiss,true);document.addEventListener('keydown',dismiss,true);document.addEventListener('close',dismiss,true);}},0);
   }
 
   semanticPromptSection(label,text='',className='') {
@@ -7593,6 +7606,18 @@ export class IntegratedDuelController {
     const section=document.createElement('section');section.className='duel-recent-reveal duel-semantic-section';const eyebrow=document.createElement('div');eyebrow.className='duel-semantic-section-label';eyebrow.textContent=role;const h=document.createElement('h3');h.textContent=batch.label||'Related cards';section.append(eyebrow,h);
     const grid=document.createElement('div');grid.className='duel-recent-reveal-grid duel-horizontal-context-card-rail';
     batch.cards.forEach(card=>{const tile=document.createElement('div');tile.className='duel-reveal-card';tile.tabIndex=0;tile.setAttribute('role','button');tile.title=`View ${this.cardName(card.code)} details`;this.bindInspectorHover(tile,card.code,card);const img=document.createElement('img');img.src=cardImage(card.code);img.alt=this.cardName(card.code);const name=document.createElement('span');name.textContent=this.cardName(card.code);const open=()=>{this.inspectCard(card.code,card);this.renderCardDetailsModal(card.code,card);};tile.append(img,name);tile.addEventListener('click',open);tile.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open();}});grid.append(tile);});section.append(grid);return section;
+  }
+
+  // rc249: the Rules Engine often names an effect with a two-word hint ("Special Summon", "Change position").
+  // When exactly one sentence of the card's text does what the hint says, show that sentence instead.
+  matchShortEffectLabel(label='',candidates=[]) {
+    const short=String(label||'').toLowerCase().trim();
+    if(!short||candidates.length<2||/^(?:affected by|select |choose |activate 1 of)/.test(short)||short.endsWith('?'))return'';
+    const table=[[/search|\badd\b/,/add [^.;:]*\bhand\b/],[/fusion summon/,/fusion summon/],[/special summon/,/special summon/],[/negat/,/negat/],[/destroy/,/destroy/],[/banish/,/banish/],[/draw/,/\bdraw/],[/return|bounce/,/return|shuffle/],[/\batk\b/,/\batk\b/],[/\bdef\b/,/\bdef\b/],[/position/,/battle position|defense position|attack position|face-down/],[/\bsend/,/\bsend/],[/\bset\b/,/\bset\b/],[/tribute/,/tribute/],[/equip/,/equip/],[/control/,/control/],[/counter/,/counter/],[/level|rank/,/level|rank/],[/discard/,/discard/],[/damage/,/damage/],[/gain lp|recover/,/gain[^.;]*\blp\b/],[/apply/,/apply/],[/detach/,/detach/],[/attach/,/attach/],[/excavate/,/excavate/],[/reveal/,/reveal/],[/\blook\b/,/look at/],[/\bplace\b/,/\bplace\b/],[/\bcopy/,/\bcop(?:y|ies)/],[/attack/,/attack/]];
+    const wants=table.filter(([hint])=>hint.test(short)).map(([,effect])=>effect);if(!wants.length)return'';
+    const scored=candidates.map(text=>{const whole=String(text).toLowerCase(),cut=Math.max(whole.lastIndexOf(':'),whole.lastIndexOf(';')),part=cut>=0?whole.slice(cut+1):whole;let score=0;for(const want of wants)score+=want.test(part)?2:want.test(whole)?1:0;if(score&&cut>=0)score+=1;return{text,score};}).filter(entry=>entry.score>0).sort((a,b)=>b.score-a.score);
+    if(!scored.length||(scored.length>1&&scored[0].score===scored[1].score))return'';
+    return scored[0].text;
   }
 
   effectSentenceCandidates(text='') {
