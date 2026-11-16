@@ -1,4 +1,4 @@
-const DUEL_BRANCH = 'duelcore.1-rc247';
+const DUEL_BRANCH = 'duelcore.1-rc248';
 
 const DUMMY_CARD_CODE = 89631139;
 const DUMMY_OK=Object.freeze({blocked:false,penalty:0,reason:''}),DUMMY_BLOCK=reason=>({blocked:true,penalty:Infinity,reason}); // Blue-Eyes White Dragon: inert Level 8 normal monster.
@@ -1631,6 +1631,22 @@ export class IntegratedDuelController {
     this.writeStringPreference('ygoDuelActionPresentationSpeed',this.actionPresentationSpeed);this.syncInterfaceSettingsMenu();this.playSound('select');
   }
 
+  // rc248: how long a card showcase deserves, as a multiplier of the base time. The Dummy's plays and boss
+  // monsters get full attention; your own routine plays and repeats within a turn move faster.
+  presentationImportance(item={}) {
+    if(Number.isFinite(item.importance))return item.importance;
+    const code=this.normalizeActionCode(item.code),kind=String(item.kind||''),own=Number(item.player)===0;let factor=own?.8:1;
+    if(code){
+      const data=this.cardData?.(code)||{},atk=Number(data.attack)||0,big=this.isExtraDeckCard(code)||atk>=2500;
+      if(kind==='summon'||kind==='special'||kind==='flip')factor*=big?1.15:(kind==='summon'?.85:1);
+      if(!this.presentationSeenThisTurn||this.presentationSeenThisTurn.turn!==this.turn)this.presentationSeenThisTurn={turn:this.turn,counts:new Map()};
+      const key=`${kind}:${code}`,seen=this.presentationSeenThisTurn.counts.get(key)||0;this.presentationSeenThisTurn.counts.set(key,seen+1);
+      if(seen===1)factor*=.75;else if(seen>=2)factor*=.6;
+    }
+    if(Number(item.chainLink)>1)factor*=1.05;
+    return item.importance=Math.max(.55,Math.min(1.25,factor));
+  }
+
   actionPresentationScale() {
     return this.actionPresentationSpeed==='fast'?0.72:this.actionPresentationSpeed==='dramatic'?1.35:1;
   }
@@ -2671,7 +2687,7 @@ export class IntegratedDuelController {
     const presentStage=()=>{
       if(this.currentAffectedCardOutcome!==state)return;
       const descriptor=item.descriptors[state.index];if(!descriptor){state.timer=setTimeout(()=>{if(this.currentAffectedCardOutcome!==state)return;if(item.descriptors[state.index])presentStage();else finish();},140);return;}
-      const duration=Math.round(descriptor.duration*this.actionPresentationScale());
+      const backlog=this.affectedCardOutcomeQueue?.length||0,duration=Math.round(descriptor.duration*this.actionPresentationScale()*(backlog>=3?.6:backlog>=1?.8:1));
       node.className=`duel-affected-card-showcase outcome-${descriptor.key}${state.index?' outcome-sequence-transition':''}`;node.style.setProperty('--affected-card-ms',`${duration}ms`);result.textContent=descriptor.short;{const outcomeSound=this.outcomeSoundKind(descriptor.key);if(outcomeSound)this.playSound(outcomeSound);}const showSymbol=descriptor.key!=='summoned';symbolStage.hidden=!showSymbol;if(showSymbol){symbol.className=`duel-affected-card-symbol symbol-${descriptor.key}`;symbol.innerHTML=this.affectedCardOutcomeSymbolMarkup(descriptor.key);}else{symbol.className='duel-affected-card-symbol';symbol.replaceChildren();}void frame.offsetWidth;
       this.chainOutcomePresentationUntil=Math.max(Number(this.chainOutcomePresentationUntil)||0,Date.now()+duration+140);this.traceSession?.('affected-card-outcome-stage',{presentationId:state.id,code:item.code,chainLink:item.chainLink,outcome:descriptor.key,stage:state.index+1,durationMs:duration,reusedSurface:state.index>0});
       state.timer=setTimeout(()=>{if(this.currentAffectedCardOutcome!==state)return;state.index+=1;presentStage();},duration);
@@ -3258,7 +3274,7 @@ export class IntegratedDuelController {
     if(!this.duelAnimationsEnabled){this.pendingDrawArrivals.clear();this.pendingMoveArrivals.clear();this.pendingDrawPresentationCounts=[0,0];this.renderField();return;}
     const scale=this.actionPresentationScale(),now=Date.now(),sequentialCardActions=!!(this.actionPresentationEnabled&&!this.synchronizedShowcaseTravelEnabled);
     let cursor=Math.max(now,Number(this.actionPresentationUntil)||0),routineEnd=cursor,attackDelay=0;
-    const showcaseDuration=item=>item?.showcase!==false&&['activate','summon','special','flip'].includes(String(item?.kind||''))?Math.round(1250*scale):0;
+    const showcaseDuration=item=>item?.showcase!==false&&['activate','summon','special','flip'].includes(String(item?.kind||''))?Math.round(1250*scale*this.presentationImportance(item)):0;
     const outcomeDuration=item=>{const outcome=item?.orderedOutcome?.outcome;if(!outcome)return 0;const descriptor=this.chainOutcomeDescriptor(outcome);return Math.round(Number(descriptor?.duration||980)*scale)+340;};
     const L=this.mod?.OcgLocation||{},deckMask=Number(L.DECK||0);
     const deckTravelItem=item=>{if(!deckMask||!item)return false;const from=Number(item?.from?.location)||0,to=Number(item?.to?.location)||0;return !!((from&deckMask)||(to&deckMask));};
@@ -3385,9 +3401,9 @@ export class IntegratedDuelController {
     if(now-Number(this.activationPresentationHistory.get(activationKey)||0)<2400){this.traceSession?.('duplicate-activation-showcase-suppressed',{key:activationKey,code:Number(item.code),chainLink:Number(item.chainLink)||0});return;}
     this.activationPresentationHistory.set(activationKey,now);
     this.boardWrap.querySelectorAll?.('.duel-activation-showcase').forEach(node=>node.remove());
-    const node=document.createElement('div');node.className='duel-activation-showcase';node.style.setProperty('--activation-showcase-ms',`${Math.round(1150*this.actionPresentationScale())}ms`);node.setAttribute('aria-hidden','true');
+    const node=document.createElement('div');node.className='duel-activation-showcase';const showcaseScale=this.actionPresentationScale()*this.presentationImportance(item);node.style.setProperty('--activation-showcase-ms',`${Math.round(1150*showcaseScale)}ms`);node.setAttribute('aria-hidden','true');
     const img=document.createElement('img');img.src=cardImage(item.code);img.alt='';node.append(img);this.boardWrap.append(node);
-    this.traceSession?.('activation-showcase',{code:Number(item.code),chainLink:Number(item.chainLink)||0});setTimeout(()=>node.remove(),Math.round(1250*this.actionPresentationScale()));return true;
+    this.traceSession?.('activation-showcase',{code:Number(item.code),chainLink:Number(item.chainLink)||0});setTimeout(()=>node.remove(),Math.round(1250*showcaseScale));return true;
   }
 
   effectTargetsForResponse(prompt={},response={}) {
@@ -4953,9 +4969,10 @@ export class IntegratedDuelController {
   async awaitCardAnimationForDecision(prompt={}) {
     if(!this.duelAnimationsEnabled||Number(prompt?.player)!==0)return;
     if(this.heldRightPassResponse(prompt))return;
-    const remaining=Math.max(0,(Number(this.cardAnimationPresentationUntil)||0)-Date.now());
+    // rc248: a backlog of decoration never holds your decision for more than a couple of seconds.
+    const backlogMs=Math.max(0,(Number(this.cardAnimationPresentationUntil)||0)-Date.now()),remaining=Math.min(backlogMs,Math.round(2200*this.actionPresentationScale()));
     if(remaining<=0)return;
-    this.traceSession('prompt-animation-barrier',{signature:this.replayPromptSignature(prompt),remainingMs:remaining});
+    this.traceSession('prompt-animation-barrier',{signature:this.replayPromptSignature(prompt),remainingMs:remaining,backlogMs});
     await this.wait(remaining);
     this.traceSession('prompt-animation-barrier-complete',{signature:this.replayPromptSignature(prompt)});
   }
@@ -6369,7 +6386,8 @@ export class IntegratedDuelController {
     if (locationKey==='mzone' && card?.position && (card.position & (this.mod?.OcgPosition?.DEFENSE||0))) node.classList.add('defense');
     if (card?.position && (card.position & (this.mod?.OcgPosition?.FACEDOWN||0))) node.classList.add('face-down');
     this.appendLiveMonsterStats(node,card,ctx,visible||inspectCode||realCode);
-    if(!suppressInspection&&inspectCode)node.title=`${this.cardName(inspectCode)} - identity is known; card remains face-down on the field`;else if(!suppressInspection&&visible)node.title=this.cardName(visible);
+    // rc248: cards carry an accessible name instead of a hover tooltip. The Card Details panel already shows the hovered card, and the tooltip covered neighbouring cards.
+    if(!suppressInspection&&inspectCode)node.setAttribute('aria-label',(locationKey==='mzone'||locationKey==='szone')&&inspectCode!==visible?`${this.cardName(inspectCode)} (face-down, identity known)`:this.cardName(inspectCode));else if(!suppressInspection&&visible)node.setAttribute('aria-label',this.cardName(visible));
     if(inspectCode)this.bindInspectorHover(node,inspectCode,card);
 
     const inspect=()=>{ if(inspectCode) this.handleCardClick(inspectCode,card,ctx); };
@@ -7453,9 +7471,9 @@ export class IntegratedDuelController {
     const promptAtBind=this.currentPrompt,revisionAtBind=this.currentPromptRevision,T=this.mod?.OcgMessageType||{};
     const confirmSelection=!!options.confirmSelection,isSelected=typeof options.isSelected==='function'?options.isSelected:()=>false,onDeselect=typeof options.onDeselect==='function'?options.onDeselect:null;
 
-    b.title=this.cardName(item.code)||'';
+    b.setAttribute('aria-label',this.cardName(item.code)||'');
     const art=document.createElement('span');art.className='duel-prompt-card-art';
-    const img=document.createElement('img');img.src=cardImage(item.code);img.alt=this.cardName(item.code);img.title=this.cardName(item.code)||'';art.append(img);
+    const img=document.createElement('img');img.src=cardImage(item.code);img.alt=this.cardName(item.code);img.setAttribute('aria-label',this.cardName(item.code)||'');art.append(img);
     if(Number(item.location)){const loc=document.createElement('span');loc.className='duel-prompt-card-location';loc.textContent=this.selectionSourceBadge(item);art.append(loc);}
     const span=document.createElement('strong');span.className='duel-prompt-card-label duel-universal-card-caption';span.textContent=label||this.cardName(item.code)||this.locLabel(item);
     const runAction=()=>{if(promptAtBind&&(this.currentPrompt!==promptAtBind||this.currentPromptRevision!==revisionAtBind))return;this.playSound('select');onClick();};

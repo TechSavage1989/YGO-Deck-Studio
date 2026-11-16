@@ -1,0 +1,13 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc248
+
+Test Duel pacing by importance.
+
+- Card showcases (summons, activations, flips) no longer all take the same time. The Practice Dummy's plays and boss monsters (Extra Deck monsters and 2500+ ATK) get full or slightly longer attention. Your own plays are shorter, since you already know what you did. Routine Normal Summons are shorter still.
+- Repeats speed up: the second time the same card is showcased in a turn is shorter, and the third and later are shorter again, so combo loops stop dragging.
+- Mass outcomes move faster: when several cards are waiting to show their result (for example after Raigeki or a board wipe), each one is shown more briefly.
+- Your decisions wait less: a backlog of animations can hold a prompt for at most about two seconds (scaled by the Action Presentation Speed setting) instead of the full length of everything queued.
+- The Action Presentation Speed setting (Fast, Normal, Dramatic) still scales everything.
+
+Also fixed: hovering a card in your hand, on the field or in a selection prompt no longer pops up a name tooltip over the neighbouring cards. The Card Details panel already shows the hovered card; screen readers still get the card name. The old tooltip also wrongly described hand cards as "face-down on the field".
+
+Tests: tests/test_rc248_pacing.py (new).
