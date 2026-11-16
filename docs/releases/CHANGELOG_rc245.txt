@@ -1,0 +1,14 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc245
+
+Test Duel presentation: events the Rules Engine reported but the app never showed.
+
+- Coin tosses and die rolls now appear in the Duel Log, play a sound, and show a short on-board callout with the result.
+- Counters placed on or removed from a card are logged, and cards on the field show a counter badge with their current total.
+- Equips, control switches, Deck and Graveyard swaps, shuffled Set cards, unusable zones and Rock-Paper-Scissors results are logged.
+- Missed timing is called out: when an optional "When... you can" effect cannot activate because it missed its timing, the log and an on-board callout say so. This is one of the most common questions when testing a deck.
+- Damage calculation is logged for every battle with the final ATK or DEF values and which monster, if any, was destroyed.
+- Log wording: movement lines no longer print "Position 5 Position" or "Position 10 Position". Positions are only mentioned on the field (Attack, Defense, Face-down Defense, or face-up and face-down for Spells and Traps). A face-down Spell or Trap being activated reads "is turned face-up".
+- Activated-effect labels for Extra Deck monsters no longer start with the summoning-material line.
+- Face-down opponent cards are never named by the new lines.
+
+Tests: tests/test_rc245_event_presentation.py (new). Two engine-backed duels with a coin, dice, counter and equip list confirmed the lines against the real Rules Engine with zero rejections.

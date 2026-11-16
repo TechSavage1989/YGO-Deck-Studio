@@ -5904,3 +5904,16 @@ body.duel-mode-active{overflow:hidden}
   .duel-affected-card-symbol{width:72px;height:72px;flex-basis:auto;border-radius:17px}
   .duel-affected-card-symbol svg{width:66%;height:66%}
 }
+
+/* rc245: engine event callouts and counter badges */
+.duel-event-callout{position:absolute;left:50%;top:38%;z-index:60;display:grid;justify-items:center;gap:3px;min-width:180px;max-width:min(70%,460px);padding:12px 22px;border-radius:14px;border:1px solid rgba(160,200,255,.55);background:linear-gradient(180deg,rgba(18,30,48,.96),rgba(10,18,30,.96));box-shadow:0 14px 38px rgba(0,0,0,.5),0 0 22px rgba(90,150,255,.25);color:#eaf2ff;text-align:center;pointer-events:none;transform:translate(-50%,-50%);animation:duelEventCallout var(--callout-ms,1500ms) ease both}
+.duel-event-callout-kicker{font-size:10px;letter-spacing:.18em;opacity:.75}
+.duel-event-callout-title{font-size:24px;line-height:1.1;font-weight:800}
+.duel-event-callout-detail{font-size:12px;opacity:.85}
+.duel-event-callout.tone-chance{border-color:rgba(255,214,120,.7);box-shadow:0 14px 38px rgba(0,0,0,.5),0 0 24px rgba(255,200,90,.3)}
+.duel-event-callout.tone-chance .duel-event-callout-title{color:#ffe08a}
+.duel-event-callout.tone-warn{border-color:rgba(255,140,120,.7);box-shadow:0 14px 38px rgba(0,0,0,.5),0 0 24px rgba(255,110,90,.28)}
+.duel-event-callout.tone-warn .duel-event-callout-title{font-size:18px;color:#ffb4a4}
+@keyframes duelEventCallout{0%{opacity:0;transform:translate(-50%,-50%) scale(.82)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.04)}20%{transform:translate(-50%,-50%) scale(1)}82%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-58%) scale(.98)}}
+.duel-card-counter-badge{position:absolute;right:-5px;top:-5px;z-index:4;min-width:18px;height:18px;padding:0 4px;border-radius:999px;display:grid;place-items:center;font-size:11px;font-weight:800;color:#1b1300;background:radial-gradient(circle at 35% 30%,#fff3c4,#f2b632 70%);border:1px solid rgba(60,40,0,.7);box-shadow:0 2px 6px rgba(0,0,0,.45);pointer-events:none}
+@media (prefers-reduced-motion:reduce){.duel-event-callout{animation:none}}

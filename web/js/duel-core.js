@@ -1,4 +1,4 @@
-const DUEL_BRANCH = 'duelcore.1-rc244';
+const DUEL_BRANCH = 'duelcore.1-rc245';
 
 const DUMMY_CARD_CODE = 89631139;
 const DUMMY_OK=Object.freeze({blocked:false,penalty:0,reason:''}),DUMMY_BLOCK=reason=>({blocked:true,penalty:Infinity,reason}); // Blue-Eyes White Dragon: inert Level 8 normal monster.
@@ -66,7 +66,9 @@ function formatPosition(mod, value) {
   if (value === P.FACEDOWN_ATTACK) return 'Face-down Attack';
   if (value === P.FACEUP_DEFENSE) return 'Defense';
   if (value === P.FACEDOWN_DEFENSE) return 'Face-down Defense';
-  return `Position ${value}`;
+  if (P.FACEUP && value === P.FACEUP) return 'Face-up';
+  if (P.FACEDOWN && value === P.FACEDOWN) return 'Face-down';
+  return '';
 }
 
 function firstBits(mask, values) {
@@ -1478,7 +1480,7 @@ export class IntegratedDuelController {
   soundEffectVolumeStorageKey(category='') { const base=this.soundEffectStorageKey(category);return base?`${base}Volume`:''; }
 
   soundCategoryForKind(kind='select') {
-    return ({select:'ui',draw:'draw',move:'move',summon:'summon',special:'summon',set:'set',position:'set',activate:'activate',flip:'activate',chain:'chain',phase:'phase',attack:'battle',impact:'battle',damage:'lp',recover:'lp',victory:'result',defeat:'result'})[String(kind)]||'ui';
+    return ({select:'ui',draw:'draw',move:'move',summon:'summon',special:'summon',set:'set',position:'set',activate:'activate',flip:'activate',chain:'chain',phase:'phase',attack:'battle',impact:'battle',damage:'lp',recover:'lp',victory:'result',defeat:'result',coin:'activate',dice:'activate',counter:'set',equip:'set',missed:'activate'})[String(kind)]||'ui';
   }
 
   isSoundEffectEnabled(categoryOrKind='ui') {
@@ -1880,7 +1882,7 @@ export class IntegratedDuelController {
     if(this.isSoundEffectEnabled('battle')&&!this.battleAttackSoundBuffer&&!this.battleAttackSoundLoadPromise)this.preloadBattleAttackSound(ctx);
 
     const presets={
-      select:[660,.065,'sine',.78],draw:[740,.13,'triangle',.96],summon:[330,.18,'triangle',1.0],special:[440,.22,'sine',1.02],set:[220,.13,'square',.88],position:[220,.13,'square',.88],activate:[880,.16,'sine',.98],chain:[980,.15,'triangle',.98],attack:[150,.24,'sawtooth',1.06],impact:[90,.2,'square',1.04],phase:[520,.15,'sine',.94],damage:[120,.23,'sawtooth',1.04],recover:[620,.21,'sine',.98],move:[300,.1,'triangle',.86],victory:[720,.38,'triangle',1.0],defeat:[90,.2,'square',1.04]
+      select:[660,.065,'sine',.78],draw:[740,.13,'triangle',.96],summon:[330,.18,'triangle',1.0],special:[440,.22,'sine',1.02],set:[220,.13,'square',.88],position:[220,.13,'square',.88],activate:[880,.16,'sine',.98],chain:[980,.15,'triangle',.98],attack:[150,.24,'sawtooth',1.06],impact:[90,.2,'square',1.04],phase:[520,.15,'sine',.94],damage:[120,.23,'sawtooth',1.04],recover:[620,.21,'sine',.98],move:[300,.1,'triangle',.86],victory:[720,.38,'triangle',1.0],defeat:[90,.2,'square',1.04],coin:[1320,.2,'triangle',.9],dice:[410,.16,'square',.8],counter:[560,.09,'sine',.8],equip:[260,.16,'triangle',.9],missed:[200,.3,'sawtooth',.85]
     };
     const [freq,duration,type,loudness]=presets[kind]||presets.select;
     const now=ctx.currentTime;
@@ -5171,13 +5173,111 @@ export class IntegratedDuelController {
     return `${this.playerPossessive(player)} ${formatLocation(this.mod,Number(loc.location)||0)}`;
   }
 
+  // rc245: battle positions only mean something on the field; piles and the hand never print one.
+  positionPhrase(position,location,lead='') {
+    const L=this.mod?.OcgLocation||{},P=this.mod?.OcgPosition||{},loc=Number(location)||0,pos=Number(position)||0;if(!pos)return'';
+    if(loc&Number(L.MZONE||0)){const name=formatPosition(this.mod,pos)||(pos&Number(P.FACEUP||0)?'Face-up':'Face-down');return `${lead}in ${name} Position`;}
+    if(loc&Number(L.SZONE||0))return `${lead}${pos&Number(P.FACEUP||0)?'face-up':'face-down'}`;
+    return'';
+  }
+
+  positionChangePhrase(position,location) {
+    const L=this.mod?.OcgLocation||{},P=this.mod?.OcgPosition||{},pos=Number(position)||0;
+    if(Number(location)&Number(L.MZONE||0))return `changes to ${formatPosition(this.mod,pos)||(pos&Number(P.FACEUP||0)?'Face-up':'Face-down')} Position`;
+    return pos&Number(P.FACEUP||0)?'is turned face-up':'is turned face-down';
+  }
+
+  // rc245: Extra Deck monsters print their materials on the first line; an activated effect label never needs it.
+  effectTextWithoutMaterials(code,text='') {
+    const value=String(text||''),split=value.search(/\r?\n/);if(split<0||!this.isExtraDeckCard(this.normalizeActionCode(code)))return value;
+    const rest=value.slice(split).trim();return rest||value;
+  }
+
+  eventCardName(loc={}) {
+    const card=this.cardAtLoc(loc)||{},code=this.normalizeActionCode(loc.code||card.code),visible=Number(loc.controller)===0||this.opponentCardsVisible||this.locationIsPublic({location:loc.location,position:loc.position||card.position});
+    return{code:visible?code:0,name:visible&&code?this.cardName(code):'a card',controller:Number(loc.controller)||0};
+  }
+
+  // rc245: short on-board callout for results the Rules Engine reports without moving a card.
+  showEventCallout({kicker='',title='',detail='',tone='info',duration=1500}={}) {
+    if(this.isReplaySeekReconstruction()||!this.duelAnimationsEnabled||!this.boardWrap||typeof document==='undefined'||!title)return;
+    if(!this.eventCalloutQueue)this.eventCalloutQueue=[];this.eventCalloutQueue.push({kicker,title,detail,tone,duration:Math.round(Math.max(700,Number(duration)||1500)*this.actionPresentationScale())});
+    if(this.eventCalloutQueue.length>6)this.eventCalloutQueue.splice(0,this.eventCalloutQueue.length-6);
+    this.presentNextEventCallout();
+  }
+
+  presentNextEventCallout() {
+    if(this.eventCalloutActive||!this.eventCalloutQueue?.length||!this.boardWrap)return;
+    const next=this.eventCalloutQueue.shift(),node=document.createElement('div');this.eventCalloutActive=true;
+    node.className=`duel-event-callout tone-${next.tone}`;node.setAttribute('role','status');node.style.setProperty('--callout-ms',`${next.duration}ms`);
+    const add=(tag,cls,text)=>{if(!text)return;const el=document.createElement(tag);el.className=cls;el.textContent=text;node.append(el);};
+    add('span','duel-event-callout-kicker',next.kicker);add('strong','duel-event-callout-title',next.title);add('span','duel-event-callout-detail',next.detail);
+    this.boardWrap.append(node);
+    setTimeout(()=>{node.remove();this.eventCalloutActive=false;this.presentNextEventCallout();},next.duration);
+  }
+
+  // rc245: engine events that previously produced no log entry, sound or visual.
+  consumePresentationEvent(m={}) {
+    const T=this.mod?.OcgMessageType||{},is=name=>T[name]!=null&&m.type===T[name],who=p=>this.playerLabel(p);
+    if(is('TOSS_COIN')){
+      const results=(m.results||[]).map(Boolean),faces=results.map(v=>v?'Heads':'Tails'),heads=results.filter(Boolean).length,player=Number(m.player)||0;
+      const text=results.length===1?`${who(player)} tosses a coin: ${faces[0]}.`:`${who(player)} tosses ${results.length} coins: ${faces.join(', ')} (${heads} Heads, ${results.length-heads} Tails).`;
+      this.log(text,{type:'coin',controller:player,cause:this.currentResolutionCause()||undefined,outcome:results.length===1?faces[0]:`${heads} Heads`});
+      this.showEventCallout({kicker:'COIN TOSS',title:results.length===1?faces[0]:faces.map(f=>f[0]).join(' · '),detail:results.length>1?`${heads} Heads, ${results.length-heads} Tails`:who(player),tone:'chance'});this.playSound('coin');return true;
+    }
+    if(is('TOSS_DICE')){
+      const results=(m.results||[]).map(Number),player=Number(m.player)||0;
+      this.log(`${who(player)} rolls ${results.length===1?'a die':`${results.length} dice`}: ${results.join(', ')}.`,{type:'dice',controller:player,cause:this.currentResolutionCause()||undefined,outcome:results.join(', ')});
+      this.showEventCallout({kicker:'DIE ROLL',title:results.join(' · '),detail:who(player),tone:'chance'});this.playSound('dice');return true;
+    }
+    if(is('ADD_COUNTER')||is('REMOVE_COUNTER')){
+      const adding=is('ADD_COUNTER'),count=Math.max(1,Number(m.count)||1),card=this.eventCardName(m);
+      this.log(`${card.name==='a card'?'A card':card.name} ${adding?'gains':'loses'} ${count} counter${count===1?'':'s'}.`,{type:'counter',code:card.code,controller:card.controller,amount:adding?count:-count,cause:this.currentResolutionCause()||undefined,outcome:adding?'Counter added':'Counter removed'});
+      this.playSound('counter');return true;
+    }
+    if(is('EQUIP')){
+      const card=this.eventCardName(m.card||{}),target=this.eventCardName(m.target||{});
+      this.log(`${card.name==='a card'?'A card':card.name} is equipped to ${target.name}.`,{type:'equip',code:card.code,controller:card.controller,cards:[card.code,target.code].filter(Boolean).map(code=>({code})),outcome:'Equipped'});
+      this.playSound('equip');return true;
+    }
+    if(is('SWAP')){
+      const a=this.eventCardName(m.card1||{}),b=this.eventCardName(m.card2||{});
+      this.log(`${a.name==='a card'?'A card':a.name} and ${b.name} switch places.`,{type:'swap',code:a.code,controller:a.controller,cards:[a.code,b.code].filter(Boolean).map(code=>({code})),outcome:'Switched'});
+      this.playSound('move');return true;
+    }
+    if(is('MISSED_EFFECT')){
+      const card=this.eventCardName(m),name=card.name==='a card'?'A card':card.name;
+      this.log(`${name}'s optional "When... you can" effect missed its timing and cannot be activated.`,{type:'missed-timing',code:card.code,controller:card.controller,outcome:'Missed timing'});
+      this.showEventCallout({kicker:'MISSED TIMING',title:name,detail:'Its "When... you can" effect could not activate.',tone:'warn',duration:1900});this.playSound('missed');return true;
+    }
+    if(is('FIELD_DISABLED')){
+      let mask=Number(m.field_mask)>>>0,zones=0;while(mask){zones+=mask&1;mask>>>=1;}
+      if(zones)this.log(`${zones} zone${zones===1?' is':'s are'} currently unusable.`,{type:'zone-disabled',amount:zones,outcome:'Zone disabled'});return true;
+    }
+    if(is('HAND_RES')){
+      const names=['','Scissors','Rock','Paper'],r=m.results||[];
+      this.log(`Rock-Paper-Scissors: Player shows ${names[Number(r[this.corePlayer(0)])]||'?'}, Practice Dummy shows ${names[Number(r[this.corePlayer(1)])]||'?'}.`,{type:'rps',outcome:'Rock-Paper-Scissors'});return true;
+    }
+    if(is('SHUFFLE_SET_CARD')){this.log('Set cards are shuffled.',{type:'shuffle',outcome:'Set cards shuffled'});this.playSound('move');return true;}
+    if(is('SWAP_GRAVE_DECK')){const player=Number(m.player)||0;this.log(`${who(player)} swaps the Deck and Graveyard.`,{type:'swap',controller:player,outcome:'Deck and GY swapped'});return true;}
+    if(is('REVERSE_DECK')){this.log('The Decks are turned upside down.',{type:'shuffle',outcome:'Deck reversed'});return true;}
+    if(is('BATTLE')){
+      const a=m.card||{},t=m.target||null,an=this.eventCardName(a),P=this.mod?.OcgPosition||{};this.lastBattleOutcome={attacker:{...a},target:t?{...t}:null,turn:Number(this.turn)||0};
+      if(t){const tn=this.eventCardName(t),defending=!!(Number(t.position)&Number(P.DEFENSE||0))||(!!(Number(t.position))&&!(Number(t.position)&Number(P.ATTACK||P.FACEUP_ATTACK||1))),tv=defending?Number(t.defense)||0:Number(t.attack)||0;
+        const result=a.destroyed&&t.destroyed?'both are destroyed':t.destroyed?`${tn.name} is destroyed`:a.destroyed?`${an.name} is destroyed`:'neither is destroyed';
+        this.log(`Damage calculation: ${an.name} (${Number(a.attack)||0} ATK) vs ${tn.name} (${tv} ${defending?'DEF':'ATK'}) - ${result}.`,{type:'battle-calc',code:an.code,controller:an.controller,cards:[an.code,tn.code].filter(Boolean).map(code=>({code})),outcome:result});}
+      return true;
+    }
+    return false;
+  }
+
   movementText(m) {
     const from=m.from||{},to=m.to||{},code=this.displayCodeForLog(m.card,from,to);const subject=code?this.cardName(code):'a hidden card';
     const fromPlayer=Number(from.controller)||0,toPlayer=Number(to.controller??from.controller)||0,owner=this.playerLabel(fromPlayer),fromOverlay=this.isAttachedXyzMaterial(from),toOverlay=this.isAttachedXyzMaterial(to);
     if(fromOverlay){const host=this.xyzMaterialHostCard(from),hostName=host?.code?this.cardName(host.code):'the Xyz Monster',dest=formatLocation(this.mod,Number(to.location)||0);return `${owner} detaches ${subject} from ${hostName} as Xyz Material and moves it to ${toPlayer===fromPlayer?(fromPlayer===0?'their':'its'):this.playerPossessive(toPlayer)} ${dest}.`;}
     if(toOverlay){const host=this.xyzMaterialHostCard(to),hostName=host?.code?this.cardName(host.code):'the Xyz Monster';return `${owner} attaches ${subject} to ${hostName} as Xyz Material ${Number(to.overlay_sequence)+1}.`;}
     const fromName=formatLocation(this.mod,Number(from.location)||0),toName=formatLocation(this.mod,Number(to.location)||0),fromOwner=fromPlayer===0?'their':'its',toOwner=toPlayer===fromPlayer?fromOwner:(toPlayer===0?"Player's":"Practice Dummy's");
-    return `${owner} moves ${subject} from ${fromOwner} ${fromName} to ${toOwner} ${toName}${Number(to.position)?` in ${formatPosition(this.mod,Number(to.position))} Position`:''}.`;
+    return `${owner} moves ${subject} from ${fromOwner} ${fromName} to ${toOwner} ${toName}${this.positionPhrase(to.position,to.location,' ')}.`;
   }
 
   markOpponentAction(player) { if(Number(player)===1&&this.turnPlayer===1)this.opponentActionThisPhase=true; }
@@ -5355,7 +5455,7 @@ export class IntegratedDuelController {
       const player=Number(m.controller)||0,key=this.trackedLocationKey(m.location),seq=Number(m.sequence)||0;let knownCode=Number(m.code)||0,priorPosition=0;
       if((key==='mzone'||key==='szone')&&this.knownField[player][key][seq]){const faceup=!!(Number(m.position)&(P.FACEUP||0));const known=this.knownField[player][key][seq];priorPosition=Number(known.position)||0;knownCode=knownCode||Number(known.code)||0;const rulesKnown=player===0||faceup||!!known.legallyKnown;const displayKnown=rulesKnown||this.opponentCardsVisible;this.knownField[player][key][seq]={...known,code:displayKnown?knownCode:0,isHidden:!displayKnown,legallyKnown:rulesKnown,testerVisible:player===1&&!rulesKnown&&this.opponentCardsVisible,position:Number(m.position)||0,activatedFaceup:key==='szone'&&!!(Number(m.position)&(P.FACEUP||0))?!!known.activatedFaceup:false};}
       const faceVisibilityChanged=!!(priorPosition&&(!!(priorPosition&(P.FACEUP||0))!==!!(Number(m.position)&(P.FACEUP||0))));
-      const positionCause=this.currentResolutionCause();this.markOpponentAction(player);this.log(`${knownCode&&(player===0||this.opponentCardsVisible||this.locationIsPublic({location:m.location,position:m.position}))?this.cardName(knownCode):'A card'} changes to ${formatPosition(this.mod,Number(m.position)||0)} Position.`,{type:'position',code:(player===0||this.opponentCardsVisible||this.locationIsPublic({location:m.location,position:m.position}))?knownCode:0,controller:player,cause:positionCause||undefined,outcome:'Position Changed'});
+      const positionCause=this.currentResolutionCause();this.markOpponentAction(player);this.log(`${knownCode&&(player===0||this.opponentCardsVisible||this.locationIsPublic({location:m.location,position:m.position}))?this.cardName(knownCode):'A card'} ${this.positionChangePhrase(m.position,m.location)}.`,{type:'position',code:(player===0||this.opponentCardsVisible||this.locationIsPublic({location:m.location,position:m.position}))?knownCode:0,controller:player,cause:positionCause||undefined,outcome:'Position Changed'});
       const positionAnimation=faceVisibilityChanged?this.queueCardAnimation('flip',{player,location:Number(m.location)||0,sequence:seq,code:knownCode,showcase:false}):this.queueCardAnimation('position',{player,location:Number(m.location)||0,sequence:seq,code:knownCode});
       if(positionCause?.chainLink&&knownCode){
         const result={code:knownCode,controller:player,location:Number(m.location)||0,sequence:seq,outcome:'Position Changed'};this.recordChainSummaryCardOutcome(positionCause.chainLink,result);
@@ -5387,6 +5487,7 @@ export class IntegratedDuelController {
       this.log(`${m.player===0?'Player':'Practice Dummy'} takes ${amount.toLocaleString()} damage${directText}.`,{type:directCtx?'direct-attack-damage':'damage',amount:-amount,controller:Number(m.player)||0,code:Number(directCtx?.attackerCode)||0,cause:cause||undefined,outcome:directCtx?'Direct attack damage':'Damage'});
       if(attackCtx)this.lastAttackContext=null;
     }
+    else if (this.consumePresentationEvent(m)) {}
     else if (m.type === T.RECOVER) {this.lp[m.player]+=m.amount;if(!Array.isArray(this.displayLp))this.displayLp=[...this.lp];this.displayLp[m.player]=this.lp[m.player];this.queueLpAnimation(m.player,Number(m.amount),{displayValue:this.displayLp[m.player]});this.log(`${m.player===0?'Player':'Practice Dummy'} gains ${Number(m.amount).toLocaleString()} LP.`,{type:'recover',amount:Number(m.amount),controller:Number(m.player)||0,outcome:'LP gained'});}
     else if (m.type === T.LPUPDATE) {const prior=Number(this.lp[m.player])||0;this.lp[m.player]=m.lp;if(!Array.isArray(this.displayLp))this.displayLp=[...this.lp];this.displayLp[m.player]=this.lp[m.player];const delta=Number(m.lp)-prior;if(delta){this.queueLpAnimation(m.player,delta,{displayValue:this.displayLp[m.player],lethalPresentation:delta<0&&Number(this.displayLp[m.player])<=0});this.log(`${m.player===0?'Player':'Practice Dummy'} LP changes from ${prior.toLocaleString()} to ${Number(m.lp).toLocaleString()}.`,{type:'lp-update',amount:delta,controller:Number(m.player)||0,outcome:delta>0?'LP gained':'LP lost'});}}
     else if (m.type === T.PAY_LPCOST) {this.lp[m.player]=Math.max(0,this.lp[m.player]-m.amount);if(!Array.isArray(this.displayLp))this.displayLp=[...this.lp];this.displayLp[m.player]=this.lp[m.player];this.queueLpAnimation(m.player,-Number(m.amount),{displayValue:this.displayLp[m.player]});this.log(`${m.player===0?'Player':'Practice Dummy'} pays ${Number(m.amount).toLocaleString()} LP as a cost.`,{type:'lp-cost',amount:-Number(m.amount),controller:Number(m.player)||0,outcome:'LP cost paid'});}
@@ -5401,7 +5502,7 @@ export class IntegratedDuelController {
       const resolvedEffect=this.resolvedEffectDisplay(code,m.description,pendingSame||effectLabel);
       const structuralEffect=resolvedEffect.text?'':this.deterministicEffectRecovery(code,{controller,location:Number(m.triggering_location??m.location??m.card?.location)||0,sequence:Number(m.triggering_sequence??m.sequence??m.card?.sequence)||0},m);
       const baseEffect=resolvedEffect.text||structuralEffect||'';
-      const effect=this.expandActivatedEffectContinuation(code,baseEffect)||baseEffect;
+      const effect=this.effectTextWithoutMaterials(code,this.expandActivatedEffectContinuation(code,baseEffect)||baseEffect);
       const hasExactEffect=!!(resolvedEffect.specific||structuralEffect);
       this.activeEffectDescription=effect;
       const source={
@@ -5750,7 +5851,7 @@ export class IntegratedDuelController {
     // rc242: the ocgcore-wasm query reader has no QUERY_TYPE branch, so a TYPE entry desynchronizes every field
     // after it (ATK/DEF, owner, public flag, Link data, Xyz materials) and can raise "eof" for whole zones.
     // The queried type bits are never consumed here, so the flag is omitted.
-    const flags = Q.CODE|Q.POSITION|Q.LEVEL|Q.RANK|Q.ATTRIBUTE|Q.ATTACK|Q.DEFENSE|Q.OWNER|Q.IS_PUBLIC|Q.LINK|Q.OVERLAY_CARD;
+    const flags = Q.CODE|Q.POSITION|Q.LEVEL|Q.RANK|Q.ATTRIBUTE|Q.ATTACK|Q.DEFENSE|Q.OWNER|Q.IS_PUBLIC|Q.LINK|Q.OVERLAY_CARD|Q.COUNTERS;
 
     for (let p=0; p<2; p++) {
       const target = this.emptyPlayer();
@@ -6154,6 +6255,7 @@ export class IntegratedDuelController {
     const node=document.createElement('div');
     node.className=`duel-card${compact?' compact':''}${visible?'':' card-back'}`;
     node.dataset.code=String(realCode||'');node.dataset.player=String(player);node.dataset.location=locationKey;node.dataset.sequence=String(ctx.sequence);if(testerVisibleOnly)node.dataset.testerVisibleOnly='true';
+    const counterTotal=Object.values(card?.counters||{}).reduce((sum,value)=>sum+(Number(value)||0),0);if(counterTotal>0&&(locationKey==='mzone'||locationKey==='szone')){const badge=document.createElement('span');badge.className='duel-card-counter-badge';badge.textContent=String(counterTotal);badge.title=`${counterTotal} counter${counterTotal===1?'':'s'}`;node.append(badge);}
     node.tabIndex=suppressInspection?-1:0;node.setAttribute('role',suppressInspection?'presentation':'group');if(suppressInspection)node.setAttribute('aria-hidden','true');
     const inlineSelectionIndex=this.inlineSelectionIndexForContext(ctx);
 
@@ -6695,6 +6797,15 @@ export class IntegratedDuelController {
     else if(type==='player-effect-response'){set('Effect Choice','choice','EFFECT');}
     else if(type==='player-card-response'){set('Card Selection','choice','SELECT');}
     else if(type==='player-position-response'||type==='player-sort-response'){set('Player Choice','choice','CHOICE');}
+    else if(type==='coin'){set('Coin Toss','choice','COIN');}
+    else if(type==='dice'){set('Die Roll','choice','DICE');}
+    else if(type==='counter'){set('Counter',Number(d.amount)>0?'gain':'lp','CTR');}
+    else if(type==='equip'){set('Equip','move','EQUIP');}
+    else if(type==='swap'){set('Switch','move','SWAP');}
+    else if(type==='missed-timing'){set('Missed Timing','negated','MISS');}
+    else if(type==='battle-calc'){set('Damage Calc','battle','CALC');}
+    else if(type==='zone-disabled'){set('Zone Disabled','negated','ZONE');}
+    else if(type==='rps'){set('Rock-Paper-Scissors','choice','RPS');}
     else if(type==='concede'){set('Concede','negated','END');}
     else if(/phase begins/i.test(text)){set('Phase','system','PHASE');}
     else if(/turn \d+ begins/i.test(text)){set('Turn','system','TURN');}
@@ -7196,7 +7307,7 @@ export class IntegratedDuelController {
     if(this.isBattleReplayPrompt(prompt)){const attacker=this.lastAttackContext?.attackerCode?this.cardName(this.lastAttackContext.attackerCode):'the attacking monster';this.log(response.yes?`Player continues ${attacker}'s attack and will choose a new legal target.`:`Player cancels ${attacker}'s attack after the Battle Step replay.`,{type:'player-battle-replay-response',code:Number(this.lastAttackContext?.attackerCode)||0,controller:0,action:response.yes?'retarget':'cancel',outcome:response.yes?'Choose new attack target':'Attack cancelled'});if(!response.yes)this.lastAttackContext=null;return;}
     if(prompt.type===T.SELECT_EFFECTYN||prompt.type===T.SELECT_YESNO){const code=this.effectSourceCode(prompt);const effect=this.inferPromptEffectText(prompt);this.log(`Player ${response.yes?'accepts':'declines'}${code?` ${this.cardName(code)}'s`:''} optional effect.`,{type:'player-effect-response',code:code||undefined,effect:effect||undefined,controller:0,action:response.yes?'accept':'decline'});return;}
     if(prompt.type===T.SELECT_CARD||prompt.type===T.SELECT_TRIBUTE||prompt.type===T.SELECT_SUM){const source=prompt.type===T.SELECT_SUM?[...(prompt.selects_must||[]),...(prompt.selects||[])]:prompt.selects||[];const indices=Array.isArray(response.indicies)?response.indicies:[];const selected=indices.map(i=>source[(prompt.type===T.SELECT_SUM?(prompt.selects_must||[]).length:0)+Number(i)]).filter(Boolean);const names=selected.map(item=>`${this.cardName(item.code)} (${this.isAttachedXyzMaterial(item)?`Xyz Material ${Number(item.overlay_sequence)+1}`:formatLocation(this.mod,Number(item.location)||0)})`);if(this.isPlayerAttackTargetPrompt(prompt)&&selected.length){this.log(`Player selects ${this.cardName(selected[0].code)} as the attack target.`,{type:'player-attack-target',cards:[{code:Number(selected[0].code)||0}],controller:0,outcome:'Attack target selected'});return;}if(names.length){const xyz=selected.some(item=>this.isAttachedXyzMaterial(item));this.log(`Player confirms ${xyz?'Xyz Material':prompt.type===T.SELECT_TRIBUTE?'Tribute/material':'card'} selection: ${names.join(', ')}.`,{type:'player-card-response',cards:selected.map(item=>({code:Number(item.code)||0,controller:Number(item.controller)||0,location:Number(item.location)||0,sequence:Number(item.sequence)||0,...(this.isAttachedXyzMaterial(item)?{overlay_sequence:Number(item.overlay_sequence)}:{})})).filter(item=>item.code),controller:0,outcome:xyz?'Xyz Material selected':undefined});}return;}
-    if(prompt.type===T.SELECT_POSITION&&response.position!=null){this.log(`Player confirms ${formatPosition(this.mod,Number(response.position))} Position.`,{type:'player-position-response',controller:0});return;}
+    if(prompt.type===T.SELECT_POSITION&&response.position!=null){this.log(`Player confirms ${formatPosition(this.mod,Number(response.position))||'the'} Position.`,{type:'player-position-response',controller:0});return;}
     if((prompt.type===T.SELECT_PLACE||prompt.type===T.SELECT_DISFIELD)&&Array.isArray(response.places)){this.log(`Player confirms zone selection: ${response.places.map(p=>p.label||`${formatLocation(this.mod,p.location)} ${Number(p.sequence)+1}`).join(', ')}.`);return;}
     if(prompt.type===T.SORT_CARD&&response.order)this.log('Player confirms the requested card order.',{type:'player-sort-response',controller:0});
   }

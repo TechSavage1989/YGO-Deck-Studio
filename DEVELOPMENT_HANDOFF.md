@@ -2,7 +2,7 @@
 
 ## Latest version
 
-3.0.0-alpha.221-duelcore.1-rc244 (unpublished; build pipeline only: terser minification of the embedded JavaScript and patching of web/duel-core.css, see docs/releases/CHANGELOG_rc244.txt).
+3.0.0-alpha.221-duelcore.1-rc245 (unpublished; roadmap phase 3: presentation of previously silent engine events and log wording, see docs/releases/CHANGELOG_rc245.txt). rc244 (unpublished unless tagged; build pipeline only: terser minification and patching of web/duel-core.css, see docs/releases/CHANGELOG_rc244.txt).
 
 Previous published baseline: 3.0.0-alpha.221-duelcore.1-rc243 (published 2026-11-04; assets, manifest and checksums verified from the live feed, and the unchanged rc242 updater client found, downloaded and validated it). Before that: rc242 (published 2026-11-03; the published manifest, executable, archives and checksums were verified from the live feed and the unchanged rc241 updater client found, downloaded and validated it). Before that: rc241. The owner confirmed the rc240 desktop icon is fixed. Native Windows installation and restart are not inferred from icon confirmation.
 
@@ -95,6 +95,7 @@ The release builder:
 
 ## Current focused tests
 
+- tests/test_rc245_event_presentation.py
 - tests/test_rc244_minified_embed.py
 - tests/test_rc243_duel_review.py
 - tests/test_rc242_practice_dummy_decisions.py
