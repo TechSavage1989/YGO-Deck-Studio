@@ -10,7 +10,7 @@ sys.path.insert(0,str(root/'tools'))
 import patch_embedded_web as pw  # noqa: E402
 
 js_source=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
-assert "duelcore.1-rc259" in js_source
+assert "duelcore.1-rc260" in js_source
 
 # 1. Embedded compaction: only literal-free lines change, meaning-bearing whitespace survives, output parses.
 c=pw.compact_literal_free_js_line

@@ -14558,3 +14558,29 @@ body .duel-attack-impact.duel-attack-style-water{border-color:#79d4ee!important;
 
 /* rc246: the update banner sits at the bottom so it never covers the toolbar, and stays out of the way during a Test Duel (installing is blocked there anyway). */
 body.duel-mode-active .app-update-banner{display:none!important}
+
+/* rc260: deck builder review. Denser search grid, an unmistakable active sort button, hidden shortcut
+   hints, and controls that are large enough to read. */
+.shortcut-strip.shortcut-strip-collapsed { display:none !important; }
+.shortcut-hint-toggle { min-width:28px; width:28px; height:28px; padding:0; border-radius:999px; font-weight:800; flex:0 0 auto; }
+.shortcut-hint-toggle[aria-expanded="true"] { border-color:var(--accent); color:var(--accent); }
+.search-filter-popover .search-sort-mode-btn:not(.active),
+.deck-sort-popover .deck-sort-mode-btn:not(.active) {
+  background:var(--surface-2) !important;
+  border:1px solid var(--line) !important;
+  color:var(--text) !important;
+  box-shadow:none !important;
+}
+.search-filter-popover .search-sort-mode-btn:not(.active):hover,
+.deck-sort-popover .deck-sort-mode-btn:not(.active):hover { background:var(--surface-3) !important; border-color:color-mix(in srgb,var(--accent) 48%,var(--line)) !important; }
+.search-filter-popover .search-sort-mode-btn.active,
+.deck-sort-popover .deck-sort-mode-btn.active { background:var(--accent) !important; border-color:var(--accent) !important; color:#fff !important; font-weight:800; }
+#searchResults.search-results.priority-layout-v4.grid-view { grid-template-columns:repeat(auto-fill,minmax(92px,1fr)) !important; gap:6px !important; }
+#searchResults.search-results.priority-layout-v4.grid-view .search-card { height:auto !important; min-height:0 !important; }
+#searchResults.search-results.priority-layout-v4.grid-view .search-card .image-wrap { flex:0 0 auto !important; height:auto !important; min-height:0 !important; aspect-ratio:421 / 614; }
+#searchResults.search-results.priority-layout-v4.grid-view .search-card .search-name { font-size:11px; line-height:1.2; white-space:normal !important; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; height:auto !important; max-height:none !important; }
+#searchResults.search-results.priority-layout-v4.grid-view .search-card .search-stats-line { flex-wrap:wrap !important; gap:1px 5px !important; height:auto !important; }
+#searchResults.search-results.priority-layout-v4.grid-view .search-card .search-stat-item { flex:0 0 auto !important; overflow:visible !important; font-size:9.5px; }
+.search-filter-popover input[type="number"], .search-filter-popover input[type="search"], .search-filter-popover input[type="text"] { min-height:30px; font-size:13px; padding:4px 8px; box-sizing:border-box; }
+#importClipboardBtn, #copyYdkBtn, #copyYdkeBtn, #exportYdkBtn, #exportYdkeBtn { min-height:28px; font-size:12px; }
+

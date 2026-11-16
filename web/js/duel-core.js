@@ -1,4 +1,4 @@
-const DUEL_BRANCH = 'duelcore.1-rc259';
+const DUEL_BRANCH = 'duelcore.1-rc260';
 
 const DUMMY_CARD_CODE = 89631139;
 const DUMMY_OK=Object.freeze({blocked:false,penalty:0,reason:''}),DUMMY_BLOCK=reason=>({blocked:true,penalty:Infinity,reason}); // Blue-Eyes White Dragon: inert Level 8 normal monster.

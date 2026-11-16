@@ -28,6 +28,7 @@ A **Windows desktop deck builder and integrated test-duel application**, with a 
 | Create/load decks and organize deck-library directories. | Choose a Practice Dummy deck, intelligence, and turn order. | Inspect the visual Duel Log and replay recorded decisions. |
 | Scan supported deck files, including YDK and YDKE. | Test through the integrated OCGCore rules engine. | Seek through live history and branch with a new decision. |
 | Keep recent decks and reconnect saved library folders. | Use prompt-window or eligible direct hand/field selection. | Reset a duel with its captured setup and a fresh shuffle. |
+| Search cards by name, archetype or text with typo tolerance, and filter by type, Attribute, Level, ATK/DEF and effect. | Hear and see each action with recorded sound effects and board effects. | Sort and validate the deck against the selected forbidden list. |
 
 ## Screenshots
 

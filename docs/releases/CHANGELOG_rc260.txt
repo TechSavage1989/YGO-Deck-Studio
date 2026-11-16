@@ -1,0 +1,24 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc260
+
+Deck builder search and layout improvements from a review of the deck builder.
+
+Fixes
+- Searching "D/D/D" (or any query made of single letters) no longer returns almost every card; it finds the D/D/D cards first.
+- PSY-Framegear monsters are now found by the Hand Trap filter.
+- Reset Search now also resets the sort arrow on the view switch.
+
+Search
+- Typo tolerance: when nothing matches exactly, close spellings are tried ("ash blosom" finds Ash Blossom & Joyous Spring, "blu eyes wite dragon" finds Blue-Eyes White Dragon).
+- Spacing and punctuation no longer matter ("blueeyes" finds Blue-Eyes cards).
+- With nothing typed, cards are listed by name instead of database order. Equal matches list shorter names first.
+- Attribute, Type, Level, ATK and DEF filters are available without choosing Card Type first, and show only matching monsters.
+- ATK, DEF and Level / Rank sorting starts with the highest value; click again to reverse.
+
+Layout
+- Search results in Grid view show three smaller cards per row instead of two large ones, with names and stats wrapping instead of being cut off.
+- The selected sort button is the only highlighted one, in both Search Options and Deck Sort.
+- The mouse and keyboard shortcut hints above the results and the deck are hidden behind a "?" button; the choice is remembered.
+- Larger Search Text and Maximum Results boxes and larger Import/Copy/Export buttons.
+
+Documentation
+- README screenshots recaptured with the new layout.
