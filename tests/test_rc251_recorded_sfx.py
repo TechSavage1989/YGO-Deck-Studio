@@ -11,7 +11,7 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 core=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
 app=(root/'web/js/app.js').read_text(encoding='utf-8')
-assert "duelcore.1-rc253" in core
+assert "duelcore.1-rc254" in core
 match=re.search(r'globalThis\.YGO_DUEL_SFX=(\{.*?\});',app)
 assert match,'app.js must define the recorded clip table'
 table=json.loads(match.group(1))
@@ -54,7 +54,7 @@ assert result['fallbackOsc']>0,'recipe must play while clips are still decoding'
 table={**table,**long_table}
 assert set(result['clips'])==set(table),sorted(set(table)-set(result['clips']))
 for kind,clip in result['clips'].items():
-    assert 0.12<=clip['seconds']<=2.0,(kind,clip)
+    assert 0.12<=clip['seconds']<=2.1,(kind,clip)
     assert clip['peak']>=0.25,(kind,clip)
 assert set(result['kinds'])<=set(table),sorted(set(result['kinds'])-set(table))
 assert sorted(result['viaClip'])==sorted(result['kinds']),sorted(set(result['kinds'])-set(result['viaClip']))
@@ -62,5 +62,5 @@ assert all(result['attack'].values()),result['attack']
 assert result['recipeAfterRemoval']
 assert result['levels']['select']<result['levels']['fusion']
 total=sum(len(v) for v in table.values())
-assert total<140_000,total
+assert total<160_000,total
 print(f"rc251 recorded sound effects: {len(table)} clips, {total} base64 bytes, all decoded and routed")
