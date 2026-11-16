@@ -185,3 +185,7 @@ Not performed here: native Windows build, packaging and owner playtesting.
 
 The release build now needs Node.js with npx: tools/patch_embedded_web.py minifies app.js and duel-core.js with a pinned terser (local names only) and also patches web/duel-core.css. This is phase 1 of an owner-approved plan: (1) make room and fix the pipeline, (2) test every feature of the deck builder and Test Duel headlessly, (3) present the engine events that are currently silent (coin, dice, counters, equips, control changes, missed timing) and fix log wording, (4) battle and action animations, (5) layered synthesized sound, (6) importance-based pacing. Synthesized audio only; no recorded samples.
 
+
+## Publish button — 2026-11-16
+
+The Build and Release workflow accepts a manual run (workflow_dispatch) on main that builds and publishes the version in launcher/version.go as a prerelease, creating the tag itself. Tag pushes still work. Both paths now check the built manifest against the tag before publishing. No application change and no version bump.

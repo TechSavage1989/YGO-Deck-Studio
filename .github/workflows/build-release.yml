@@ -6,6 +6,14 @@ on:
     tags: ['v*']
   pull_request:
     branches: [main]
+  # Publish button: Actions -> Build and Release -> Run workflow (branch: main).
+  # Builds main and publishes it as the prerelease named by launcher/version.go.
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "publish" to build main and publish it as a new prerelease'
+        required: true
+        default: ''
 
 permissions:
   contents: write
@@ -15,6 +23,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check the publish request
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$CONFIRM" != "publish" ]; then
+            echo 'Type "publish" in the confirm box to release.' >&2
+            exit 1
+          fi
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "Releases are published from main only (got $GITHUB_REF)." >&2
+            exit 1
+          fi
       - uses: actions/setup-go@v5
         with:
           go-version: '1.23.x'
@@ -51,21 +74,39 @@ jobs:
           name: ygo-deck-studio-${{ github.sha }}
           path: dist/*
           if-no-files-found: error
-      - name: Refuse tag release without build artifacts
-        if: ${{ startsWith(github.ref, 'refs/tags/v') && hashFiles('dist/*') == '' }}
+      - name: Refuse release without build artifacts
+        if: ${{ (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch') && hashFiles('dist/*') == '' }}
         run: |
           echo "Release build requires the verified recovered rc189 baseline executable." >&2
           exit 1
       - name: Create immutable GitHub release
-        if: ${{ startsWith(github.ref, 'refs/tags/v') && hashFiles('dist/*') != '' }}
+        if: ${{ (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch') && hashFiles('dist/*') != '' }}
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          TAG="${GITHUB_REF_NAME}"
-          if gh release view "$TAG" >/dev/null 2>&1; then
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="$(sed -n 's/.*AppVersion *= *"\([^"]*\)".*/\1/p' launcher/version.go | head -n 1)"
+            if [ -z "$VERSION" ]; then
+              echo "Could not read the version from launcher/version.go." >&2
+              exit 1
+            fi
+            TAG="v${VERSION}"
+            if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+              echo "Tag $TAG already exists; bump the release candidate before publishing again." >&2
+              exit 1
+            fi
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          # A tag on the wrong commit must never publish a mislabeled release.
+          if ! grep -q "\"tag\": \"${TAG}\"" dist/update-manifest.json; then
+            echo "The built manifest does not match $TAG; refusing to publish." >&2
+            exit 1
+          fi
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "Release $TAG already exists; refusing to overwrite it." >&2
             exit 1
           fi
-          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "YGO Deck Studio $TAG" --prerelease --generate-notes
+          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "YGO Deck Studio $TAG" --prerelease --generate-notes
