@@ -33,6 +33,8 @@ Increment the release candidate consistently in:
 
 Published tags use v followed by the complete application version. Never reuse an existing tag or overwrite its release assets.
 
+Publishing: either push the version tag, or use the publish button (GitHub -> Actions -> Build and Release -> Run workflow on main, type "publish"). The button builds main and creates the tag and prerelease named by launcher/version.go; it refuses if that tag already exists. Both paths refuse a release whose built manifest does not match the tag, so a tag placed on the wrong commit cannot publish a mislabeled release. Claude cloud sessions cannot push tags or create releases through their git proxy; the button is how to publish without a local git client.
+
 ## Build
 
 Primary build command:
