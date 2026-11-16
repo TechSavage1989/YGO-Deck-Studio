@@ -54,7 +54,7 @@ def main():
     if not args.skip_tests:
         run('node','--check',ROOT/'web/js/app.js');run('node','--check',ROOT/'web/js/duel-core.js')
         run('go','test','./launcher/updater')
-        for t in ['tests/test_rc236_update_client_timers.py','tests/test_rc238_update_banner_clicks.py','tests/test_rc235_named_identity_legality_explanations.py','tests/test_rc234_shared_extra_monster_zones.py','tests/test_rc233_xyz_material_and_final_chain.py','tests/test_rc232_visual_log_click_routing.py','tests/test_rc230_exact_material_autosubmit.py']:
+        for t in ['tests/test_rc244_minified_embed.py','tests/test_rc243_duel_review.py','tests/test_rc242_practice_dummy_decisions.py','tests/test_rc236_update_client_timers.py','tests/test_rc238_update_banner_clicks.py','tests/test_rc235_named_identity_legality_explanations.py','tests/test_rc234_shared_extra_monster_zones.py','tests/test_rc233_xyz_material_and_final_chain.py','tests/test_rc232_visual_log_click_routing.py','tests/test_rc230_exact_material_autosubmit.py']:
             run(sys.executable,ROOT/t)
     asset_name=EXECUTABLE_NAME;exe=out/asset_name
     env=os.environ.copy();env.update({'GOOS':'windows','GOARCH':'amd64','CGO_ENABLED':'0'})
