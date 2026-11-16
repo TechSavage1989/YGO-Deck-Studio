@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Patch the verified rc260 browser assets into the exact rc189 Go executable.
+"""Patch the verified rc261 browser assets into the exact rc189 Go executable.
 
 This script intentionally supports only the supplied rc189 baseline. It verifies the
 baseline SHA-256 before modifying the Go embed.FS payload, updates the embedded file
@@ -22,7 +22,7 @@ EMBED_TABLE_VA = 0xD6A578
 EMBED_ENTRY_COUNT = 87
 EMBED_ENTRY_SIZE = 48
 NATIVE_VERSION_OLD = b"3.0.0-alpha.221-duelcore.1-rc189"
-NATIVE_VERSION_NEW = b"3.0.0-alpha.221-duelcore.1-rc260"
+NATIVE_VERSION_NEW = b"3.0.0-alpha.221-duelcore.1-rc261"
 PATCH_FILES = (
     "web/index.html",
     "web/styles.css",
@@ -315,7 +315,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("base_exe", type=Path, help="Exact rc189 baseline executable")
     parser.add_argument("web_root", type=Path, help="Patched web source root")
-    parser.add_argument("output_exe", type=Path, help="Output rc260 executable")
+    parser.add_argument("output_exe", type=Path, help="Output rc261 executable")
     args = parser.parse_args()
     base_bytes = args.base_exe.read_bytes()
     actual_sha = hashlib.sha256(base_bytes).hexdigest()
@@ -347,7 +347,7 @@ def main() -> int:
     print(f"SHA-256: {output_sha}")
     for name, old_size, new_size in changed:
         print(f"{name}: {old_size} bytes -> {new_size} bytes")
-    print(f"Native version constant: rc189 -> rc260 at file offset {native_offset:#x}")
+    print(f"Native version constant: rc189 -> rc261 at file offset {native_offset:#x}")
     return 0
 
 if __name__ == "__main__":

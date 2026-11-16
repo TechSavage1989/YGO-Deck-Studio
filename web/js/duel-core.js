@@ -1,4 +1,4 @@
-const DUEL_BRANCH = 'duelcore.1-rc260';
+const DUEL_BRANCH = 'duelcore.1-rc261';
 
 const DUMMY_CARD_CODE = 89631139;
 const DUMMY_OK=Object.freeze({blocked:false,penalty:0,reason:''}),DUMMY_BLOCK=reason=>({blocked:true,penalty:Infinity,reason}); // Blue-Eyes White Dragon: inert Level 8 normal monster.
@@ -3942,10 +3942,12 @@ export class IntegratedDuelController {
   syncReplayControls({renderEvents=false}={}) {
     const data=this.replaySourceData(),total=this.replayDecisionCount(data),playback=this.replayPlayback?.mode==='playback'?this.replayPlayback:null,reconstruction=this.replayPlayback?.seeking?this.replayPlayback:null,branch=this.liveReplayBranch?.ready?this.liveReplayBranch:null;
     const actualIndex=playback?Math.max(0,Number(playback.index)||0):branch?Math.max(0,Math.min(total,Number(branch.index)||0)):total,seekTarget=reconstruction&&Number.isFinite(Number(reconstruction.stopAtIndex))?Math.max(0,Math.min(total,Number(reconstruction.stopAtIndex))):null,previewTarget=this.replaySeekPreviewTarget==null?null:Math.max(0,Math.min(total,Number(this.replaySeekPreviewTarget)||0)),index=previewTarget==null?(seekTarget==null?actualIndex:seekTarget):previewTarget;
+    // rc261: a replay that has run to the end of the duel is finished, not "playing"; Play then restarts it.
+    const replayEnded=this.replayPlaybackEnded(playback);
     const timeline=$id('duelReplayTimeline'),timelineValue=$id('duelReplayTimelineValue'),status=$id('duelReplayStatus'),play=$id('duelReplayPlayPauseBtn'),speed=$id('duelReplaySpeed');
     if(timeline){timeline.max=String(Math.max(0,total));timeline.value=String(Math.min(total,index));timeline.disabled=total===0;}if(timelineValue)timelineValue.textContent=`${Math.min(total,index)} / ${total}`;
-    if(status){if(reconstruction?.branchLive)status.textContent=`Seeking live history · ${Math.min(total,index)} / ${total}`;else if(playback?.seeking)status.textContent=`Seeking replay · ${Math.min(total,index)} / ${total}`;else if(playback)status.textContent=`Replay ${playback.paused?'paused':'playing'} · ${Math.min(total,index)} / ${total}`;else if(branch){const future=Math.max(0,total-Math.min(total,index));status.textContent=future?`Live branch point · ${Math.min(total,index)} / ${total} · ${future} future decision${future===1?'':'s'} preserved`:`Live history caught up · ${Math.min(total,index)} / ${total}`;}else if(this.replaySession)status.textContent=`Live recording · ${total} decision${total===1?'':'s'}`;else status.textContent='No replay recorded';}
-    if(play){if(branch&&!playback&&!reconstruction){play.textContent=branch.awaitingContinue?'Continue':'Live';play.disabled=!branch.awaitingContinue;}else{const activelyPlaying=!!(playback&&!playback.paused&&!playback.seeking);play.textContent=activelyPlaying?'Pause':'Play';play.disabled=total===0||!!reconstruction;}}if(speed){speed.value=String(this.replaySpeed||1);speed.disabled=total===0||!!branch&&!playback;}
+    if(status){if(reconstruction?.branchLive)status.textContent=`Seeking live history · ${Math.min(total,index)} / ${total}`;else if(playback?.seeking)status.textContent=`Seeking replay · ${Math.min(total,index)} / ${total}`;else if(playback&&replayEnded)status.textContent=`Replay finished · ${total} / ${total}`;else if(playback)status.textContent=`Replay ${playback.paused?'paused':'playing'} · ${Math.min(total,index)} / ${total}`;else if(branch){const future=Math.max(0,total-Math.min(total,index));status.textContent=future?`Live branch point · ${Math.min(total,index)} / ${total} · ${future} future decision${future===1?'':'s'} preserved`:`Live history caught up · ${Math.min(total,index)} / ${total}`;}else if(this.replaySession)status.textContent=`Live recording · ${total} decision${total===1?'':'s'}`;else status.textContent='No replay recorded';}
+    if(play){if(branch&&!playback&&!reconstruction){play.textContent=branch.awaitingContinue?'Continue':'Live';play.disabled=!branch.awaitingContinue;}else{const activelyPlaying=!!(playback&&!playback.paused&&!playback.seeking&&!replayEnded);play.textContent=activelyPlaying?'Pause':'Play';play.disabled=total===0||!!reconstruction;}}if(speed){speed.value=String(this.replaySpeed||1);speed.disabled=total===0||!!branch&&!playback;}
     const setDisabled=(id,value)=>{const node=$id(id);if(node)node.disabled=!!value;};setDisabled('duelReplaySaveBtn',!data);setDisabled('duelReplayCheckpointBtn',!data);setDisabled('duelReplayDebugBtn',!data);setDisabled('duelReplayRestartBtn',total===0||!!reconstruction);setDisabled('duelReplayPreviousBtn',total===0||index<=0||!!reconstruction);setDisabled('duelReplayNextBtn',total===0||index>=total||!!reconstruction);setDisabled('duelReplayEndBtn',total===0||index>=total||!!reconstruction);setDisabled('duelReplayEventsBtn',!(Array.isArray(data?.events)&&data.events.length)||!!reconstruction);
     if(this.replayEventsOpen&&(renderEvents||playback||branch))this.renderReplayEvents();
   }
@@ -4021,10 +4023,15 @@ export class IntegratedDuelController {
     if(!playback.seeking){await this.wait(120);if(this.replayPlayback!==playback||playback.cancelled||!this.running||!this.handle)return;while(this.replayPlayback===playback&&playback.paused&&!playback.cancelled)await new Promise(resolve=>{playback.gateResolve=resolve;});}
   }
 
+  replayPlaybackEnded(playback=this.replayPlayback) {
+    return !!(playback&&playback.mode==='playback'&&!playback.seeking&&!this.starting&&(!this.running||!!this.finalResult)&&Number(playback.index)>=this.replayDecisionCount(playback.data));
+  }
+
   toggleReplayPlayback() {
     const playback=this.replayPlayback?.mode==='playback'?this.replayPlayback:null,branch=this.liveReplayBranch?.ready?this.liveReplayBranch:null;
     if(!playback&&branch){if(branch.awaitingContinue){this.continueLiveReplayBranch();return;}this.toast('Live control is paused at the selected history point. Make a move to branch from here.');return;}
     if(!playback){const data=this.replaySourceData();if(!this.replayDecisionCount(data)){this.toast('No replay decisions are available yet.');return;}this.replayFromStart(true);return;}
+    if(this.replayPlaybackEnded(playback)){this.replayFromStart(true);return;}
     playback.paused=!playback.paused;if(!playback.paused)this.releaseReplayGate(playback);this.syncReplayControls();
   }
 
@@ -5403,11 +5410,14 @@ export class IntegratedDuelController {
         if(!response)response=this.dummyMode==='passive'?this.dummyPassiveResponse(prompt,attempt):this.dummyEscapeResponse(prompt,attempt);
         if(!response)throw new Error(`Practice Dummy could not produce a legal response for duel decision ${prompt.type}.`);
       }else if(!response){await this.awaitCardAnimationForDecision(prompt);const branchManual=!!(this.liveReplayBranch?.ready&&this.liveReplayBranch.forceManualAtTarget&&Number(prompt.player)===0);response=await this.playerResponse(prompt,{manualOnly:branchManual});if(branchManual&&this.liveReplayBranch)this.liveReplayBranch.forceManualAtTarget=false;}
-      if (!this.running || !this.handle) return;
+      // rc261: a decision loop that was replaced while it waited (replay seek, live-history seek, restart) must
+      // not record its answer or send it to the new duel.
+      if (!this.running || !this.handle || loopSerial!==this.processLoopSerial) return;
       if (!response) throw new Error(`No valid response handler for duel decision ${prompt.type}.`);
       if(Number(prompt.player)===0&&prompt.type===T.SELECT_CHAIN&&(prompt.selects||[]).length&&!this.userSubmittedPrompts.has(prompt)&&!this.smartAutoPassedPrompts?.has?.(prompt)&&!this.replayPlayback){
         this.traceSession('automatic-chain-response-blocked',{signature:this.replayPromptSignature(prompt),response:this.traceSafeObject(response)});
         response=await this.playerResponse(prompt,{manualOnly:true});
+        if(!this.running||!this.handle||loopSerial!==this.processLoopSerial)return;
         if(!response||!this.userSubmittedPrompts.has(prompt))throw new Error('A nonempty player Chain decision did not receive an explicit player response.');
       }
       if(Number(prompt.player)===1)this.noteDummyCommandResponse(prompt,response);
@@ -6035,7 +6045,7 @@ export class IntegratedDuelController {
 
   showResultOverlay({player=null,reason=null}={}) {
     this.hideCardHoverOverlay();this.clearLogCardFocus('hover');
-    this.pendingResult=null;this.finalResult={player,reason};const overlay=$id('duelResultOverlay'),title=$id('duelResultTitle'),detail=$id('duelResultDetail'),primary=$id('duelResultRestart'),side=$id('duelResultSide'),saveReplay=$id('duelResultSaveReplay'),replayDuel=$id('duelResultReplay');if(!overlay)return;
+    this.pendingResult=null;this.finalResult={player,reason};if(this.replayPlayback)setTimeout(()=>this.syncReplayControls(),0);const overlay=$id('duelResultOverlay'),title=$id('duelResultTitle'),detail=$id('duelResultDetail'),primary=$id('duelResultRestart'),side=$id('duelResultSide'),saveReplay=$id('duelResultSaveReplay'),replayDuel=$id('duelResultReplay');if(!overlay)return;
     const isDraw=player!==0&&player!==1;const victory=Number(player)===0;
     if(this.matchMode==='match3'&&this.matchState)this.registerMatchResult(player);
     let titleText=isDraw?'Draw':victory?'Victory':'Defeat',detailText=isDraw?'The duel ended in a draw.':this.winReasonText(reason);
