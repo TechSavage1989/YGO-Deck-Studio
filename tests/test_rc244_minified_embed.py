@@ -8,7 +8,7 @@ root=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(root/'tools'))
 import patch_embedded_web as pw  # noqa: E402
 
-assert "duelcore.1-rc255" in (root/'web/js/duel-core.js').read_text(encoding='utf-8')
+assert "duelcore.1-rc256" in (root/'web/js/duel-core.js').read_text(encoding='utf-8')
 assert 'web/duel-core.css' in pw.PATCH_FILES
 LIMITS={'web/js/duel-core.js':798551,'web/js/app.js':463846,'web/styles.css':586884,'web/duel-core.css':361955,'web/index.html':97860}
 
@@ -36,7 +36,7 @@ else:
     assert 'class IntegratedDuelController' in core and 'export' in core
     for method in ('dummyResponse(','processLoop(','mapCoreMessageValue(','smartOptionalChainResponse(','playSound('):
         assert method in core,method
-    assert 'triggering_controller' in core and "duelcore.1-rc255" in core
+    assert 'triggering_controller' in core and "duelcore.1-rc256" in core
 
 # The whitespace fallback still yields valid JavaScript when terser is disabled.
 os.environ['YGO_NO_TERSER']='1'
