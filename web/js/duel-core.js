@@ -1,4 +1,4 @@
-const DUEL_BRANCH = 'duelcore.1-rc245';
+const DUEL_BRANCH = 'duelcore.1-rc246';
 
 const DUMMY_CARD_CODE = 89631139;
 const DUMMY_OK=Object.freeze({blocked:false,penalty:0,reason:''}),DUMMY_BLOCK=reason=>({blocked:true,penalty:Infinity,reason}); // Blue-Eyes White Dragon: inert Level 8 normal monster.
@@ -5262,7 +5262,7 @@ export class IntegratedDuelController {
     if(is('SWAP_GRAVE_DECK')){const player=Number(m.player)||0;this.log(`${who(player)} swaps the Deck and Graveyard.`,{type:'swap',controller:player,outcome:'Deck and GY swapped'});return true;}
     if(is('REVERSE_DECK')){this.log('The Decks are turned upside down.',{type:'shuffle',outcome:'Deck reversed'});return true;}
     if(is('BATTLE')){
-      const a=m.card||{},t=m.target||null,an=this.eventCardName(a),P=this.mod?.OcgPosition||{};this.lastBattleOutcome={attacker:{...a},target:t?{...t}:null,turn:Number(this.turn)||0};
+      const a=m.card||{},t=m.target&&Number(m.target.location)?m.target:null,an=this.eventCardName(a),P=this.mod?.OcgPosition||{};this.lastBattleOutcome={attacker:{...a},target:t?{...t}:null,turn:Number(this.turn)||0};
       if(t){const tn=this.eventCardName(t),defending=!!(Number(t.position)&Number(P.DEFENSE||0))||(!!(Number(t.position))&&!(Number(t.position)&Number(P.ATTACK||P.FACEUP_ATTACK||1))),tv=defending?Number(t.defense)||0:Number(t.attack)||0;
         const result=a.destroyed&&t.destroyed?'both are destroyed':t.destroyed?`${tn.name} is destroyed`:a.destroyed?`${an.name} is destroyed`:'neither is destroyed';
         this.log(`Damage calculation: ${an.name} (${Number(a.attack)||0} ATK) vs ${tn.name} (${tv} ${defending?'DEF':'ATK'}) - ${result}.`,{type:'battle-calc',code:an.code,controller:an.controller,cards:[an.code,tn.code].filter(Boolean).map(code=>({code})),outcome:result});}

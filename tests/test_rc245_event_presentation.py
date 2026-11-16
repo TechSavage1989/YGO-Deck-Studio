@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 js_source=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
 css=(root/'web/duel-core.css').read_text(encoding='utf-8')
-assert "duelcore.1-rc245" in js_source
+assert "duelcore.1-rc246" in js_source
 assert '.duel-event-callout' in css and '.duel-card-counter-badge' in css
 js=js_source.replace('export function ','function ').replace('export class ','class ')+'\nwindow.IntegratedDuelController=IntegratedDuelController;window.__formatPosition=formatPosition;'
 
@@ -40,6 +40,7 @@ with sync_playwright() as p:
       handled.hidden=c.consumePresentationEvent({type:T.ADD_COUNTER,controller:1,location:L.MZONE,sequence:0,count:1});
       handled.rps=c.consumePresentationEvent({type:T.HAND_RES,results:[2,3]});
       handled.battle=c.consumePresentationEvent({type:T.BATTLE,card:{controller:0,location:L.MZONE,sequence:2,position:P.FACEUP_ATTACK,attack:1900,defense:1200,destroyed:false},target:{controller:1,location:L.MZONE,sequence:0,position:P.FACEDOWN_DEFENSE,attack:800,defense:2000,destroyed:false}});
+      const before=logs.length;handled.direct=c.consumePresentationEvent({type:T.BATTLE,card:{controller:0,location:L.MZONE,sequence:2,position:P.FACEUP_ATTACK,attack:1900,defense:1200,destroyed:false},target:{controller:0,location:0,sequence:0,position:0,attack:0,defense:0,destroyed:false}});handled.directLogged=logs.length-before;
       handled.zones=c.consumePresentationEvent({type:T.FIELD_DISABLED,field_mask:0b101});
       handled.unknown=c.consumePresentationEvent({type:9999});
       const calloutNow=document.querySelector('.duel-event-callout')?.textContent||'';
@@ -54,6 +55,7 @@ with sync_playwright() as p:
     browser.close()
 print(result)
 h=result['handled'];texts=[l['text'] for l in result['logs']];types=[l['type'] for l in result['logs']]
+assert h['direct'] is True and h['directLogged']==0, h  # a direct attack has no second monster to compare
 assert all(h[k] for k in ('coin1','coin3','dice','add','remove','equip','missed','hidden','rps','battle','zones')) and h['unknown'] is False, h
 assert 'Player tosses a coin: Heads.' in texts and any('tosses 3 coins: Heads, Tails, Heads (2 Heads, 1 Tails)' in t for t in texts), texts
 assert 'Player rolls a die: 4.' in texts, texts
