@@ -1,0 +1,7 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc259
+
+The summon sound now plays for every summon.
+
+Sound
+- Fixed: a monster summoned by a card effect (most Special Summons) played no summon sound, because the sound was tied to the large card showcase that only appears for summons made directly. Every summon now plays the "spellcast" recording.
+- The summon sound is the "spellcast" recording on its own, without the card slap that was layered under it.

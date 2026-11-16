@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 core=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
 app=(root/'web/js/app.js').read_text(encoding='utf-8')
-assert "duelcore.1-rc258" in core
+assert "duelcore.1-rc259" in core
 table={**json.loads(re.search(r'globalThis\.YGO_DUEL_SFX=(\{.*?\});',app).group(1)),**json.loads(re.search(r'const DUEL_SFX_LONG=(\{.*?\});',core).group(1))}
 assert 'fieldspell' in table and 'summon' in table and 'activate' in table and 'xyz' not in table and 'special' not in table
 js=core.replace('export function ','function ').replace('export class ','class ')+'\nwindow.IntegratedDuelController=IntegratedDuelController;'
@@ -32,4 +32,6 @@ with sync_playwright() as p:
 assert result['kinds']=={'field':'fieldspell','quick':'activate','trap':'activate','monster':'activate','fusion':'fusion','normal':'summon'},result['kinds']
 for key in ('fieldUsesOwn','fusion','synchro','link','ritual','xyzOwn'): assert result[key] is True,(key,result)
 assert result['category']=='activate'
+# rc259: the summon sound is not gated on the showcase, so effect summons are not silent.
+assert "if(item.kind!=='activate'||(shown&&!item.chainLink))this.playSound(this.summonPresentationKind(item));" in core
 print('rc257 owner sound map: Field Spell activation, shared summon recording and Xyz confirmed')
