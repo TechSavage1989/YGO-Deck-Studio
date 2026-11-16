@@ -1,0 +1,17 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc251
+
+Recorded sound effects. The synthesized sounds of rc247 and rc250 were judged too basic, so the duel now plays real recordings instead of generated tones.
+
+Sound
+- Card handling uses recordings of real cards: drawing, setting, moving, changing position, flipping, discarding, sending to the Graveyard and returning to the hand or Deck.
+- Each summon type has its own layered sound: Normal (card slap, impact, spell), Special (magic swell and shimmer), Fusion (fire swirl into a gong), Synchro (bells), Xyz (warp into an explosion), Link (warp into a metal strike), Ritual (gong, fire and a distant roar).
+- Effect activation, chain links, targeting, negation (shattering glass), destruction (explosion with breaking debris), banishing, LP damage and recovery, coin tosses, dice rolls, counters, equips, stat changes, phase changes, victory and defeat all use recordings.
+- Attacks use a recorded sound chosen by the attacker: blade swing, beast roar, spell blast or fire.
+- Interface clicks and card handling are mixed quieter than summons, battle and destruction. The existing sound categories and volume sliders apply unchanged.
+- If the browser cannot decode a clip, the previous synthesized sound for that action plays instead.
+
+Sources
+- All clips are mixed from public-domain (CC0) recordings by Kenney, rubberduck and artisticdude, credited in docs/LEGAL_NOTICE.txt.
+
+Validation
+- tests/test_rc251_recorded_sfx.py decodes every embedded clip in a real browser and checks that each is audible, short and routed to its action.
