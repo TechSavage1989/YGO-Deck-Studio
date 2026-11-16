@@ -1,0 +1,8 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc246
+
+Feature audit of the deck builder and the Test Duel controls, with the fixes it produced.
+
+- Update banner no longer blocks the toolbar. The banner was fixed to the top centre of the window and covered New, Open, Save, Recent and Draw 5 (and Test Duel on narrower windows) until dismissed. It appeared on its own whenever a background check failed, for example offline or when GitHub rate-limited the check. It now sits at the bottom of the window, stays hidden during a Test Duel, and a failed background check no longer raises it at all. A manual Check for Updates, or a failed download or install, still reports the problem.
+- Damage calculation log: direct attacks no longer print a comparison against a nonexistent second monster (found before rc245 was published).
+
+Audited headlessly against the real app and Rules Engine and found working: card search and result counts, category filter and reset, adding cards with the three-copy limit, Extra Deck routing, Grid, List, Readable and YDK views, YDK and YDKE export and round-trip, Help, duel log export, Reset Duel, Concede, replay from start, Rematch, Best of 3 (score, Next Game, side-deck availability, match completion) and closing the duel.
