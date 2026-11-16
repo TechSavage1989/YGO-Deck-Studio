@@ -1,0 +1,42 @@
+name: Mark Latest Release
+
+# Marks an already published release as the repository's "Latest" full release.
+# Every build is published as a prerelease; GitHub shows no "Latest" release until one
+# is promoted. This changes only the release's prerelease/latest flags, never its assets.
+# Actions -> Mark Latest Release -> Run workflow. Leave the tag empty to promote the
+# release for the version in launcher/version.go on main.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to mark as Latest (empty = current version on main)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  mark-latest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Mark the release as Latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_INPUT: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="$TAG_INPUT"
+          if [ -z "$TAG" ]; then
+            VERSION="$(sed -n 's/.*AppVersion *= *"\([^"]*\)".*/\1/p' launcher/version.go | head -n 1)"
+            TAG="v${VERSION}"
+          fi
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG does not exist; publish it first." >&2
+            exit 1
+          fi
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --prerelease=false --latest
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json tagName,isPrerelease,isLatest
