@@ -3,11 +3,11 @@ import {
   EFFECT_FILTER_LABELS, normalizeName, normalizeCard, buildCardIndexes, preferredImage, belongsInExtra,
   cardLimitStatus, allowedCopies, canAddCard, canMoveCard, newDeck, deckIds,
   parseYDK, sectionsToYDK, encodeYDKE, decodeYDKE, sectionsToHuman, humanToSections, humanLineCard,
-  cardMatchesEffectFilters, cardEffectTags, cardSearchScore, cardTypeBucket, displayCardType, cardHasActualEffect, isTrapMonsterCard, isMaximumMonsterCard, validateDeck,
+  cardMatchesEffectFilters, cardEffectTags, cardSearchScore, normalizeSearchText, cardTypeBucket, displayCardType, cardHasActualEffect, isTrapMonsterCard, isMaximumMonsterCard, validateDeck,
   copyGroup, sortDeckEntries, sortDeckEntriesSelective, deckInsertionIndex, applyStoredDeckOrder, canonicalizeSections, computeDeckLayoutGeometry,
 } from './core.js?v=3.0.0-alpha.221';
 import { allocateSearchListTracks } from './search-list-layout.js?v=3.0.0-alpha.221';
-import { IntegratedDuelController } from './duel-core.js?v=3.0.0-alpha.221-duelcore.1-rc259';
+import { IntegratedDuelController } from './duel-core.js?v=3.0.0-alpha.221-duelcore.1-rc260';
 const APP_VERSION = '3.0.0-alpha.221';
 const TOOLTIP_HIDE_MS = 1400;
 const TOOLTIP_MOVE_PX = 4;
@@ -1870,7 +1870,7 @@ function activeSearchListPriorityColumns() {
 function searchEffectSummary(card) {
   const selected=state.filters.effects || new Set();
   if(selected.size) {
-    const tags=[...cardEffectTags(card)].filter(tag=>selected.has(tag));
+    const tags=[...searchEffectTags(card)].filter(tag=>selected.has(tag));
     if(tags.length) return tags.slice(0,2).join(', ')+(tags.length>2?' +':'');
   }
   const text=String(card?.desc || '').replace(/\s+/g,' ').trim();
@@ -3263,6 +3263,8 @@ function searchFilterContext(filters=state.filters) {
   return {
     family, specific, monster, spell, trap, type, subtype, pendulum,
     trapMonster:monster && type==='Trap Monster',
+    // rc260: Attribute, Type, Level and ATK/DEF can be used without choosing Card Type first.
+    stats:(monster && type!=='Trap Monster') || !specific,
     link:monster && (type==='Link' || (pendulum && subtype==='Link')),
     xyz:monster && (type==='Xyz' || (pendulum && subtype==='Xyz')),
   };
@@ -3360,6 +3362,113 @@ function searchEffectTextMatches(card,filters=state.filters) {
   const haystack=String(card?.desc || '').replace(/\s+/g,' ').toLocaleLowerCase();
   return haystack.includes(needle);
 }
+// rc260: search scoring lives here because core.js is part of the recovered baseline and is not rebuilt.
+// Lower scores rank first; null means no match.
+const searchNameCache=new WeakMap();
+function searchCardText(card) {
+  let entry=searchNameCache.get(card);
+  if(!entry) {
+    const name=normalizeSearchText(card?.name || '');
+    entry={name, compact:name.replace(/ /g,''), words:name.split(' ').filter(Boolean), archetype:normalizeSearchText(card?.archetype || ''), desc:null};
+    searchNameCache.set(card,entry);
+  }
+  return entry;
+}
+function prepareSearchQuery(query) {
+  const text=normalizeSearchText(query || '');
+  const tokens=text.split(' ').filter(Boolean);
+  // Single-character tokens ("d d d" from "D/D/D") match almost every card on their own, so they only
+  // count as part of the joined form.
+  return {text, compact:text.replace(/ /g,''), tokens, words:tokens.filter(token=>token.length>1)};
+}
+function searchEditDistance(a,b,limit) {
+  if(Math.abs(a.length-b.length)>limit) return limit+1;
+  let previous=Array.from({length:b.length+1},(_,i)=>i);
+  for(let i=1;i<=a.length;i++) {
+    const current=[i]; let best=i;
+    for(let j=1;j<=b.length;j++) {
+      const value=Math.min(previous[j]+1,current[j-1]+1,previous[j-1]+(a[i-1]===b[j-1]?0:1));
+      current.push(value); if(value<best) best=value;
+    }
+    if(best>limit) return limit+1;
+    previous=current;
+  }
+  return previous[b.length];
+}
+function deckSearchScore(card,query,fuzzy=false) {
+  if(!query?.text) return 0;
+  const text=searchCardText(card);
+  if(!fuzzy) {
+    if(text.name===query.text) return 0;
+    if(String(card?.id || '')===query.text) return 1;
+    if(text.name.startsWith(query.text)) return text.name.charAt(query.text.length)===' ' ? 5 : 7;
+    const at=text.name.indexOf(query.text);
+    if(at>=0) return 10+Math.min(at,15);
+    if(query.compact.length>=2) {
+      // "D/D/D", "blueeyes" and other spacing or punctuation differences.
+      if(text.compact.startsWith(query.compact)) { let joined=''; for(const word of text.words) { joined+=word; if(joined.length>=query.compact.length) break; } return joined===query.compact ? 5 : 8; }
+      if(query.compact.length>=3 && text.compact.includes(query.compact)) return 26;
+    }
+    if(query.words.length) {
+      // At least one real word is required; single characters ("draw 2 cards") then count too.
+      if(query.tokens.every(token=>text.name.includes(token))) return 30;
+      if(text.archetype && text.archetype.includes(query.text)) return 50;
+      if(text.desc==null) text.desc=normalizeSearchText(card?.desc || '');
+      const combined=`${text.name} ${text.archetype} ${text.desc}`;
+      if(query.tokens.every(token=>combined.includes(token))) return 80;
+    }
+    return null;
+  }
+  // Typo-tolerant pass: every typed word must be close to a word of the name.
+  if(!query.words.length) return null;
+  let total=0;
+  for(const token of query.words) {
+    const limit=token.length>=8?2:token.length>=4?1:0;
+    let best=limit+1;
+    for(const word of text.words) {
+      if(word.startsWith(token)) { best=0; break; }
+      const distance=searchEditDistance(token,word,limit);
+      if(distance<best) best=distance;
+      if(!best) break;
+    }
+    if(best>limit) return null;
+    total+=best;
+  }
+  return 60+total;
+}
+// Effect tags with corrections the baseline tagger misses: the PSY-Framegear monsters Special Summon
+// themselves from the hand in response to the opponent, which is how players use the term hand trap.
+function searchEffectTags(card) {
+  const tags=cardEffectTags(card);
+  if(/^PSY-Framegear /i.test(String(card?.name || ''))) { const extended=new Set(tags); extended.add('Hand Trap'); extended.add('Activates from Hand'); extended.add('Special Summon from Hand'); return extended; }
+  return tags;
+}
+function searchEffectFiltersMatch(card,selected,mode='Any') {
+  if(!selected?.size) return true;
+  const tags=searchEffectTags(card);
+  if(String(mode).toLocaleLowerCase()==='all') return [...selected].every(value=>tags.has(value));
+  return [...selected].some(value=>tags.has(value));
+}
+
+// rc260: end of search scoring helpers
+// rc260: the shortcut hint strips take two rows above the results and the deck; they are hidden until
+// asked for with a "?" button beside the view switches. The choice is remembered.
+function initShortcutHintToggles() {
+  const read=key=>{ try { return localStorage.getItem(key)==='1'; } catch { return false; } };
+  const write=(key,value)=>{ try { localStorage.setItem(key,value?'1':'0'); } catch {} };
+  const pairs=[['.search-shortcut-strip','.search-view-segmented','ygoSearchHintsOpen'],['.shortcut-strip:not(.search-shortcut-strip)','[data-deck-view="grid"]','ygoDeckHintsOpen']];
+  for(const [stripSelector,anchorSelector,key] of pairs) {
+    const strip=document.querySelector(stripSelector), anchor=document.querySelector(anchorSelector);
+    if(!strip || !anchor) continue;
+    const host=anchor.matches('[data-deck-view]') ? anchor.parentElement : anchor;
+    const button=document.createElement('button');
+    button.type='button'; button.className='btn compact ghost shortcut-hint-toggle'; button.textContent='?';
+    const apply=open=>{ strip.classList.toggle('shortcut-strip-collapsed',!open); button.setAttribute('aria-expanded',open?'true':'false'); button.title=open?'Hide mouse and keyboard shortcuts':'Show mouse and keyboard shortcuts'; button.setAttribute('aria-label',button.title); };
+    apply(read(key));
+    button.addEventListener('click',()=>{ const open=strip.classList.contains('shortcut-strip-collapsed'); apply(open); write(key,open); window.dispatchEvent(new Event('resize')); });
+    host.insertAdjacentElement('afterend',button);
+  }
+}
 function filteredCards() {
   const f = state.filters;
   const ctx=searchFilterContext(f);
@@ -3368,25 +3477,29 @@ function filteredCards() {
   const pool = String(f.cardPool || '').toLocaleLowerCase();
   const poolAliases = {tcg:['tcg'], ocg:['ocg','ocg goat'], goat:['goat','ocg goat'], 'master duel':['master duel'], 'speed duel':['speed duel'], 'rush duel':['rush duel'], 'duel links':['duel links']};
   const bound = value => value === '' || value == null ? null : Number(value);
-  const levelMin=ctx.monster && !ctx.trapMonster && !ctx.link ? bound(f.levelMin) : null;
-  const levelMax=ctx.monster && !ctx.trapMonster && !ctx.link ? bound(f.levelMax) : null;
+  const levelMin=ctx.stats && !ctx.link ? bound(f.levelMin) : null;
+  const levelMax=ctx.stats && !ctx.link ? bound(f.levelMax) : null;
   const scaleMin=ctx.pendulum ? bound(f.scaleMin) : null;
   const scaleMax=ctx.pendulum ? bound(f.scaleMax) : null;
-  const atkMin=ctx.monster && !ctx.trapMonster ? bound(f.atkMin) : null;
-  const atkMax=ctx.monster && !ctx.trapMonster ? bound(f.atkMax) : null;
-  const defMin=ctx.monster && !ctx.trapMonster && !ctx.link ? bound(f.defMin) : null;
-  const defMax=ctx.monster && !ctx.trapMonster && !ctx.link ? bound(f.defMax) : null;
+  const atkMin=ctx.stats ? bound(f.atkMin) : null;
+  const atkMax=ctx.stats ? bound(f.atkMax) : null;
+  const defMin=ctx.stats && !ctx.link ? bound(f.defMin) : null;
+  const defMax=ctx.stats && !ctx.link ? bound(f.defMax) : null;
   const linkRatingMin=ctx.link ? bound(f.linkRatingMin) : null;
   const linkRatingMax=ctx.link ? bound(f.linkRatingMax) : null;
+  const searchQuery=prepareSearchQuery(f.query), hasQuery=Boolean(searchQuery.text);
+  // Strict matching first; only when nothing matches is a second, typo-tolerant pass made.
+  for (let pass=0; pass<2 && !results.length; pass++) {
+  const fuzzy=pass===1; if(fuzzy && !hasQuery) break;
   for (let sourceIndex=0; sourceIndex<state.cards.length; sourceIndex++) {
     const card=state.cards[sourceIndex];
-    const score = cardSearchScore(card, f.query);
-    if (f.query && score == null) continue;
+    const score = deckSearchScore(card, searchQuery, fuzzy);
+    if (hasQuery && score == null) continue;
     if (ctx.specific && !cardMatchesSearchFamily(card,ctx.family)) continue;
     if (!searchContextualTypeMatches(card,f)) continue;
     if (ctx.monster && !ctx.trapMonster && f.ability && !cardMatchesMonsterSearchAbility(card,f.ability)) continue;
-    if (ctx.monster && !ctx.trapMonster && f.attribute && card.attribute !== f.attribute) continue;
-    if (ctx.monster && !ctx.trapMonster && f.race && card.race !== f.race) continue;
+    if (ctx.stats && f.attribute && card.attribute !== f.attribute) continue;
+    if (ctx.stats && f.race && (card.race !== f.race || cardTypeBucket(card)!=='Monster')) continue;
     if (ctx.specific && f.archetype && card.archetype !== f.archetype) continue;
     if (ctx.link && (linkRatingMin != null || linkRatingMax != null)) {
       const rating=Number(card?.linkval);
@@ -3421,15 +3534,19 @@ function filteredCards() {
     if (defMax != null && (defValue == null || defValue > defMax)) continue;
     const status = cardLimitStatus(card, f.banlist);
     if (f.restriction && status !== f.restriction) continue;
-    if (!cardMatchesEffectFilters(card, selectedEffects, f.effectMode)) continue;
+    if (!searchEffectFiltersMatch(card, selectedEffects, f.effectMode)) continue;
     if (!searchEffectTextMatches(card,f)) continue;
     results.push({card, score:score ?? 0, sourceIndex});
+  }
   }
   const dir = f.direction === 'desc' ? -1 : 1;
   results.sort((a,b) => {
     if (f.sort === 'relevance') {
+      // rc260: with nothing typed there is no relevance to rank by, so list by name; equal scores prefer
+      // the shorter name ("Blue-Eyes White Dragon" before its longer relatives), then alphabetical.
+      if (!hasQuery) return a.card.name.localeCompare(b.card.name) * dir;
       if (a.score !== b.score) return (a.score - b.score) * dir;
-      if (a.sourceIndex !== b.sourceIndex) return (a.sourceIndex - b.sourceIndex) * dir;
+      if (a.card.name.length !== b.card.name.length) return (a.card.name.length - b.card.name.length) * dir;
       return a.card.name.localeCompare(b.card.name) * dir;
     }
     const groupOrder = {Monster:0, Spell:1, Trap:2, Other:3};
@@ -5360,8 +5477,8 @@ function updateSearchFilterContextUI() {
   const raceField=$('#searchRaceField');
   const structuredMonster=ctx.monster && !ctx.trapMonster;
   setSearchContextVisibility(abilityField,structuredMonster);
-  setSearchContextVisibility(attributeField,structuredMonster);
-  setSearchContextVisibility(raceField,structuredMonster);
+  setSearchContextVisibility(attributeField,ctx.stats);
+  setSearchContextVisibility(raceField,ctx.stats);
   if(dom.abilityFilter) replaceSearchSelectOptions(dom.abilityFilter,MONSTER_SEARCH_ABILITIES,structuredMonster?String(f.ability||''):'');
   const additional=$('#searchAdditionalDropdown');
   const stats=$('#searchStatDropdown');
@@ -5369,21 +5486,21 @@ function updateSearchFilterContextUI() {
   const xyz=$('#searchXyzFilterDropdown');
   const link=$('#searchLinkFilterDropdown');
   setSearchContextVisibility(additional,ctx.specific);
-  setSearchContextVisibility(stats,structuredMonster);
+  setSearchContextVisibility(stats,ctx.stats);
   setSearchContextVisibility(pendulumScale,ctx.pendulum);
   setSearchContextVisibility(xyz,ctx.xyz);
   setSearchContextVisibility(link,ctx.link);
-  const levelVisible=structuredMonster && !ctx.link;
+  const levelVisible=ctx.stats && !ctx.link;
   setSearchContextVisibility($('#levelMinField'),levelVisible);
   setSearchContextVisibility($('#levelMaxField'),levelVisible);
-  const defenseVisible=structuredMonster && !ctx.link;
+  const defenseVisible=ctx.stats && !ctx.link;
   setSearchContextVisibility($('#defMinField'),defenseVisible);
   setSearchContextVisibility($('#defMaxField'),defenseVisible);
-  setSearchContextVisibility($('#atkMinField'),structuredMonster);
-  setSearchContextVisibility($('#atkMaxField'),structuredMonster);
+  setSearchContextVisibility($('#atkMinField'),ctx.stats);
+  setSearchContextVisibility($('#atkMaxField'),ctx.stats);
   const hint=$('#searchCriteriaHint');
   if(hint) {
-    if(!ctx.specific) hint.textContent='Any card type keeps the search simple: Effect Characteristics and Effect Text remain available below.';
+    if(!ctx.specific) hint.textContent='Attribute, Type, Level and ATK/DEF work with any card type and show only monsters that match. Choose Monster Cards for Category, Ability and Link or Pendulum controls.';
     else if(ctx.monster && !ctx.type) hint.textContent='Monster-specific identity and stat filters are available. Choose a Category to reveal Pendulum or Link controls.';
     else if(ctx.link) hint.textContent='Link category selected. Link Rating, Arrow Directions, and Link Materials are positioned directly below Effect Text.';
     else if(ctx.pendulum && ctx.subtype) hint.textContent=`Pendulum ${ctx.subtype} subtype selected. Pendulum Scale stays directly below Effect Text, with Link-specific controls added there when applicable.`;
@@ -5459,12 +5576,12 @@ function activeSearchFilterCount() {
   if(ctx.type) count+=1;
   if(ctx.subtype) count+=1;
   if(ctx.monster && !ctx.trapMonster && f.ability) count+=1;
-  if(ctx.monster && !ctx.trapMonster && f.attribute) count+=1;
-  if(ctx.monster && !ctx.trapMonster && f.race) count+=1;
+  if(ctx.stats && f.attribute) count+=1;
+  if(ctx.stats && f.race) count+=1;
   if(ctx.specific && f.archetype) count+=1;
   if(f.restriction) count+=1;
-  if(ctx.monster && !ctx.trapMonster && !ctx.link) for(const key of ['levelMin','levelMax','defMin','defMax']) if(f[key]!=='' && f[key]!=null) count+=1;
-  if(ctx.monster && !ctx.trapMonster) for(const key of ['atkMin','atkMax']) if(f[key]!=='' && f[key]!=null) count+=1;
+  if(ctx.stats && !ctx.link) for(const key of ['levelMin','levelMax','defMin','defMax']) if(f[key]!=='' && f[key]!=null) count+=1;
+  if(ctx.stats) for(const key of ['atkMin','atkMax']) if(f[key]!=='' && f[key]!=null) count+=1;
   if(ctx.pendulum) for(const key of ['scaleMin','scaleMax']) if(f[key]!=='' && f[key]!=null) count+=1;
   if(ctx.link) {
     for(const key of ['linkRatingMin','linkRatingMax','linkMaterialMin','linkMaterialMax','linkMaterialRace','linkMaterialAttribute','linkMaterialPattern']) if(f[key]!=='' && f[key]!=null) count+=1;
@@ -5496,13 +5613,13 @@ function activeSearchFilterLabels() {
   if(ctx.type) labels.push(ctx.type);
   if(ctx.subtype) labels.push(`${ctx.subtype} subtype`);
   if(ctx.monster && !ctx.trapMonster && f.ability) labels.push(f.ability);
-  if(ctx.monster && !ctx.trapMonster && f.attribute) labels.push(f.attribute);
-  if(ctx.monster && !ctx.trapMonster && f.race) labels.push(f.race);
+  if(ctx.stats && f.attribute) labels.push(f.attribute);
+  if(ctx.stats && f.race) labels.push(f.race);
   if(ctx.specific && f.archetype) labels.push(f.archetype);
   if(f.restriction) labels.push(f.restriction);
   let statCount=0;
-  if(ctx.monster && !ctx.trapMonster && !ctx.link) statCount+=['levelMin','levelMax','defMin','defMax'].filter(key=>f[key]!=='' && f[key]!=null).length;
-  if(ctx.monster && !ctx.trapMonster) statCount+=['atkMin','atkMax'].filter(key=>f[key]!=='' && f[key]!=null).length;
+  if(ctx.stats && !ctx.link) statCount+=['levelMin','levelMax','defMin','defMax'].filter(key=>f[key]!=='' && f[key]!=null).length;
+  if(ctx.stats) statCount+=['atkMin','atkMax'].filter(key=>f[key]!=='' && f[key]!=null).length;
   if(statCount) labels.push(`${statCount} stat ${statCount===1?'limit':'limits'}`);
   const scaleCount=ctx.pendulum ? ['scaleMin','scaleMax'].filter(key=>f[key]!=='' && f[key]!=null).length : 0;
   if(scaleCount) labels.push(`${scaleCount} Pendulum Scale ${scaleCount===1?'limit':'limits'}`);
@@ -5537,8 +5654,8 @@ function updateSearchStatSummary() {
   const f=state.filters;
   const ctx=searchFilterContext(f);
   let statCount=0;
-  if(ctx.monster && !ctx.trapMonster && !ctx.link) statCount+=['levelMin','levelMax','defMin','defMax'].filter(key=>f[key]!=='' && f[key]!=null).length;
-  if(ctx.monster && !ctx.trapMonster) statCount+=['atkMin','atkMax'].filter(key=>f[key]!=='' && f[key]!=null).length;
+  if(ctx.stats && !ctx.link) statCount+=['levelMin','levelMax','defMin','defMax'].filter(key=>f[key]!=='' && f[key]!=null).length;
+  if(ctx.stats) statCount+=['atkMin','atkMax'].filter(key=>f[key]!=='' && f[key]!=null).length;
   dom.searchStatSummary.textContent=statCount ? `${statCount} active` : 'Any Stats';
 }
 function renderSearchSortModeOptions() {
@@ -5576,7 +5693,8 @@ function chooseSearchSortMode(mode) {
   if(state.filters.sort===mode) state.filters.direction=state.filters.direction==='desc'?'asc':'desc';
   else {
     state.filters.sort=mode;
-    state.filters.direction='asc';
+    // rc260: numeric sorts start with the highest value, which is what people look for first.
+    state.filters.direction=['atk','def','level'].includes(mode)?'desc':'asc';
   }
   renderSearchSortModeOptions();
   syncSearchViewButtons();
@@ -5638,8 +5756,8 @@ function openSearchFilterPopover() {
   renderEffectOptions();
   const f=state.filters;
   const ctx=searchFilterContext(f);
-  const statActive=(ctx.monster && !ctx.trapMonster && !ctx.link && ['levelMin','levelMax','defMin','defMax'].some(key=>f[key]!=='' && f[key]!=null)) ||
-    (ctx.monster && !ctx.trapMonster && ['atkMin','atkMax'].some(key=>f[key]!=='' && f[key]!=null));
+  const statActive=(ctx.stats && !ctx.link && ['levelMin','levelMax','defMin','defMax'].some(key=>f[key]!=='' && f[key]!=null)) ||
+    (ctx.stats && ['atkMin','atkMax'].some(key=>f[key]!=='' && f[key]!=null));
   const additionalActive=ctx.specific && Boolean(f.archetype);
   if(statActive) $('#searchStatDropdown')?.setAttribute('open','');
   if(additionalActive) $('#searchAdditionalDropdown')?.setAttribute('open','');
@@ -6401,7 +6519,7 @@ function updateEffectSummary() { const count=state.filters.effects.size; if(dom.
 function updateEffectTextSummary() { if(dom.effectTextSummary) dom.effectTextSummary.textContent=String(state.filters.effectText||'').trim()?'Active':'Any'; }
 function resetFilters() {
   state.filters={...state.filters,query:'',category:'',type:'',monsterSubtype:'',ability:'',attribute:'',race:'',archetype:'',effectText:'',cardPool:'TCG',banlist:'TCG',restriction:'',sort:'relevance',direction:'asc',maxResults:500,levelMin:'',levelMax:'',scaleMin:'',scaleMax:'',atkMin:'',atkMax:'',defMin:'',defMax:'',linkRatingMin:'',linkRatingMax:'',linkMarkers:new Set(),linkMarkerMode:'All',linkMaterialMin:'',linkMaterialMax:'',linkMaterialQualifiers:new Set(),linkMaterialQualifierMode:'Any',linkMaterialRace:'',linkMaterialAttribute:'',linkMaterialPattern:'',linkMaterials:new Set(),xyzMaterialMin:'',xyzMaterialMax:'',xyzMaterialLevelMin:'',xyzMaterialLevelMax:'',xyzMaterialQualifiers:new Set(),xyzMaterialQualifierMode:'Any',xyzMaterialRace:'',xyzMaterialAttribute:'',xyzMaterialPattern:'',xyzMaterials:new Set(),effects:new Set(),effectMode:'Any'};
-  dom.searchInput.value=''; if(dom.searchScopeQueryFilter) dom.searchScopeQueryFilter.value=''; if(dom.effectTextFilter) dom.effectTextFilter.value=''; if(dom.linkMaterialSearch) dom.linkMaterialSearch.value=''; if(dom.xyzMaterialSearch) dom.xyzMaterialSearch.value=''; populateFilters(); renderEffectOptions(); renderSearchSortModeOptions(); updateSearchFilterSummary(); updateEffectTextSummary(); updateSearchStatSummary(); scheduleSearch(true); persistState();
+  dom.searchInput.value=''; if(dom.searchScopeQueryFilter) dom.searchScopeQueryFilter.value=''; if(dom.effectTextFilter) dom.effectTextFilter.value=''; if(dom.linkMaterialSearch) dom.linkMaterialSearch.value=''; if(dom.xyzMaterialSearch) dom.xyzMaterialSearch.value=''; populateFilters(); renderEffectOptions(); renderSearchSortModeOptions(); syncSearchViewButtons(); updateSearchFilterSummary(); updateEffectTextSummary(); updateSearchStatSummary(); scheduleSearch(true); persistState();
 }
 function scheduleSearch(immediate=false) {
   clearTimeout(state.searchTimer);
@@ -8019,7 +8137,7 @@ async function boot() {
   startHostHeartbeat();
   queueMicrotask(()=>startApplicationUpdater());
   startWindowGeometryTracking();
-  restoreSettings(); await restoreIconTuningFile(); installDeckLibraryUI(); bindEvents(); syncCardTextStylingControl(); fitResponsivePaneWidths({force:true}); renderEffectOptions(); renderLinkArrowFilterOptions(); renderLinkMaterialOptions(); renderSearchSortModeOptions(); updateSearchFilterSummary(); updateSearchStatSummary();
+  restoreSettings(); await restoreIconTuningFile(); installDeckLibraryUI(); bindEvents(); initShortcutHintToggles(); syncCardTextStylingControl(); fitResponsivePaneWidths({force:true}); renderEffectOptions(); renderLinkArrowFilterOptions(); renderLinkMaterialOptions(); renderSearchSortModeOptions(); updateSearchFilterSummary(); updateSearchStatSummary();
   syncSearchViewButtons();
   setupSearchListColumnResizeObserver();
   setupDeckListColumnResizeObserver();
@@ -8111,7 +8229,7 @@ async function startIntegratedTestDuel() {
 function startApplicationUpdater(){
   const cfg=window.__YGO_UPDATE_TEST_TIMINGS__||{},intervalMs=Number(cfg.intervalMs)||300000,focusMs=Number(cfg.focusMs)||120000,heartbeatMs=Number(cfg.heartbeatMs)||5000;
   const client={base:'',lastCheck:0,checking:false,banner:null,status:null,manual:false};
-  const busy=()=>({dirty:!!state.dirty,duel_running:!!integratedDuelController?.running,visible:document.visibilityState==='visible',version:'3.0.0-alpha.221-duelcore.1-rc259'});
+  const busy=()=>({dirty:!!state.dirty,duel_running:!!integratedDuelController?.running,visible:document.visibilityState==='visible',version:'3.0.0-alpha.221-duelcore.1-rc260'});
   const post=async(path,body=null)=>{if(!client.base)throw new Error('Updater service unavailable.');const r=await fetch(client.base+path,{method:'POST',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):'{}',cache:'no-store'});if(!r.ok)throw new Error((await r.text()).trim()||`Updater returned ${r.status}.`);return r.json();};
   const get=async path=>{if(!client.base)throw new Error('Updater service unavailable.');const r=await fetch(client.base+path,{cache:'no-store'});if(!r.ok)throw new Error((await r.text()).trim()||`Updater returned ${r.status}.`);return r.json();};
   const discover=async()=>{for(let port=49357;port<49367;port++){const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),350);try{const r=await fetch(`http://127.0.0.1:${port}/api/update/ping`,{cache:'no-store',signal:ctrl.signal});if(r.ok){const j=await r.json();if(j.app_id==='com.techsavage1989.ygo-deck-studio'){client.base=`http://127.0.0.1:${port}`;clearTimeout(timer);return true}}}catch{}clearTimeout(timer)}return false;};
@@ -8122,17 +8240,17 @@ function startApplicationUpdater(){
     // rc246: a background check that fails (offline, rate-limited, no launcher) must not raise a banner over the app; only a manual check or a failed download/install reports errors.
     if(manual===false&&(s.state==='error'||s.state==='throttled'||s.state==='no_release'))return;
     client.status=s;const b=ensureUI(),title=b.querySelector('[data-update-title]'),ver=b.querySelector('[data-update-version]'),notes=b.querySelector('[data-update-notes]'),msg=b.querySelector('[data-update-message]'),read=b.querySelector('[data-update-read]'),checkBtn=b.querySelector('[data-update-check]'),downloadBtn=b.querySelector('[data-update-download]'),installBtn=b.querySelector('[data-update-install]');notes.replaceChildren();read.hidden=true;downloadBtn.hidden=true;installBtn.hidden=true;checkBtn.hidden=false;b.classList.remove('is-error','is-ready','is-progress');
-    const installed=s.installed_version||'3.0.0-alpha.221-duelcore.1-rc259',latest=s.latest?.version||'';ver.textContent=latest&&latest!==installed?`Installed ${installed} · Latest ${latest}`:`Version ${installed}`;msg.textContent=s.message||'';
+    const installed=s.installed_version||'3.0.0-alpha.221-duelcore.1-rc260',latest=s.latest?.version||'';ver.textContent=latest&&latest!==installed?`Installed ${installed} · Latest ${latest}`:`Version ${installed}`;msg.textContent=s.message||'';
     if(s.state==='available'||s.state==='downloaded'||s.state==='downloading'){b.hidden=false;if(s.state==='downloaded')b.classList.add('is-ready');if(s.state==='downloading')b.classList.add('is-progress');title.textContent=s.state==='downloaded'?'Update ready to install':'Update available';for(const n of (s.latest?.notes||[]).slice(0,3)){const li=document.createElement('li');li.textContent=n;notes.append(li)}read.hidden=!s.latest?.read_more;downloadBtn.hidden=s.state!=='available';installBtn.hidden=s.state!=='downloaded';checkBtn.hidden=s.state==='downloading';if(s.state==='downloading')msg.textContent=`Downloading update... ${Number(s.download_progress)||0}%`;return}
     if(s.state==='checking'){if(manual){b.hidden=false;title.textContent='Checking for updates';msg.textContent='Contacting the release feed...';b.classList.add('is-progress')}return}
     if(s.state==='up_to_date'){b.hidden=true;if(manual)toast(`YGO Deck Studio ${installed} is up to date.`,'good');return}
     if(s.state==='error'||s.state==='throttled'||s.state==='no_release'){b.hidden=false;b.classList.add('is-error');title.textContent=s.state==='no_release'?'Update feed not published':'Update check unavailable';downloadBtn.hidden=true;installBtn.hidden=true;return}
     b.hidden=true;
   };
-  const check=async manual=>{if(client.checking)return;if(!client.base){if(!await discover()){render({state:'error',installed_version:'3.0.0-alpha.221-duelcore.1-rc259',message:'The native update service is unavailable.'},{manual});return}await post('/api/update/hello',busy()).catch(()=>{})}client.checking=true;render({state:'checking',installed_version:'3.0.0-alpha.221-duelcore.1-rc259'},{manual});try{const s=await post(`/api/update/check?manual=${manual?'1':'0'}`);client.lastCheck=Date.now();render(s,{manual})}catch(e){client.lastCheck=Date.now();render({state:'error',installed_version:'3.0.0-alpha.221-duelcore.1-rc259',message:e.message},{manual})}finally{client.checking=false}};
-  const download=async()=>{try{ensureUI().querySelector('[data-update-download]').disabled=true;const pending=post('/api/update/download');const poll=setInterval(()=>get('/api/update/status').then(s=>render(s)).catch(()=>{}),500);const s=await pending;clearInterval(poll);render(s)}catch(e){render({state:'error',installed_version:'3.0.0-alpha.221-duelcore.1-rc259',latest:client.status?.latest,message:e.message})}finally{const n=client.banner?.querySelector('[data-update-download]');if(n)n.disabled=false}};
-  const install=async()=>{if(state.dirty){toast('Save the current deck before installing the update.','warn');return}if(integratedDuelController?.running){toast('End the active duel before installing the update.','warn');return}if(!await appConfirm('Install the downloaded update and restart YGO Deck Studio?',{acceptLabel:'Install and restart',cancelLabel:'Cancel'}))return;try{await post('/api/update/heartbeat',busy());await post('/api/update/install',busy());state.allowUnloadOnce=true;requestApplicationShutdown()}catch(e){render({state:'error',installed_version:'3.0.0-alpha.221-duelcore.1-rc259',latest:client.status?.latest,message:e.message})}};
-  ensureUI();discover().then(async ok=>{if(!ok){render({state:'error',installed_version:'3.0.0-alpha.221-duelcore.1-rc259',message:'The native update service is unavailable.'},{manual:false});return}await post('/api/update/hello',busy()).catch(()=>{});void check(false);setInterval(()=>post('/api/update/heartbeat',busy()).catch(()=>{}),heartbeatMs)});
+  const check=async manual=>{if(client.checking)return;if(!client.base){if(!await discover()){render({state:'error',installed_version:'3.0.0-alpha.221-duelcore.1-rc260',message:'The native update service is unavailable.'},{manual});return}await post('/api/update/hello',busy()).catch(()=>{})}client.checking=true;render({state:'checking',installed_version:'3.0.0-alpha.221-duelcore.1-rc260'},{manual});try{const s=await post(`/api/update/check?manual=${manual?'1':'0'}`);client.lastCheck=Date.now();render(s,{manual})}catch(e){client.lastCheck=Date.now();render({state:'error',installed_version:'3.0.0-alpha.221-duelcore.1-rc260',message:e.message},{manual})}finally{client.checking=false}};
+  const download=async()=>{try{ensureUI().querySelector('[data-update-download]').disabled=true;const pending=post('/api/update/download');const poll=setInterval(()=>get('/api/update/status').then(s=>render(s)).catch(()=>{}),500);const s=await pending;clearInterval(poll);render(s)}catch(e){render({state:'error',installed_version:'3.0.0-alpha.221-duelcore.1-rc260',latest:client.status?.latest,message:e.message})}finally{const n=client.banner?.querySelector('[data-update-download]');if(n)n.disabled=false}};
+  const install=async()=>{if(state.dirty){toast('Save the current deck before installing the update.','warn');return}if(integratedDuelController?.running){toast('End the active duel before installing the update.','warn');return}if(!await appConfirm('Install the downloaded update and restart YGO Deck Studio?',{acceptLabel:'Install and restart',cancelLabel:'Cancel'}))return;try{await post('/api/update/heartbeat',busy());await post('/api/update/install',busy());state.allowUnloadOnce=true;requestApplicationShutdown()}catch(e){render({state:'error',installed_version:'3.0.0-alpha.221-duelcore.1-rc260',latest:client.status?.latest,message:e.message})}};
+  ensureUI();discover().then(async ok=>{if(!ok){render({state:'error',installed_version:'3.0.0-alpha.221-duelcore.1-rc260',message:'The native update service is unavailable.'},{manual:false});return}await post('/api/update/hello',busy()).catch(()=>{});void check(false);setInterval(()=>post('/api/update/heartbeat',busy()).catch(()=>{}),heartbeatMs)});
   window.setInterval(()=>{if(document.visibilityState==='visible'&&navigator.onLine!==false)void check(false)},intervalMs);window.addEventListener('focus',()=>{if(Date.now()-client.lastCheck>=focusMs)void check(false)});window.addEventListener('online',()=>{if(Date.now()-client.lastCheck>=focusMs)void check(false)});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-client.lastCheck>=focusMs)void check(false)});
   window.__YGO_UPDATE_CLIENT__={check,render,client,busy};
 }
