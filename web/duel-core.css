@@ -5958,3 +5958,35 @@ body.duel-mode-active{overflow:hidden}
 
 /* rc252: particle effects layer (see playFx in duel-core.js) */
 .duel-fx-canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:129500;pointer-events:none}
+
+/* rc262: monster facts on cards offered in a selection, matching the field's stat badges. */
+.duel-reveal-card{position:relative}
+.duel-choice-stats{position:absolute;left:50%;bottom:27px;z-index:7;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1px 2px;width:max-content;max-width:calc(100% - 4px);box-sizing:border-box;padding:2px 3px;border:1px solid rgba(194,226,245,.72);border-radius:4px;background:linear-gradient(180deg,rgba(4,11,18,.94),rgba(3,8,13,.97));box-shadow:0 2px 7px rgba(0,0,0,.76);color:#f5fbff;font-variant-numeric:tabular-nums;pointer-events:none}
+.duel-prompt-card-art:not(:has(.duel-prompt-card-location))>.duel-choice-stats{bottom:3px}
+.duel-reveal-card>.duel-choice-stats{bottom:auto;top:calc(var(--duel-card-h) - 18px)}
+.duel-choice-stat{display:flex;align-items:baseline;gap:2px;white-space:nowrap}
+.duel-choice-stats{row-gap:0;column-gap:4px}
+.duel-choice-stat small{color:#a9c5d6;font-size:clamp(5px,6.5cqw,6px);line-height:1;font-weight:850;letter-spacing:.04em}
+.duel-choice-stat strong{color:#f6fbff;font-size:clamp(7px,10cqw,9.5px);line-height:1;font-weight:950;text-shadow:0 1px 2px #000}
+.duel-choice-stat.modified strong{color:#7fe8ff}
+.duel-prompt-card-art,.duel-reveal-card{container-type:inline-size}
+.duel-choice-stat{gap:1px}
+.duel-choice-level,.duel-choice-scale{position:absolute;z-index:7;padding:2px 3px;border-radius:4px;border:1px solid rgba(255,214,110,.75);background:rgba(20,14,2,.9);color:#ffe08a;font-size:clamp(6.5px,9cqw,9px);line-height:1;font-weight:900;pointer-events:none;white-space:nowrap}
+.duel-choice-level{top:3px;right:3px}
+.duel-choice-level.rank{border-color:rgba(200,200,210,.8);background:rgba(10,10,14,.92);color:#f0f0f6}
+.duel-choice-level.modified{color:#7fe8ff;border-color:#7fe8ff}
+.duel-choice-scale{top:3px;left:3px;border-color:rgba(120,220,200,.8);color:#9ff0de;background:rgba(2,20,18,.9)}
+.duel-reveal-card>.duel-choice-level{top:8px;right:8px}
+.duel-choice-link-arrows{position:absolute;inset:0;z-index:6;pointer-events:none}
+.duel-reveal-card>.duel-choice-link-arrows{inset:5px 5px auto 5px;height:var(--duel-card-h)}
+.duel-choice-link-arrow{position:absolute;width:0;height:0;border:6px solid transparent;opacity:0}
+.duel-choice-link-arrow.on{opacity:1;filter:drop-shadow(0 0 3px rgba(255,80,60,.9)) drop-shadow(0 1px 1px #000)}
+.duel-choice-link-arrow.t{top:1px;left:50%;transform:translateX(-50%);border-bottom:9px solid #ff5040;border-top-width:0}
+.duel-choice-link-arrow.b{bottom:1px;left:50%;transform:translateX(-50%);border-top:9px solid #ff5040;border-bottom-width:0}
+.duel-choice-link-arrow.l{left:1px;top:50%;transform:translateY(-50%);border-right:9px solid #ff5040;border-left-width:0}
+.duel-choice-link-arrow.r{right:1px;top:50%;transform:translateY(-50%);border-left:9px solid #ff5040;border-right-width:0}
+.duel-choice-link-arrow.tl{top:2px;left:2px;border:0;width:10px;height:10px;background:linear-gradient(135deg,#ff5040 50%,transparent 50%)}
+.duel-choice-link-arrow.tr{top:2px;right:2px;border:0;width:10px;height:10px;background:linear-gradient(225deg,#ff5040 50%,transparent 50%)}
+.duel-choice-link-arrow.bl{bottom:2px;left:2px;border:0;width:10px;height:10px;background:linear-gradient(45deg,#ff5040 50%,transparent 50%)}
+.duel-choice-link-arrow.br{bottom:2px;right:2px;border:0;width:10px;height:10px;background:linear-gradient(315deg,#ff5040 50%,transparent 50%)}
+
