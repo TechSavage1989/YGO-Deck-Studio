@@ -1,0 +1,13 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc262
+
+Card selection prompts, requested by the owner.
+
+Card details on choices
+- Monsters offered in a selection (Summons, materials, targets, Deck or Extra Deck choices) and in the Cards Inspected row now show ATK and DEF, Level or Rank, Link rating and Link Arrows, and Pendulum Scale, like monsters on the field. A monster that is already on the field shows its current values, highlighted when they differ from the printed ones.
+- The figures shrink with the card and wrap onto two lines on small cards so they stay readable.
+
+Fixes
+- On wide screens the selection window could stay narrower than the cards it shows, cutting off the last inspected card (for example the third card looked at by Dark Magical Circle). The window now widens to fit.
+
+Publishing
+- From this build on, every new release is marked as the Latest release on GitHub.

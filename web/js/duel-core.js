@@ -1,4 +1,4 @@
-const DUEL_BRANCH = 'duelcore.1-rc261';
+const DUEL_BRANCH = 'duelcore.1-rc262';
 
 const DUMMY_CARD_CODE = 89631139;
 const DUMMY_OK=Object.freeze({blocked:false,penalty:0,reason:''}),DUMMY_BLOCK=reason=>({blocked:true,penalty:Infinity,reason}); // Blue-Eyes White Dragon: inert Level 8 normal monster.
@@ -2327,7 +2327,7 @@ export class IntegratedDuelController {
     const cards=[...grid.querySelectorAll('.duel-prompt-card')];if(!cards.length)return;
 
     this.prompt.style.removeProperty('--duel-selection-card-w');this.prompt.style.removeProperty('--duel-selection-card-h');
-    this.prompt.style.removeProperty('--duel-selection-measured-width');this.prompt.style.removeProperty('width');
+    this.prompt.style.removeProperty('--duel-selection-measured-width');this.prompt.style.removeProperty('width');this.prompt.style.removeProperty('max-width');
     for(const prop of ['max-height','overflow-y','overflow-x','grid-template-columns','justify-content'])grid.style.removeProperty(prop);
     grid.classList.remove('duel-selection-grid-scroll');
 
@@ -2400,6 +2400,9 @@ export class IntegratedDuelController {
       const measuredPromptWidth=Math.min(promptLimit,Math.max(260,criticalContextWidth,Math.ceil(exactRailWidth+promptChrome+4),Math.ceil(contextRailWidth+promptChrome+4)));
       this.prompt.style.setProperty('--duel-selection-measured-width',`${measuredPromptWidth}px`);
       this.prompt.style.setProperty('width',`${measuredPromptWidth}px`,'important');
+      // rc262: some prompt layouts cap the width at 300px in CSS; the measured width already fits the screen,
+      // so lift the cap or the last inspected card is cut off on wide screens.
+      this.prompt.style.setProperty('max-width',`${measuredPromptWidth}px`,'important');
       if(this.prompt.classList.contains('duel-chain-attached-prompt')&&this.chainVisualNode)this.chainVisualNode.style.setProperty('--duel-contained-prompt-width',`${measuredPromptWidth}px`);
       grid.dataset.duelVisibleCardCount=String(whole.visibleCount);grid.tabIndex=grid.tabIndex<0?0:grid.tabIndex;
       this.bindCardRailWheelSnap(grid,'x');
@@ -7763,6 +7766,35 @@ export class IntegratedDuelController {
 
   button(label,onClick,{ghost=false,disabled=false}={}){const b=document.createElement('button');b.type='button';b.className=`duel-action${ghost?' ghost':''}`;b.textContent=label;b.disabled=disabled;b.addEventListener('click',event=>{onClick(event);this.playSelectionSoundSoon();});return b;}
 
+  // rc262: cards offered in a selection (summon, materials, targets, inspected cards) show the same facts as
+  // a monster on the field: Level / Rank / Link rating, ATK and DEF (current values when the card is on the
+  // field), Pendulum Scale and the Link Arrows around the card. Face-down or unknown cards show nothing.
+  appendChoiceCardStats(host,item={},{compact=false}={}) {
+    const code=this.normalizeActionCode?.(item?.code)??Number(item?.code);if(!host||!Number(code))return;
+    let data=null;try{data=this.cardData(Number(code));}catch{}if(!data)return;
+    const type=Number(data.type)>>>0;if(!(type&0x1))return;
+    const isLink=!!(type&0x4000000),isXyz=!!(type&0x800000),isPendulum=!!(type&0x1000000);
+    const stats=this.monsterStatSnapshot?.(code,item)||{};
+    const attack=Number.isFinite(Number(stats.attack))?stats.attack:data.attack,defense=Number.isFinite(Number(stats.defense))?stats.defense:data.defense;
+    const box=document.createElement('div');box.className=`duel-choice-stats${compact?' compact':''}`;
+    const add=(label,value,modified=false)=>{const part=document.createElement('span');part.className='duel-choice-stat';if(modified)part.classList.add('modified');const name=document.createElement('small');name.textContent=label;const strong=document.createElement('strong');strong.textContent=value;part.append(name,strong);box.append(part);};
+    const short=value=>{const n=Number(value);return Number.isFinite(n)&&n>=0?String(n):'?';};
+    add('ATK',short(attack),!!stats.attackModified);
+    if(isLink)add('LINK',String(Number(data.level)||0));else add('DEF',short(defense),!!stats.defenseModified);
+    host.append(box);
+    if(!isLink){
+      const level=Number.isFinite(Number(stats.progress))&&Number(stats.progress)>0?Number(stats.progress):Number(data.level)||0;
+      if(level>0){const chip=document.createElement('div');chip.className=`duel-choice-level ${isXyz?'rank':'level'}${stats.progressModified?' modified':''}`;chip.textContent=`${isXyz?'Rank':'Lv'} ${level}`;chip.setAttribute('aria-label',`${isXyz?'Rank':'Level'} ${level}`);host.append(chip);}
+    }
+    if(isPendulum&&!compact){const chip=document.createElement('div');chip.className='duel-choice-scale';chip.textContent=`Scale ${Number(data.lscale)||0}`;host.append(chip);}
+    if(isLink){
+      const marker=Number(data.link_marker)>>>0,arrows=document.createElement('div');arrows.className='duel-choice-link-arrows';arrows.setAttribute('aria-hidden','true');
+      for(const [bit,name] of [[0x40,'tl'],[0x80,'t'],[0x100,'tr'],[0x8,'l'],[0x20,'r'],[0x1,'bl'],[0x2,'b'],[0x4,'br']]){const arrow=document.createElement('span');arrow.className=`duel-choice-link-arrow ${name}${marker&bit?' on':''}`;arrows.append(arrow);}
+      host.append(arrows);
+    }
+    host.dataset.choiceStats=isLink?`ATK ${this.formatMonsterStat(attack)} LINK-${Number(data.level)||0}`:`ATK ${this.formatMonsterStat(attack)} DEF ${this.formatMonsterStat(defense)}`;
+  }
+
   actionCard(item,onClick,label='',options={}){
     const b=document.createElement('div');b.className='duel-prompt-card duel-selection-card-clean duel-universal-card-choice';b.tabIndex=0;b.setAttribute('role','button');
     b.dataset.player=String(Number(item?.controller)||0);b.dataset.location=this.locationKey(Number(item?.location)||0);b.dataset.sequence=String(Number(item?.sequence)||0);b.dataset.code=String(this.normalizeActionCode(item?.code)||'');if(this.isAttachedXyzMaterial(item)){b.dataset.overlaySequence=String(Number(item.overlay_sequence));b.dataset.overlayNumber=String(Number(item.overlay_sequence)+1);b.classList.add('duel-xyz-material-choice');}
@@ -7773,6 +7805,7 @@ export class IntegratedDuelController {
     const art=document.createElement('span');art.className='duel-prompt-card-art';
     const img=document.createElement('img');img.src=cardImage(item.code);img.alt=this.cardName(item.code);img.setAttribute('aria-label',this.cardName(item.code)||'');art.append(img);
     if(Number(item.location)){const loc=document.createElement('span');loc.className='duel-prompt-card-location';loc.textContent=this.selectionSourceBadge(item);art.append(loc);}
+    this.appendChoiceCardStats(art,item);
     const span=document.createElement('strong');span.className='duel-prompt-card-label duel-universal-card-caption';span.textContent=label||this.cardName(item.code)||this.locLabel(item);
     const runAction=()=>{if(promptAtBind&&(this.currentPrompt!==promptAtBind||this.currentPromptRevision!==revisionAtBind))return;this.playSound('select');onClick();};
     const openDetails=()=>{if(!Number(item.code))return;const info=confirmSelection?{...item}:{...item,_detailAction:runAction,_detailActionLabel:promptAtBind?.type===T.SELECT_CHAIN?'Chain':'Select'};this.inspectCard(item.code,info);this.renderCardDetailsModal(item.code,info);};
@@ -7901,7 +7934,7 @@ export class IntegratedDuelController {
     const role=batch.mode==='draw'?'Effect Result':batch.mode==='inspect'?'Effect Step':batch.mode==='reveal'?'Effect Step':'Related Effect Event';
     const section=document.createElement('section');section.className='duel-recent-reveal duel-semantic-section';const eyebrow=document.createElement('div');eyebrow.className='duel-semantic-section-label';eyebrow.textContent=role;const h=document.createElement('h3');h.textContent=batch.label||'Related cards';section.append(eyebrow,h);
     const grid=document.createElement('div');grid.className='duel-recent-reveal-grid duel-horizontal-context-card-rail';
-    batch.cards.forEach(card=>{const tile=document.createElement('div');tile.className='duel-reveal-card';tile.tabIndex=0;tile.setAttribute('role','button');tile.title=`View ${this.cardName(card.code)} details`;this.bindInspectorHover(tile,card.code,card);const img=document.createElement('img');img.src=cardImage(card.code);img.alt=this.cardName(card.code);const name=document.createElement('span');name.textContent=this.cardName(card.code);const open=()=>{this.inspectCard(card.code,card);this.renderCardDetailsModal(card.code,card);};tile.append(img,name);tile.addEventListener('click',open);tile.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open();}});grid.append(tile);});section.append(grid);return section;
+    batch.cards.forEach(card=>{const tile=document.createElement('div');tile.className='duel-reveal-card';tile.tabIndex=0;tile.setAttribute('role','button');tile.title=`View ${this.cardName(card.code)} details`;this.bindInspectorHover(tile,card.code,card);const img=document.createElement('img');img.src=cardImage(card.code);img.alt=this.cardName(card.code);const name=document.createElement('span');name.textContent=this.cardName(card.code);const open=()=>{this.inspectCard(card.code,card);this.renderCardDetailsModal(card.code,card);};tile.append(img,name);this.appendChoiceCardStats(tile,card,{compact:true});tile.addEventListener('click',open);tile.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open();}});grid.append(tile);});section.append(grid);return section;
   }
 
   // rc249: the Rules Engine often names an effect with a two-word hint ("Special Summon", "Change position").
