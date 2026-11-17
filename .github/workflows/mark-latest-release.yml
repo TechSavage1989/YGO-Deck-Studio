@@ -1,8 +1,9 @@
 name: Mark Latest Release
 
 # Marks an already published release as the repository's "Latest" full release.
-# Every build is published as a prerelease; GitHub shows no "Latest" release until one
-# is promoted. This changes only the release's prerelease/latest flags, never its assets.
+# New builds are published as Latest automatically (since 2026-11-17). Use this to mark an
+# older release as Latest again, or one published before then. This changes only the
+# release's prerelease/latest flags, never its assets.
 # Actions -> Mark Latest Release -> Run workflow. Leave the tag empty to promote the
 # release for the version in launcher/version.go on main.
 
