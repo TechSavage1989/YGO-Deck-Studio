@@ -11,7 +11,7 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 core=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
 app=(root/'web/js/app.js').read_text(encoding='utf-8')
-assert "duelcore.1-rc263" in core
+assert "duelcore.1-rc264" in core
 match=re.search(r'globalThis\.YGO_DUEL_SFX=(\{.*?\});',app)
 assert match,'app.js must define the recorded clip table'
 table=json.loads(match.group(1))

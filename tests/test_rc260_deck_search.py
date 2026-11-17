@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 app=(root/'web/js/app.js').read_text(encoding='utf-8')
 css=(root/'web/styles.css').read_text(encoding='utf-8')
-assert "duelcore.1-rc263" in app
+assert "duelcore.1-rc264" in app
 start=app.index('// rc260: search scoring lives here');end=app.index('// rc260: end of search scoring helpers')
 helpers=app[start:end]
 # Source contracts for the parts that need the whole application to exercise.

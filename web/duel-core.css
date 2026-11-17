@@ -5961,9 +5961,8 @@ body.duel-mode-active{overflow:hidden}
 
 /* rc262: monster facts on cards offered in a selection, matching the field's stat badges. */
 .duel-reveal-card{position:relative}
-.duel-choice-stats{position:absolute;left:50%;bottom:27px;z-index:7;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1px 2px;width:max-content;max-width:calc(100% - 4px);box-sizing:border-box;padding:2px 3px;border:1px solid rgba(194,226,245,.72);border-radius:4px;background:linear-gradient(180deg,rgba(4,11,18,.94),rgba(3,8,13,.97));box-shadow:0 2px 7px rgba(0,0,0,.76);color:#f5fbff;font-variant-numeric:tabular-nums;pointer-events:none}
-.duel-prompt-card-art:not(:has(.duel-prompt-card-location))>.duel-choice-stats{bottom:3px}
-.duel-reveal-card>.duel-choice-stats{bottom:auto;top:calc(var(--duel-card-h) - 18px)}
+.duel-choice-stats{position:absolute;left:50%;top:74.5%;bottom:auto;z-index:7;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1px 2px;width:max-content;max-width:calc(100% - 4px);box-sizing:border-box;padding:2px 3px;border:1px solid rgba(194,226,245,.72);border-radius:4px;background:linear-gradient(180deg,rgba(4,11,18,.94),rgba(3,8,13,.97));box-shadow:0 2px 7px rgba(0,0,0,.76);color:#f5fbff;font-variant-numeric:tabular-nums;pointer-events:none}
+.duel-reveal-card>.duel-choice-stats{bottom:auto;top:calc(5px + var(--duel-card-h) * .745)}
 .duel-choice-stat{display:flex;align-items:baseline;gap:2px;white-space:nowrap}
 .duel-choice-stats{row-gap:0;column-gap:4px}
 .duel-choice-stat small{color:#a9c5d6;font-size:clamp(5px,6.5cqw,6px);line-height:1;font-weight:850;letter-spacing:.04em}
@@ -5980,10 +5979,14 @@ body.duel-mode-active{overflow:hidden}
 .duel-choice-link-arrows{position:absolute;inset:0;z-index:9;overflow:hidden;pointer-events:none}
 .duel-reveal-card>.duel-choice-link-arrows{inset:5px 5px auto 5px;height:var(--duel-card-h)}
 .duel-choice-link-arrow{position:absolute;display:block;height:auto;margin:0;padding:0;transform:translate(-50%,-50%) rotate(var(--link-arrow-angle,0deg));transform-origin:center center;filter:drop-shadow(0 0 2px rgba(255,60,40,.85)) drop-shadow(0 1px 1px rgba(0,0,0,.8));pointer-events:none}
-.duel-choice-link-arrow.edge{width:20%}
-.duel-choice-link-arrow.corner{width:15%}
+.duel-choice-link-arrow.edge{width:9.5%}
+.duel-choice-link-arrow.corner{width:7%}
 /* Card-image rules inside selection tiles size every img to the whole card; keep the arrows at arrow size. */
-.duel-choice-link-arrows>img.duel-choice-link-arrow{position:absolute!important;height:auto!important;max-width:none!important;max-height:none!important;min-width:0!important;min-height:0!important;object-fit:contain!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;inset:auto!important;transform:translate(-50%,-50%) rotate(var(--link-arrow-angle,0deg))!important;filter:drop-shadow(0 0 2px rgba(255,60,40,.85)) drop-shadow(0 1px 1px rgba(0,0,0,.8))!important;opacity:1!important}
-.duel-choice-link-arrows>img.duel-choice-link-arrow.edge{width:20%!important}
-.duel-choice-link-arrows>img.duel-choice-link-arrow.corner{width:15%!important}
+.duel-choice-link-arrows>img.duel-choice-link-arrow{position:absolute!important;height:auto!important;aspect-ratio:auto!important;max-width:none!important;max-height:none!important;min-width:0!important;min-height:0!important;object-fit:contain!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;inset:auto!important;transform:translate(-50%,-50%) rotate(var(--link-arrow-angle,0deg))!important;filter:drop-shadow(0 0 2px rgba(255,60,40,.85)) drop-shadow(0 1px 1px rgba(0,0,0,.8))!important;opacity:1!important}
+.duel-choice-link-arrows>img.duel-choice-link-arrow.edge{width:9.5%!important}
+.duel-choice-link-arrows>img.duel-choice-link-arrow.corner{width:7%!important}
+/* The stat strip sits on the card's text box, so the source badge ("Your Deck") moves to the name bar;
+   the name is printed under each tile anyway. The Level/Rank chip sits on the star row below it. */
+.duel-prompt-card-art:has(.duel-choice-stats)>.duel-prompt-card-location{top:3px!important;bottom:auto!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;max-width:calc(100% - 6px)!important;font-size:clamp(6.5px,8.5cqw,10px)!important;line-height:1.15!important;padding:1px 4px!important;min-height:0!important;height:auto!important}
+.duel-prompt-card-art:has(.duel-prompt-card-location)>.duel-choice-level{top:12.5%}
 
