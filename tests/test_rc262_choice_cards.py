@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 core=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
 css=(root/'web/duel-core.css').read_text(encoding='utf-8')
-assert "duelcore.1-rc263" in core
+assert "duelcore.1-rc264" in core
 assert "this.prompt.style.setProperty('max-width',`${measuredPromptWidth}px`,'important');" in core
 assert "this.prompt.style.removeProperty('width');this.prompt.style.removeProperty('max-width');" in core
 assert core.count("this.appendChoiceCardStats(")>=2
@@ -32,7 +32,8 @@ assert all({k:v for k,v in r[k2].items() if k!='pos'}=={'stats':'','chips':[],'o
 assert r['6']['stats']=='ATK ? DEF ?',r['6']
 assert r['live']['stats']=='ATK 2,300 DEF 1,000' and 'Lv 5' in r['live']['mod'] and '2300' in ''.join(r['live']['mod']),r['live']
 assert r['fits'] is True
-# rc263: deck-builder arrow images and positions around the artwork square
 pos={p[0]:p[1:] for p in r['3']['pos']}
-assert pos['t']==['50.02%','23.12%','0deg','assets/link_arrow_up_red.png'] and pos['bl']==['17.47%','71.9%','180deg','assets/link_arrow_corner_red.png'] and pos['br']==['81.95%','71.88%','90deg','assets/link_arrow_corner_red.png'],pos
+# rc264: centred on the arrows printed on Link card frames (measured on official card images)
+assert pos['t']==['49.9%','16.8%','0deg','assets/link_arrow_up_red.png'] and pos['bl']==['11.2%','70.9%','180deg','assets/link_arrow_corner_red.png'] and pos['br']==['88.9%','70.7%','90deg','assets/link_arrow_corner_red.png'],pos
+for needle in ('.duel-choice-link-arrows>img.duel-choice-link-arrow.edge{width:9.5%!important}','.duel-choice-link-arrows>img.duel-choice-link-arrow.corner{width:7%!important}','aspect-ratio:auto!important','top:74.5%'): assert needle in css,needle
 print('rc262 choice-card stats and prompt width passed')

@@ -6,7 +6,7 @@ from playwright.sync_api import sync_playwright
 
 root=Path(__file__).resolve().parents[1]
 core=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
-assert "duelcore.1-rc263" in core
+assert "duelcore.1-rc264" in core
 # The guard sits directly after the player's answer is awaited, before anything is recorded.
 answer=core.index("response=await this.playerResponse(prompt,{manualOnly:branchManual});")
 guard=core.index("if (!this.running || !this.handle || loopSerial!==this.processLoopSerial) return;",answer)

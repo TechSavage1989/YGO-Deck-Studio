@@ -1,0 +1,7 @@
+YGO Deck Studio 3 v3.0.0-alpha.221-duelcore.1-rc264
+
+Owner report: the Link Arrows added in rc263 did not line up with the arrows printed on the card.
+
+- Link Arrows on cards in selection prompts and in the Cards Inspected row are now centred exactly on the arrows printed on the card frame, at the printed size. Their positions were measured on official Link card images.
+- The ATK/DEF strip now sits on the card's text box instead of over the bottom of the artwork, so it no longer covers the bottom arrows.
+- The source badge ("Your Deck", "Your Extra Deck") moves to the card's name bar; the card name is still shown under each card.

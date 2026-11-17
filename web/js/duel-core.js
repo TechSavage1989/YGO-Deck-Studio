@@ -1,4 +1,4 @@
-const DUEL_BRANCH = 'duelcore.1-rc263';
+const DUEL_BRANCH = 'duelcore.1-rc264';
 
 const DUMMY_CARD_CODE = 89631139;
 const DUMMY_OK=Object.freeze({blocked:false,penalty:0,reason:''}),DUMMY_BLOCK=reason=>({blocked:true,penalty:Infinity,reason}); // Blue-Eyes White Dragon: inert Level 8 normal monster.
@@ -7789,9 +7789,10 @@ export class IntegratedDuelController {
     if(isPendulum&&!compact){const chip=document.createElement('div');chip.className='duel-choice-scale';chip.textContent=`Scale ${Number(data.lscale)||0}`;host.append(chip);}
     if(isLink){
       const marker=Number(data.link_marker)>>>0,arrows=document.createElement('div');arrows.className='duel-choice-link-arrows';arrows.setAttribute('aria-hidden','true');
-      // rc263: the same red arrow images, rotations and positions the deck builder uses on card images, so the
-      // arrows sit around the artwork square (positions are percentages of the whole card).
-      for(const [bit,name,x,y,angle] of [[0x40,'tl',17.47,28.09,-90],[0x80,'t',50.02,23.12,0],[0x100,'tr',81.95,28.09,0],[0x8,'l',10.8,49.99,-90],[0x20,'r',89.2,49.99,90],[0x1,'bl',17.47,71.9,180],[0x2,'b',50.02,76.89,180],[0x4,'br',81.95,71.88,90]]){if(!(marker&bit))continue;const corner=name.length===2,arrow=document.createElement('img');arrow.className=`duel-choice-link-arrow ${name} on ${corner?'corner':'edge'}`;arrow.src=corner?'assets/link_arrow_corner_red.png':'assets/link_arrow_up_red.png';arrow.alt='';arrow.draggable=false;arrow.style.setProperty('left',`${x}%`,'important');arrow.style.setProperty('top',`${y}%`,'important');arrow.style.setProperty('--link-arrow-angle',`${angle}deg`);arrows.append(arrow);}
+      // rc264: the deck builder's red arrow images and rotations, centred on the arrows printed on the card frame
+      // (measured on official Link card images: percentages of the whole card, edge arrow 9.5% and corner 7% of
+      // the card width). rc263 used offsets meant for the deck builder's padded image box and missed them.
+      for(const [bit,name,x,y,angle] of [[0x40,'tl',11.2,17.8,-90],[0x80,'t',49.9,16.8,0],[0x100,'tr',88.9,17.8,0],[0x8,'l',9.9,44.4,-90],[0x20,'r',90.2,44.4,90],[0x1,'bl',11.2,70.9,180],[0x2,'b',49.9,71.8,180],[0x4,'br',88.9,70.7,90]]){if(!(marker&bit))continue;const corner=name.length===2,arrow=document.createElement('img');arrow.className=`duel-choice-link-arrow ${name} on ${corner?'corner':'edge'}`;arrow.src=corner?'assets/link_arrow_corner_red.png':'assets/link_arrow_up_red.png';arrow.alt='';arrow.draggable=false;arrow.style.setProperty('left',`${x}%`,'important');arrow.style.setProperty('top',`${y}%`,'important');arrow.style.setProperty('--link-arrow-angle',`${angle}deg`);arrows.append(arrow);}
       host.append(arrows);
     }
     host.dataset.choiceStats=isLink?`ATK ${this.formatMonsterStat(attack)} LINK-${Number(data.level)||0}`:`ATK ${this.formatMonsterStat(attack)} DEF ${this.formatMonsterStat(defense)}`;
