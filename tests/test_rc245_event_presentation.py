@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 js_source=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
 css=(root/'web/duel-core.css').read_text(encoding='utf-8')
-assert "duelcore.1-rc262" in js_source
+assert "duelcore.1-rc263" in js_source
 assert '.duel-event-callout' in css and '.duel-card-counter-badge' in css
 js=js_source.replace('export function ','function ').replace('export class ','class ')+'\nwindow.IntegratedDuelController=IntegratedDuelController;window.__formatPosition=formatPosition;'
 
