@@ -6,7 +6,7 @@
 <p align="center"><strong>Build a deck. Test your ideas. Review the duel.</strong></p>
 
 <p align="center">
-  <a href="https://github.com/TechSavage1989/YGO-Deck-Studio/releases">Download</a> ·
+  <a href="https://github.com/TechSavage1989/YGO-Deck-Studio/releases/latest">Download</a> ·
   <a href="#getting-started">Get started</a> ·
   <a href="#features">Features</a> ·
   <a href="#screenshots">Screenshots</a> ·
@@ -19,7 +19,7 @@
 
 A **Windows desktop deck builder and integrated test-duel application**, with a configurable Practice Dummy, visual Duel Log, replay tools, and a built-in GitHub Releases updater.
 
-> **Preview software:** the maintained line is an alpha/release-candidate build. Choose the newest published preview in Releases and read its notes.
+> **Preview software:** the maintained line is an alpha/release-candidate build. The newest build is always marked **Latest** in Releases; read its notes before updating.
 
 ## Features
 
@@ -65,7 +65,7 @@ Captured from the application's browser UI with a fictional sample card list. Of
 
 ## Download
 
-Choose the newest published preview in [Releases](https://github.com/TechSavage1989/YGO-Deck-Studio/releases). Under **Assets**, use `YGODeckStudio.exe` or the versioned **Portable** ZIP. The **Source** ZIP is for developers.
+Open the [Latest release](https://github.com/TechSavage1989/YGO-Deck-Studio/releases/latest) (all builds are in [Releases](https://github.com/TechSavage1989/YGO-Deck-Studio/releases)). Under **Assets**, use `YGODeckStudio.exe` or the versioned **Portable** ZIP. The **Source** ZIP is for developers.
 
 ## Requirements
 
@@ -76,7 +76,7 @@ Choose the newest published preview in [Releases](https://github.com/TechSavage1
 
 ## Getting started
 
-1. Open [Releases](https://github.com/TechSavage1989/YGO-Deck-Studio/releases) and select the newest published preview. Under **Assets**, download **`YGODeckStudio.exe`**, or choose the versioned **Portable** ZIP and extract it first. The **Source** ZIP is for development.
+1. Open the [Latest release](https://github.com/TechSavage1989/YGO-Deck-Studio/releases/latest). Under **Assets**, download **`YGODeckStudio.exe`**, or choose the versioned **Portable** ZIP and extract it first. The **Source** ZIP is for development.
 2. Place `YGODeckStudio.exe` in a permanent writable folder and launch it. Point any new shortcuts to that file.
 3. Load or build your player deck. To index existing folders, open **File → Deck Library Directories → Add Directory** and grant read access.
 4. Press **F1** for Help and the full installed version. See the [user manual](docs/USER_MANUAL.txt) for selection, replay, and library behavior.

@@ -196,4 +196,4 @@ The release build now needs Node.js with npx: tools/patch_embedded_web.py minifi
 
 ## Publish button — 2026-11-16
 
-The Build and Release workflow accepts a manual run (workflow_dispatch) on main that builds and publishes the version in launcher/version.go as a prerelease, creating the tag itself. Tag pushes still work. Both paths now check the built manifest against the tag before publishing. No application change and no version bump.
+The Build and Release workflow accepts a manual run (workflow_dispatch) on main that builds and publishes the version in launcher/version.go, creating the tag itself. Since 2026-11-17 each published build is a full release marked Latest (previously prereleases); Mark Latest Release re-promotes an older one. Tag pushes still work. Both paths now check the built manifest against the tag before publishing. No application change and no version bump.
