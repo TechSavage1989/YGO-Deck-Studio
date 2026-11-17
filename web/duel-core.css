@@ -5977,16 +5977,13 @@ body.duel-mode-active{overflow:hidden}
 .duel-choice-level.modified{color:#7fe8ff;border-color:#7fe8ff}
 .duel-choice-scale{top:3px;left:3px;border-color:rgba(120,220,200,.8);color:#9ff0de;background:rgba(2,20,18,.9)}
 .duel-reveal-card>.duel-choice-level{top:8px;right:8px}
-.duel-choice-link-arrows{position:absolute;inset:0;z-index:6;pointer-events:none}
+.duel-choice-link-arrows{position:absolute;inset:0;z-index:9;overflow:hidden;pointer-events:none}
 .duel-reveal-card>.duel-choice-link-arrows{inset:5px 5px auto 5px;height:var(--duel-card-h)}
-.duel-choice-link-arrow{position:absolute;width:0;height:0;border:6px solid transparent;opacity:0}
-.duel-choice-link-arrow.on{opacity:1;filter:drop-shadow(0 0 3px rgba(255,80,60,.9)) drop-shadow(0 1px 1px #000)}
-.duel-choice-link-arrow.t{top:1px;left:50%;transform:translateX(-50%);border-bottom:9px solid #ff5040;border-top-width:0}
-.duel-choice-link-arrow.b{bottom:1px;left:50%;transform:translateX(-50%);border-top:9px solid #ff5040;border-bottom-width:0}
-.duel-choice-link-arrow.l{left:1px;top:50%;transform:translateY(-50%);border-right:9px solid #ff5040;border-left-width:0}
-.duel-choice-link-arrow.r{right:1px;top:50%;transform:translateY(-50%);border-left:9px solid #ff5040;border-right-width:0}
-.duel-choice-link-arrow.tl{top:2px;left:2px;border:0;width:10px;height:10px;background:linear-gradient(135deg,#ff5040 50%,transparent 50%)}
-.duel-choice-link-arrow.tr{top:2px;right:2px;border:0;width:10px;height:10px;background:linear-gradient(225deg,#ff5040 50%,transparent 50%)}
-.duel-choice-link-arrow.bl{bottom:2px;left:2px;border:0;width:10px;height:10px;background:linear-gradient(45deg,#ff5040 50%,transparent 50%)}
-.duel-choice-link-arrow.br{bottom:2px;right:2px;border:0;width:10px;height:10px;background:linear-gradient(315deg,#ff5040 50%,transparent 50%)}
+.duel-choice-link-arrow{position:absolute;display:block;height:auto;margin:0;padding:0;transform:translate(-50%,-50%) rotate(var(--link-arrow-angle,0deg));transform-origin:center center;filter:drop-shadow(0 0 2px rgba(255,60,40,.85)) drop-shadow(0 1px 1px rgba(0,0,0,.8));pointer-events:none}
+.duel-choice-link-arrow.edge{width:20%}
+.duel-choice-link-arrow.corner{width:15%}
+/* Card-image rules inside selection tiles size every img to the whole card; keep the arrows at arrow size. */
+.duel-choice-link-arrows>img.duel-choice-link-arrow{position:absolute!important;height:auto!important;max-width:none!important;max-height:none!important;min-width:0!important;min-height:0!important;object-fit:contain!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;inset:auto!important;transform:translate(-50%,-50%) rotate(var(--link-arrow-angle,0deg))!important;filter:drop-shadow(0 0 2px rgba(255,60,40,.85)) drop-shadow(0 1px 1px rgba(0,0,0,.8))!important;opacity:1!important}
+.duel-choice-link-arrows>img.duel-choice-link-arrow.edge{width:20%!important}
+.duel-choice-link-arrows>img.duel-choice-link-arrow.corner{width:15%!important}
 

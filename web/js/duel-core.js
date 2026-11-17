@@ -1,4 +1,4 @@
-const DUEL_BRANCH = 'duelcore.1-rc262';
+const DUEL_BRANCH = 'duelcore.1-rc263';
 
 const DUMMY_CARD_CODE = 89631139;
 const DUMMY_OK=Object.freeze({blocked:false,penalty:0,reason:''}),DUMMY_BLOCK=reason=>({blocked:true,penalty:Infinity,reason}); // Blue-Eyes White Dragon: inert Level 8 normal monster.
@@ -7789,7 +7789,9 @@ export class IntegratedDuelController {
     if(isPendulum&&!compact){const chip=document.createElement('div');chip.className='duel-choice-scale';chip.textContent=`Scale ${Number(data.lscale)||0}`;host.append(chip);}
     if(isLink){
       const marker=Number(data.link_marker)>>>0,arrows=document.createElement('div');arrows.className='duel-choice-link-arrows';arrows.setAttribute('aria-hidden','true');
-      for(const [bit,name] of [[0x40,'tl'],[0x80,'t'],[0x100,'tr'],[0x8,'l'],[0x20,'r'],[0x1,'bl'],[0x2,'b'],[0x4,'br']]){const arrow=document.createElement('span');arrow.className=`duel-choice-link-arrow ${name}${marker&bit?' on':''}`;arrows.append(arrow);}
+      // rc263: the same red arrow images, rotations and positions the deck builder uses on card images, so the
+      // arrows sit around the artwork square (positions are percentages of the whole card).
+      for(const [bit,name,x,y,angle] of [[0x40,'tl',17.47,28.09,-90],[0x80,'t',50.02,23.12,0],[0x100,'tr',81.95,28.09,0],[0x8,'l',10.8,49.99,-90],[0x20,'r',89.2,49.99,90],[0x1,'bl',17.47,71.9,180],[0x2,'b',50.02,76.89,180],[0x4,'br',81.95,71.88,90]]){if(!(marker&bit))continue;const corner=name.length===2,arrow=document.createElement('img');arrow.className=`duel-choice-link-arrow ${name} on ${corner?'corner':'edge'}`;arrow.src=corner?'assets/link_arrow_corner_red.png':'assets/link_arrow_up_red.png';arrow.alt='';arrow.draggable=false;arrow.style.setProperty('left',`${x}%`,'important');arrow.style.setProperty('top',`${y}%`,'important');arrow.style.setProperty('--link-arrow-angle',`${angle}deg`);arrows.append(arrow);}
       host.append(arrows);
     }
     host.dataset.choiceStats=isLink?`ATK ${this.formatMonsterStat(attack)} LINK-${Number(data.level)||0}`:`ATK ${this.formatMonsterStat(attack)} DEF ${this.formatMonsterStat(defense)}`;
