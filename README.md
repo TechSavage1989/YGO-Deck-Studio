@@ -95,7 +95,7 @@ Use **Check for Updates → Download → Install and restart**. Save your work a
 
 New standalone, updater, and portable downloads use **`YGODeckStudio.exe`**. Updates replace the actual running launcher path in place, preserving shortcuts even if an existing installation uses an older or custom filename. Do not rename an existing target just to match the download.
 
-The updater validates the expected repository, HTTPS hosts, SHA-256, size, application identity, and version, and retains one rollback backup. **The binaries are not publisher code-signed**; matching checksums establish integrity, not publisher signing. Native Windows replacement, restart, shortcut, and rollback checks remain subject to the [documented validation limits](DEVELOPMENT_HANDOFF.md#native-validation-status).
+The updater validates the expected repository, HTTPS hosts, SHA-256, size, application identity, and version, and retains one rollback backup. Since rc265, `YGODeckStudio.exe` is code-signed (Authenticode, through Azure Artifact Signing), so Windows shows a named publisher; rc264 and earlier releases are unsigned. The updater still checks the SHA-256 and size from the manifest. Native Windows replacement, restart, shortcut, and rollback checks remain subject to the [documented validation limits](DEVELOPMENT_HANDOFF.md#native-validation-status).
 
 ## Troubleshooting
 

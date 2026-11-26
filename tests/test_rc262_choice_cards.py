@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 core=(root/'web/js/duel-core.js').read_text(encoding='utf-8')
 css=(root/'web/duel-core.css').read_text(encoding='utf-8')
-assert "duelcore.1-rc264" in core
+assert "duelcore.1-rc265" in core
 assert "this.prompt.style.setProperty('max-width',`${measuredPromptWidth}px`,'important');" in core
 assert "this.prompt.style.removeProperty('width');this.prompt.style.removeProperty('max-width');" in core
 assert core.count("this.appendChoiceCardStats(")>=2
