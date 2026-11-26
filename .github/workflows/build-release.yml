@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write  # Azure sign-in for code signing (federated, no stored secret)
 
 jobs:
   build:
@@ -38,6 +39,35 @@ jobs:
             echo "Releases are published from main only (got $GITHUB_REF)." >&2
             exit 1
           fi
+      - name: Refuse unsigned tag releases
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          echo "Releases are signed and published with the publish button (Actions -> Build and Release -> Run workflow on main)." >&2
+          echo "Azure only trusts sign-ins from main, so a pushed tag cannot be signed. Delete the tag and use the button." >&2
+          exit 1
+      - name: Sign in to Azure for code signing
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+      - name: Prepare code signing
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # jsign signs Windows executables on Linux and supports Azure Artifact (Trusted) Signing.
+          JSIGN="$RUNNER_TEMP/jsign-7.1.jar"
+          curl --fail --location --retry 3 --output "$JSIGN" https://repo1.maven.org/maven2/net/jsign/jsign/7.1/jsign-7.1.jar
+          echo "348919ddaeed5100e1dd6a05b98da6c61e192afe  $JSIGN" | sha1sum --check
+          sha256sum "$JSIGN"
+          TOKEN="$(az account get-access-token --resource https://codesigning.azure.net --query accessToken --output tsv)"
+          echo "::add-mask::$TOKEN"
+          {
+            echo "YGO_SIGN_COMMAND=java -jar $JSIGN --storetype TRUSTEDSIGNING --keystore eus.codesigning.azure.net --storepass $TOKEN --alias networktoolkit-signing/jpaull-codesign --tsaurl http://timestamp.acs.microsoft.com --tsmode RFC3161 --name \"YGO Deck Studio\" --url https://github.com/TechSavage1989/YGO-Deck-Studio {file}"
+            echo "YGO_REQUIRE_SIGNING=1"
+          } >> "$GITHUB_ENV"
       - uses: actions/setup-go@v5
         with:
           go-version: '1.23.x'

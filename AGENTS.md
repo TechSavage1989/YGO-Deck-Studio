@@ -2,7 +2,7 @@
 
 ## Current baseline
 
-The current development baseline is 3.0.0-alpha.221-duelcore.1-rc264.
+The current development baseline is 3.0.0-alpha.221-duelcore.1-rc265.
 
 This project is a recovered-source continuation. The original native Go source for the rc189 application shell was not available. The current browser entry points, launcher/updater, tests, and release handoff are maintained in Git. The complete recovered-source tree, including web dependencies, artwork, and the verified rc189 native baseline, is distributed in the versioned Source ZIP identified in docs/SOURCE_SNAPSHOT.md. Use that complete snapshot together with newer confirmed Git changes; do not reconstruct missing files from older revisions. tools/patch_embedded_web.py patches the maintained browser assets into the verified rc189 native baseline before the launcher embeds that core executable.
 
@@ -33,7 +33,7 @@ Increment the release candidate consistently in:
 
 Published tags use v followed by the complete application version. Never reuse an existing tag or overwrite its release assets.
 
-Publishing: either push the version tag, or use the publish button (GitHub -> Actions -> Build and Release -> Run workflow on main, type "publish"). The button builds main and creates the tag and release named by launcher/version.go; it refuses if that tag already exists. Both paths refuse a release whose built manifest does not match the tag, so a tag placed on the wrong commit cannot publish a mislabeled release. Claude cloud sessions cannot push tags or create releases through their git proxy; the button is how to publish without a local git client. Every build is published as a full release and marked Latest (owner request, 2026-11-17; rc261 and earlier were published as prereleases). To make an older release Latest again, use Actions -> Mark Latest Release -> Run workflow with its tag; it changes only the prerelease and Latest flags, never assets. The in-app updater ignores the prerelease flag (it skips only drafts and compares version numbers), so neither changes what the app offers.
+Publishing: use the publish button (GitHub -> Actions -> Build and Release -> Run workflow on main, type "publish"). The button builds main, signs YGODeckStudio.exe, and creates the tag and release named by launcher/version.go; it refuses if that tag already exists. Since rc265 a pushed version tag fails on purpose, because Azure trusts sign-ins only from main and a release must be signed. The workflow also refuses a release whose built manifest does not match the tag, so a tag placed on the wrong commit cannot publish a mislabeled release. Claude cloud sessions cannot push tags or create releases through their git proxy; the button is how to publish without a local git client. Every build is published as a full release and marked Latest (owner request, 2026-11-17; rc261 and earlier were published as prereleases). To make an older release Latest again, use Actions -> Mark Latest Release -> Run workflow with its tag; it changes only the prerelease and Latest flags, never assets. The in-app updater ignores the prerelease flag (it skips only drafts and compares version numbers), so neither changes what the app offers.
 
 ## Build
 
@@ -78,6 +78,8 @@ Update release requirements:
 A matching hash is integrity validation, not publisher code signing.
 
 Code signing hook: scripts/build_release.py calls tools/sign_windows.py on YGODeckStudio.exe right after `go build`, before the icon check, updater candidate tests, manifest hash and portable ZIP, so the manifest's SHA-256 and size describe the signed file. It runs YGO_SIGN_COMMAND (with {file} for the path) from the environment and verifies a certificate table exists afterwards; without it the build stays unsigned, and YGO_REQUIRE_SIGNING=1 makes that an error. Never commit certificates, keys or tokens; signing credentials belong in repository secrets. The embedded core is not signed (it is extracted to per-user storage without a download mark). tests/test_code_signing_hook.py covers the hook.
+
+Signing setup (rc265): Azure Artifact Signing account networktoolkit-signing (endpoint eus.codesigning.azure.net, certificate profile jpaull-codesign, owner's subscription), shared with the owner's other apps. The release workflow signs in with azure/login through OIDC as the Entra app github-codesign, which holds the Artifact Signing Certificate Profile Signer role on the account and a federated credential named ygo-deck-studio-main with subject repo:TechSavage1989@44094233/YGO-Deck-Studio@1432770484:ref:refs/heads/main. Repository secrets AZURE_CLIENT_ID and AZURE_TENANT_ID hold only identifiers; there is no client secret. The workflow then fetches an access token and runs jsign 7.1 from Maven Central, pinned by SHA-1, with RFC 3161 timestamping. Signing runs only for the publish button (workflow_dispatch on main). Pull request and push builds stay unsigned.
 
 The public standalone asset, manifest asset_name, and portable EXE must all use YGODeckStudio.exe, without any release or version suffix. Versioned archive/tag names remain supported. The installer must continue replacing and restarting the actual running launcher path. Preserve existing custom or legacy executable paths so current shortcuts remain valid; never derive the installed target name from the release asset name.
 

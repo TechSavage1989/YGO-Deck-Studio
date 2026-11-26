@@ -45,7 +45,10 @@ def sign(path: Path) -> bool:
     if str(path) not in args:
         raise SystemExit('YGO_SIGN_COMMAND must contain {file}')
     print(f'+ signing {path.name}', flush=True)  # the command may hold secrets; never echo it
-    subprocess.run(args, check=True)
+    result = subprocess.run(args)
+    if result.returncode:
+        # CalledProcessError would print the arguments, which may hold an access token.
+        raise SystemExit(f'Signing {path.name} failed with exit code {result.returncode}')
     if not has_authenticode(path):
         raise SystemExit(f'Signing finished but {path.name} has no Authenticode signature')
     print(f'Signed {path.name}.', flush=True)

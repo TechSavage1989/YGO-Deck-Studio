@@ -18,9 +18,9 @@ class H(BaseHTTPRequestHandler):
         b=json.dumps(obj).encode();self.send_response(status);self.send_header('Content-Type','application/json');self.send_header('Access-Control-Allow-Origin','*');self.send_header('Access-Control-Allow-Headers','Content-Type');self.end_headers();self.wfile.write(b)
     def do_OPTIONS(self): self.send_response(204);self.send_header('Access-Control-Allow-Origin','*');self.send_header('Access-Control-Allow-Headers','Content-Type');self.end_headers()
     def do_GET(self):
-        if self.path=='/api/update/ping': return self.sendj({'app_id':'com.techsavage1989.ygo-deck-studio','version':'3.0.0-alpha.221-duelcore.1-rc264'})
+        if self.path=='/api/update/ping': return self.sendj({'app_id':'com.techsavage1989.ygo-deck-studio','version':'3.0.0-alpha.221-duelcore.1-rc265'})
         if self.path=='/api/update/status':
-            return self.sendj({'state':'downloading','installed_version':'3.0.0-alpha.221-duelcore.1-rc264','latest':{'version':'3.0.0-alpha.221-duelcore.1-rc265','notes':['One'],'read_more':False},'download_progress':55,'message':'Downloading update...'})
+            return self.sendj({'state':'downloading','installed_version':'3.0.0-alpha.221-duelcore.1-rc265','latest':{'version':'3.0.0-alpha.221-duelcore.1-rc265','notes':['One'],'read_more':False},'download_progress':55,'message':'Downloading update...'})
         self.send_error(404)
     def do_POST(self):
         l=int(self.headers.get('Content-Length','0') or 0); self.rfile.read(l)
@@ -32,12 +32,12 @@ class H(BaseHTTPRequestHandler):
             with lock:
                 state['checks']+=1; mode=state['mode']
             if mode=='error': return self.sendj({'error':'offline'},500)
-            return self.sendj({'state':'downloaded' if mode=='downloaded' else 'available','installed_version':'3.0.0-alpha.221-duelcore.1-rc264','latest':{'version':'3.0.0-alpha.221-duelcore.1-rc265','page_url':'https://example.invalid/release','notes':['First','Second'],'read_more':True},'downloaded':mode=='downloaded','download_progress':100 if mode=='downloaded' else 0,'message':'Update downloaded and verified.' if mode=='downloaded' else 'An update is available.'})
+            return self.sendj({'state':'downloaded' if mode=='downloaded' else 'available','installed_version':'3.0.0-alpha.221-duelcore.1-rc265','latest':{'version':'3.0.0-alpha.221-duelcore.1-rc265','page_url':'https://example.invalid/release','notes':['First','Second'],'read_more':True},'downloaded':mode=='downloaded','download_progress':100 if mode=='downloaded' else 0,'message':'Update downloaded and verified.' if mode=='downloaded' else 'An update is available.'})
         if self.path.startswith('/api/update/download'):
             with lock: state['downloads']+=1
             time.sleep(.12)
             with lock: state['mode']='downloaded'
-            return self.sendj({'state':'downloaded','installed_version':'3.0.0-alpha.221-duelcore.1-rc264','latest':{'version':'3.0.0-alpha.221-duelcore.1-rc265','notes':['First'],'read_more':False},'downloaded':True,'download_progress':100,'message':'Update downloaded and verified.'})
+            return self.sendj({'state':'downloaded','installed_version':'3.0.0-alpha.221-duelcore.1-rc265','latest':{'version':'3.0.0-alpha.221-duelcore.1-rc265','notes':['First'],'read_more':False},'downloaded':True,'download_progress':100,'message':'Update downloaded and verified.'})
         if self.path.startswith('/api/update/install'):
             with lock: state['installs']+=1
             return self.sendj({'ok':True,'restart':True})
