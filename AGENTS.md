@@ -77,6 +77,8 @@ Update release requirements:
 
 A matching hash is integrity validation, not publisher code signing.
 
+Code signing hook: scripts/build_release.py calls tools/sign_windows.py on YGODeckStudio.exe right after `go build`, before the icon check, updater candidate tests, manifest hash and portable ZIP, so the manifest's SHA-256 and size describe the signed file. It runs YGO_SIGN_COMMAND (with {file} for the path) from the environment and verifies a certificate table exists afterwards; without it the build stays unsigned, and YGO_REQUIRE_SIGNING=1 makes that an error. Never commit certificates, keys or tokens; signing credentials belong in repository secrets. The embedded core is not signed (it is extracted to per-user storage without a download mark). tests/test_code_signing_hook.py covers the hook.
+
 The public standalone asset, manifest asset_name, and portable EXE must all use YGODeckStudio.exe, without any release or version suffix. Versioned archive/tag names remain supported. The installer must continue replacing and restarting the actual running launcher path. Preserve existing custom or legacy executable paths so current shortcuts remain valid; never derive the installed target name from the release asset name.
 
 ## Data locations
